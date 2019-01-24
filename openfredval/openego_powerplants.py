@@ -53,7 +53,7 @@ def get_oep_landkreise():
     )
     
     landkreise =session.query(t_bkg_vg250_4_krs_mview.columns.nuts, 
-                         t_bkg_vg250_4_krs_mview.columns.geom)
+                         t_bkg_vg250_4_krs_mview.columns.geom).all()
 
     filename_out=os.path.join(cfg.get('paths', 'geometry'),
                                cfg.get('geometry', 'region_polygon'))
