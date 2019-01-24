@@ -1,96 +1,68 @@
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-
-"""Main script.
-
-Copyright (c) 2016-2018 Uwe Krien <uwe.krien@rl-institut.de>
-
-SPDX-License-Identifier: GPL-3.0-or-later
 """
-__copyright__ = "Uwe Krien <uwe.krien@rl-institut.de>"
-__license__ = "GPLv3"
+Created on Thu Jan 24 11:41:21 2019
 
+@author: RL-INSTITUT\inia.steinbach
+"""
 
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan  3 16:59:27 2019
+
+@author: RL-INSTITUT\inia.steinbach
+"""
 # Python libraries
 import os
 import logging
-from datetime import datetime
-import time
-import traceback
+import warnings
+import calendar
+from collections import namedtuple
 
-# oemof packages
-from oemof.tools import logger
+# External libraries
+import pandas as pd
 
 # internal modules
 import reegis.config as cfg
-import deflex
+import openfredval.powerplants
+import openfredval.feedin
+import openfredval.scenario_tools
 
 
-def stopwatch():
-    if not hasattr(stopwatch, 'start'):
-        stopwatch.start = datetime.now()
-    return str(datetime.now() - stopwatch.start)[:-7]
+def scenario_feedin_pv(year, my_index, weather_year=None):    
+    if weather_year is None:
+        weather_year = year
+    
+    pv_types = cfg.get_dict('pv_types')
+    pv_orientation = cfg.get_dict('pv_orientation')
+    pv = openfredval.feedin.get_openfredval_feedin(year, 'solar', weather_year)
 
+    # combine different pv-sets to one feedin time series
+    feedin_ts = pd.DataFrame(columns=my_index, index=pv.index)
+    orientation_fraction = pd.Series(pv_orientation)
 
-def main(year, plot_graph=False):
-    stopwatch()
-    name = '{0}_{1}_{2}'.format('deflex', year, cfg.get('init', 'map'))
-    meta = {'year': year,
-            'model_base': 'deflex',
-            'map': cfg.get('init', 'map'),
-            'solver': cfg.get('general', 'solver'),
-            'start_time': datetime.now()}
-    sc = deflex.Scenario(name=name, year=2014, meta=meta)
-    path = os.path.join(cfg.get('paths', 'scenario'), 'deflex', str(year))
-    csv_dir = name + '_csv'
-    csv_path = os.path.join(path, csv_dir)
-
-    if not os.path.isdir(csv_path):
-        fn = deflex.basic_scenario.create_basic_scenario(year, path=path,
-                                                         csv_dir=csv_dir)
-        if csv_path != fn.csv:
-            msg = ("\n{0}\n{1}\nThe wrong path is checked. This will recreate "
-                   "the scenario every time!".format(csv_path, fn.csv))
-            logging.error(msg)
-            csv_path = fn.csv
-    logging.info("Read scenario from csv collection: {0}".format(stopwatch()))
-    sc.load_csv(csv_path)
-
-    logging.info("Add nodes to the EnergySystem: {0}".format(stopwatch()))
-    sc.table2es()
-
-    # Save energySystem to '.graphml' file if plot_graph is True
-    if plot_graph:
-        sc.plot_nodes(filename=os.path.join(path, name),
-                      remove_nodes_with_substrings=['bus_cs'])
-
-    logging.info("Create the concrete model: {0}".format(stopwatch()))
-    sc.create_model()
-
-    logging.info("Solve the optimisation model: {0}".format(stopwatch()))
-    sc.solve()
-
-    logging.info("Solved. Dump results: {0}".format(stopwatch()))
-    res_path = os.path.join(path, 'results_{0}'.format(
-        cfg.get('general', 'solver')))
-    os.makedirs(res_path, exist_ok=True)
-    out_file = os.path.join(res_path, name + '.esys')
-    logging.info("Dump file to {0}".format(out_file))
-    sc.meta['end_time'] = datetime.now()
-    sc.dump_es(out_file)
-
-    logging.info("All done. deflex finished without errors: {0}".format(
-        stopwatch()))
-
+    pv.sort_index(1, inplace=True)
+    orientation_fraction.sort_index(inplace=True)
+    base_set_column = 'coastdat_{0}_solar_{1}'.format(weather_year, '{0}')
+    for reg in pv.columns.levels[0]:
+        feedin_ts[reg, 'solar'] = 0
+        for mset in pv_types.keys():
+            set_col = base_set_column.format(mset)
+            feedin_ts[reg, 'solar'] += pv[reg, set_col].multiply(
+                orientation_fraction).sum(1).multiply(
+                    pv_types[mset])
+            # feedin_ts[reg, 'solar'] = rt
+    # print(f.sum())
+    # from matplotlib import pyplot as plt
+    # f.plot()
+    # plt.show()
+    # exit(0)
+    return feedin_ts.sort_index(1)
 
 if __name__ == "__main__":
-    logger.define_logging()
-    for y in [2014, 2013, 2012]:
-        for my_rmap in ['de21', 'de22']:
-            cfg.tmp_set('init', 'map', my_rmap)
-            try:
-                main(y)
-            except Exception as e:
-                logging.error(traceback.format_exc())
-                time.sleep(0.5)
-                logging.error(e)
-                time.sleep(0.5)
+
+    my_index = pd.MultiIndex(
+            levels=[[], []], labels=[[], []],
+            names=['region', 'type'])
+    scenario_feedin_pv(2014, my_index, weather_year=None)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Adapting the general reegis power plants to the deflex model.
+"""Adapting the general reegis power plants to the openfredval model.
 
 Copyright (c) 2016-2018 Uwe Krien <uwe.krien@rl-institut.de>
 
@@ -17,25 +17,49 @@ import oemof.tools.logger as logger
 import reegis.geometries
 import reegis.config as cfg
 import reegis.powerplants
-import deflex.geometries
+import openfredval.geometries
 
 
-def pp_reegis2deflex(clean_offshore=True):
+def add_model_region_pp(df):
+    """Load the pp data set with geometries and add a column with the model
+    region. Afterwards the geometry column is removed. As the renewable data
+    set is big, the hdf5 format is used.
+    """
+    # Load openfredval geometries
+    openfredval_regions = openfredval.geometries.openfredval_regions()
+
+    # Load power plant geometries
+    pp = reegis.geometries.Geometry(name='power plants', df=df)
+    pp.create_geo_df()
+
+    # exit(0)
+    # Add region names to power plant table
+    pp.gdf = reegis.geometries.spatial_join_with_buffer(
+        pp, openfredval_regions, name=openfredval_regions.name)
+    df = pp.get_df()
+
+    # Delete real geometries because they are not needed anymore.
+    del df['geometry']
+
+    logging.info("openfredval regions added to power plant table.")
+    return df
+
+
+def pp_reegis2openfredval(clean_offshore=True):
+    filename_in = os.path.join(cfg.get('paths', 'powerplants'),
+                               cfg.get('powerplants', 'reegis_pp'))
     filename_out = os.path.join(cfg.get('paths', 'powerplants'),
-                                cfg.get('powerplants', 'deflex_pp')).format(
+                                cfg.get('powerplants', 'openfredval_pp')).format(
         map=cfg.get('init', 'map'))
 
-    # Add deflex regions to powerplants
-    deflex_regions = deflex.geometries.deflex_regions()
-    name = '{0}_region'.format(cfg.get('init', 'map'))
-    pp = reegis.powerplants.add_regions_to_powerplants(deflex_regions, name)
+    if not os.path.isfile(filename_in):
+        msg = "File '{0}' does not exist. Will create it from opsd file."
+        logging.debug(msg.format(filename_in))
+        filename_in = reegis.powerplants.pp_opsd2reegis()
+    pp = pd.read_hdf(filename_in, 'pp', mode='r')
 
-    federal_states = reegis.geometries.load(
-        cfg.get('paths', 'geometry'),
-        cfg.get('geometry', 'federalstates_polygon'))
-
-    pp = reegis.powerplants.add_regions_to_powerplants(
-        federal_states, 'federal_states', pp=pp)
+    pp = add_model_region_pp(pp)
+    pp = reegis.powerplants.add_capacity_in(pp)
 
     # Remove PHES (storages)
     if cfg.get('powerplants', 'remove_phes'):
@@ -43,7 +67,7 @@ def pp_reegis2deflex(clean_offshore=True):
 
     # Remove powerplants outside Germany
     for state in cfg.get_list('powerplants', 'remove_states'):
-        pp = pp.loc[pp.state != state]
+        pp = pp.loc[pp.federal_states != state]
 
     if clean_offshore:
         pp = remove_onshore_technology_from_offshore_regions(pp)
@@ -100,7 +124,7 @@ def remove_onshore_technology_from_offshore_regions(df):
     return df
 
 
-def get_deflex_pp_by_year(year, overwrite_capacity=False):
+def get_openfredval_pp_by_year(year, overwrite_capacity=False):
     """
 
     Parameters
@@ -115,14 +139,14 @@ def get_deflex_pp_by_year(year, overwrite_capacity=False):
 
     """
     filename = os.path.join(cfg.get('paths', 'powerplants'),
-                            cfg.get('powerplants', 'deflex_pp')).format(
+                            cfg.get('powerplants', 'openfredval_pp')).format(
         map=cfg.get('init', 'map'))
-    logging.info("Get deflex power plants for {0}.".format(year))
+    logging.info("Get openfredval power plants for {0}.".format(year))
     if not os.path.isfile(filename):
         msg = "File '{0}' does not exist. Will create it from reegis file."
         logging.debug(msg.format(filename))
-        filename = pp_reegis2deflex()
-    pp = pd.DataFrame(pd.read_hdf(filename, 'pp', mode='r'))
+        filename = pp_reegis2openfredval()
+    pp = pd.read_hdf(filename, 'pp', mode='r')
 
     filter_columns = ['capacity_{0}', 'capacity_in_{0}']
 
@@ -154,16 +178,14 @@ def get_deflex_pp_by_year(year, overwrite_capacity=False):
 
 if __name__ == "__main__":
     logger.define_logging(file_level=logging.INFO)
-    # print(pp_reegis2deflex())
-    # fn = '/home/uwe/express/reegis/data/powerplants/deflex_pp.h5'
+    # print(pp_reegis2openfredval())
+    # fn = '/home/uwe/express/reegis/data/powerplants/openfredval_pp.h5'
     # df = pd.read_hdf(fn, 'pp')
     # pp = reegis.geometries.Geometry(name='power plants', df=df)
     # pp.create_geo_df()
     # pp.gdf.to_file('/home/uwe/pp_tmp.shp')
     # exit(0)
-    my_df = get_deflex_pp_by_year(2014, overwrite_capacity=True)
-    print(my_df.columns)
-    exit(0)
+    my_df = get_openfredval_pp_by_year(2014, overwrite_capacity=True)
     print(my_df.groupby(['de22_region', 'energy_source_level_2']).sum()[
         'capacity'])
     # exit(0)
