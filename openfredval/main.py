@@ -17,6 +17,7 @@ Created on Thu Jan  3 16:59:27 2019
 
 @author: RL-INSTITUT\inia.steinbach
 """
+
 # Python libraries
 import os
 import logging
@@ -62,9 +63,64 @@ def scenario_feedin_pv(year, my_index, weather_year=None):
     # exit(0)
     return feedin_ts.sort_index(1)
 
+# def scenario_feedin_wind(year, my_index, weather_year=None):
+#     """
+#
+#     Parameters
+#     ----------
+#     year
+#     name
+#     regions
+#     feedin_ts
+#     weather_year
+#
+#     Returns
+#     -------
+#
+#     """
+#     # Get fraction of windzone per region
+#     wz = pd.read_csv(os.path.join(cfg.get('paths', 'powerplants'),
+#                                   'windzone_{0}.csv'.format(name)),
+#                      index_col=[0])
+#
+#     # Get normalised feedin time series
+#     wind = feedin.get_openfredval_feedin(year=year, feedin_type='wind',
+#                                          weather_year=weather_year)
+#
+#     if weather_year is not None:
+#         if calendar.isleap(weather_year) and not calendar.isleap(year):
+#             wind = wind.iloc[:8760]
+#
+#     # Rename columns and remove obsolete level
+#     wind.columns = wind.columns.droplevel(2)
+#     cols = wind.columns.get_level_values(1).unique()
+#     rn = {c: c.replace('coastdat_2014_wind_', '') for c in cols}
+#     wind.rename(columns=rn, level=1, inplace=True)
+#     wind.sort_index(1, inplace=True)
+#
+#     # Get wind turbines by wind zone
+#     wind_types = {float(k): v for (k, v) in cfg.get_dict('windzones').items()}
+#     wind_types = pd.Series(wind_types).sort_index()
+#
+#     if regions is None:
+#         regions = wind.columns.get_level_values(0).unique()
+#
+#     if feedin_ts is None or len(feedin_ts.index) == 0:
+#         cols = pd.MultiIndex(levels=[[], []], labels=[[], []])
+#         feedin_ts = pd.DataFrame(index=wind.index, columns=cols)
+#
+#     for region in regions:
+#         frac = pd.merge(wz.loc[region], pd.DataFrame(wind_types), how='right',
+#                         right_index=True, left_index=True).set_index(
+#                             0, drop=True).fillna(0).sort_index()
+#         feedin_ts[region, 'wind'] = wind[region].multiply(frac[2]).sum(1)
+#     return feedin_ts.sort_index(1)
+
+
 if __name__ == "__main__":
 
     my_index = pd.MultiIndex(
             levels=[[], []], labels=[[], []],
             names=['region', 'type'])
+    # scenario_feedin_wind(year=2014, my_index=my_index)
     scenario_feedin_pv(2014, my_index, weather_year=None)
