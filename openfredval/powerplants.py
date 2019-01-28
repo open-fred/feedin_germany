@@ -26,7 +26,7 @@ def add_model_region_pp(df):
     set is big, the hdf5 format is used.
     """
     # Load openfredval geometries
-    openfredval_regions = openfredval.geometries.openfredval_regions()
+    openfredval_regions = geometries.openfredval_regions()
 
     # Load power plant geometries
     pp = reegis.geometries.Geometry(name='power plants', df=df)

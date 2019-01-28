@@ -34,7 +34,7 @@ def scenario_feedin_pv(year, my_index, weather_year=None):
     
     pv_types = cfg.get_dict('pv_types')
     pv_orientation = cfg.get_dict('pv_orientation')
-    pv = openfredval.feedin.get_openfredval_feedin(year, 'solar', weather_year)
+    pv = feedin.get_openfredval_feedin(year, 'solar', weather_year)
 
     # combine different pv-sets to one feedin time series
     feedin_ts = pd.DataFrame(columns=my_index, index=pv.index)

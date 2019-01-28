@@ -23,7 +23,7 @@ def openfredval_regions(suffix='reegis', rmap=None, rtype='polygon'):
     if rmap is None:
         rmap = cfg.get('init', 'map')
     name = os.path.join(cfg.get('paths', 'geo_openfredval'),
-                        cfg.get('geometry', 'openfredval_polygon').format(
+                        cfg.get('geometry', 'region_polygon').format(
                             suffix=suffix, map=rmap, type=rtype))
     regions = geo.Geometry(name='{map}_region'.format(
         map=rmap))
