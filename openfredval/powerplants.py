@@ -17,7 +17,7 @@ import oemof.tools.logger as logger
 import reegis.geometries
 import reegis.config as cfg
 import reegis.powerplants
-import openfredval.geometries
+import geometries
 
 
 def add_model_region_pp(df):

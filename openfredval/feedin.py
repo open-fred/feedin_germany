@@ -24,7 +24,7 @@ from oemof.tools import logger
 import reegis.config as cfg
 import reegis.coastdat
 
-import openfredval.powerplants as powerplants
+import powerplants
 
 
 def get_grouped_power_plants(year):

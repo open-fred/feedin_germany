@@ -25,9 +25,7 @@ import pandas as pd
 
 # internal modules
 import reegis.config as cfg
-import openfredval.powerplants
-import openfredval.feedin
-import openfredval.scenario_tools
+import feedin
 
 
 def scenario_feedin_pv(year, my_index, weather_year=None):    
