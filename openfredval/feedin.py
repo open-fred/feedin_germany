@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+################ openfredval ################
+
 """Aggregating feed-in time series for the model regions.
 
 Copyright (c) 2016-2018 Uwe Krien <uwe.krien@rl-institut.de>

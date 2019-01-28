@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+################ openfredval ################
+
 """
 Reegis geometry tools.
 

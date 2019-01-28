@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+################ openfredval ################
+
 """Adapting the general reegis power plants to the openfredval model.
 
 Copyright (c) 2016-2018 Uwe Krien <uwe.krien@rl-institut.de>
