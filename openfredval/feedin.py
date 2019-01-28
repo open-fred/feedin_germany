@@ -36,6 +36,10 @@ def get_grouped_power_plants(year):
 
 
 def aggregate_by_region(year, pp=None, weather_year=None):
+    r"""
+    Get aggregated wind and pv feed-in time series and save to csv file.
+
+    """
     # Create the path for the output files.
     feedin_openfredval_path = cfg.get('paths_pattern', 'openfredval_feedin').format(
         year=year, map=cfg.get('init', 'map'))
@@ -91,6 +95,22 @@ def aggregate_by_region(year, pp=None, weather_year=None):
 
 
 def get_openfredval_feedin(year, feedin_type, weather_year=None):
+    r"""
+
+    Parameters
+    ----------
+    year : integer
+        The year pv or wind feed-in will be calculated for.
+    feedin_type : string
+        Calculated feed-in: 'pv' or 'wind'.
+    weather_year : integer
+
+    Returns
+    -------
+    None or pd.DataFrame
+        todo
+
+    """
     if weather_year is None:
         feedin_openfredval_file_name = os.path.join(
             cfg.get('paths_pattern', 'openfredval_feedin'),
