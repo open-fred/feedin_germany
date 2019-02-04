@@ -31,7 +31,7 @@ def add_model_region_pp(df):
     openfredval_regions = geometries.openfredval_regions()
 
     # Load power plant geometries
-    pp = reegis.geometries.Geometry(name='power plants', df=df)
+    pp = reegis.geometries.Geometry(name='power plants', df=df)  # todo: replace class usage
     pp.create_geo_df()
 
     # exit(0)
