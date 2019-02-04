@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+################ openfredval ################
+
 """ This module is designed for the use with the coastdat2 weather data set
 of the Helmholtz-Zentrum Geesthacht.
 

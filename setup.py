@@ -20,6 +20,9 @@ setup(
     package_dir={'reegis_tools': 'reegis'},  # todo: check
     install_requires=[
         'pandas',
-        'requests',
+        'requests',  # is it used?
+        'sqlalchemy',
+        'geoalchemy2',
+        'oedialect',
         'windpowerlib >= 0.1.0',
         'pvlib'])

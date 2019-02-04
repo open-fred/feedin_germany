@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+################ openfredval ################
+
 """Adapting the general reegis power plants to the openfredval model.
 
 Copyright (c) 2016-2018 Uwe Krien <uwe.krien@rl-institut.de>
@@ -17,7 +19,7 @@ import oemof.tools.logger as logger
 import reegis.geometries
 import reegis.config as cfg
 import reegis.powerplants
-import openfredval.geometries
+import geometries
 
 
 def add_model_region_pp(df):
@@ -26,7 +28,7 @@ def add_model_region_pp(df):
     set is big, the hdf5 format is used.
     """
     # Load openfredval geometries
-    openfredval_regions = openfredval.geometries.openfredval_regions()
+    openfredval_regions = geometries.openfredval_regions()
 
     # Load power plant geometries
     pp = reegis.geometries.Geometry(name='power plants', df=df)

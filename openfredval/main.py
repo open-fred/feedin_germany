@@ -1,4 +1,8 @@
 #!/usr/bin/env python2
+
+################ openfredval ################
+
+
 # -*- coding: utf-8 -*-
 """
 Created on Thu Jan 24 11:41:21 2019
@@ -25,9 +29,7 @@ import pandas as pd
 
 # internal modules
 import reegis.config as cfg
-import openfredval.powerplants
-import openfredval.feedin
-import openfredval.scenario_tools
+import feedin
 
 
 def scenario_feedin_pv(year, my_index, weather_year=None):    
@@ -36,9 +38,9 @@ def scenario_feedin_pv(year, my_index, weather_year=None):
     
     pv_types = cfg.get_dict('pv_types')
     pv_orientation = cfg.get_dict('pv_orientation')
-    pv = openfredval.feedin.get_openfredval_feedin(year, 'solar', weather_year)
+    pv = feedin.get_openfredval_feedin(year, 'solar', weather_year)
 
-    # combine different pv-sets to one feedin time series
+    # combine different pv-sets to one feed-in time series
     feedin_ts = pd.DataFrame(columns=my_index, index=pv.index)
     orientation_fraction = pd.Series(pv_orientation)
 
