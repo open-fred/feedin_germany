@@ -337,79 +337,25 @@ def prepare_opsd_file(category, overwrite):
 
     prepare_dates(df, date_cols, month)
 
-#   df.to_csv(prepared_file_name)
+    #df.to_csv('prepared_opsd_data.csv')
     return df
 
-def opsd_power_plants(overwrite=False, csv=False):
-    """
+def filter_solar_pp():
+    df=prepare_opsd_file(category='renewable', overwrite=True)
+    
+    df=df.loc[df['energy_source_level_2'] == 'Solar']
+    solar_pp= df[['lat', 'lon', 'commissioning_date', 'capacity']]
+    
+    solar_pp.to_csv('solar_opsd_data.csv')
+    return solar_pp
 
-    Parameters
-    ----------
-    csv
-    overwrite
-
-    Returns
-    -------
-
-    """
-    strcols = {
-        'renewable': [
-            'commissioning_date', 'decommissioning_date',
-            'energy_source_level_1', 'energy_source_level_2',
-            'energy_source_level_3', 'technology', 'voltage_level', 'comment',
-            'geometry']}
-
-    if csv:
-        opsd_file_name = os.path.join(
-            cfg.get('paths', 'opsd'),
-            cfg.get('opsd', 'opsd_prepared_csv_pattern'))
-        hdf = None
-    else:
-        opsd_file_name = os.path.join(
-            cfg.get('paths', 'opsd'), cfg.get('opsd', 'opsd_prepared'))
-        if os.path.isfile(opsd_file_name) and not overwrite:
-            hdf = None
-        else:
-            if os.path.isfile(opsd_file_name):
-                os.remove(opsd_file_name)
-            hdf = pd.HDFStore(opsd_file_name, mode='a')
-
-    # If the power plant file does not exist, download and prepare it.
-    for category in ['conventional', 'renewable']:
-        # Define file and path pattern for power plant file.
-        cleaned_file_name = os.path.join(
-            cfg.get('paths', 'opsd'),
-            cfg.get('opsd', 'cleaned_csv_file_pattern').format(
-                cat=category))
-        if csv:
-            exist = os.path.isfile(opsd_file_name) and not overwrite
-        else:
-            exist = hdf is None
-
-        if not exist:
-            logging.info("Preparing {0} opsd power plants".format(category))
-            df = load_opsd_file(category, overwrite, prepared=True)
-            #pp = geo.create_geo_df(df, lon_column='lon', lat_column='lat')
-            #pp = geo.remove_invalid_geometries(pp)
-
-            if csv:
-                pp.to_csv(opsd_file_name)
-            else:
-                df = pd.DataFrame(pp)
-                df[strcols[category]] = df[strcols[category]].astype(str)
-                hdf[category] = df
-            logging.info("Opsd power plants stored to {0}".format(
-                opsd_file_name))
-
-        if os.path.isfile(cleaned_file_name):
-            os.remove(cleaned_file_name)
-    if hdf is not None:
-        hdf.close()
-    return opsd_file_name
+def filter_wind_pp():
+    df=prepare_opsd_file(category='renewable', overwrite=True)
+    df=df.loc[df['energy_source_level_2'] == 'Wind']
 
 
 if __name__ == "__main__":
     logger.define_logging()
-    print(prepare_opsd_file(category='renewable', overwrite=True))
+    print(filter_solar_pp())
 
 
