@@ -38,8 +38,15 @@ def create_distribution_dict():
     distribution = config.todict('pv_types')
     return distribution
 
+def parse_module_dict():
+    module_dict = create_pvmodule_dict()
+    for key in module_dict:
+        module = module_dict[key]
+        print(module)
+
+
 if __name__ == "__main__":
     
-    print(create_distribution_dict())
+    print(parse_module_dict())
     #pvsets=create_pvmodule_dict()
     #print(pvsets['BP2150S_3'])
