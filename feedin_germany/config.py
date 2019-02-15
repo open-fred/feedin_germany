@@ -7,10 +7,7 @@ Created on Fri Feb 15 11:19:13 2019
 """
 
 # Python libraries
-import os
-import logging
 import configparser
-import sys
 
 config = configparser.RawConfigParser()
 configFilePath = 'feedin_germany.ini'
@@ -36,3 +33,9 @@ def aslist(value, flatten=True):
         subvalues = value.split()
         result.extend(subvalues)
     return result
+
+def todict(section):
+    dictionary = {}
+    for option in config.options(section):
+        dictionary[option] = config.get(section, option)
+    return dictionary
