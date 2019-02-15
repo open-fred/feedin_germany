@@ -28,13 +28,18 @@ def create_pvmodule_dict():
         albedo = config.get(pvlib_set, 'albedo')
         
         pvsets[set_name] = collections.OrderedDict()
-        content = (module_name, inverter_name, azimuth, tilt, albedo)
+        content = module_name, inverter_name, azimuth, tilt, albedo
         pvsets[set_name] = {content}
         pvsets = collections.OrderedDict(pvsets)
     return pvsets
 
+def create_distribution_dict():
+    
+    distribution = config.todict('pv_types')
+    return distribution
 
 if __name__ == "__main__":
     
-    pvsets=create_pvmodule_dict()
-    print(pvsets['BP2150S_3'])
+    print(create_distribution_dict())
+    #pvsets=create_pvmodule_dict()
+    #print(pvsets['BP2150S_3'])
