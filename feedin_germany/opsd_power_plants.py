@@ -46,7 +46,9 @@ import config as cfg
 
 def load_original_opsd_file(category, overwrite, latest=False):
     """Read file if exists."""
-
+    
+    opsd_directory = cfg.get('paths', 'opsd')
+    print(opsd_directory)
     orig_csv_file = os.path.join(
         cfg.get('paths', 'opsd'),
         cfg.get('opsd', 'original_file_pattern').format(cat=category))
@@ -58,6 +60,9 @@ def load_original_opsd_file(category, overwrite, latest=False):
 
     # Download non existing files. If you think that there are newer files you
     # have to set overwrite=True to overwrite existing with downloaded files.
+    if not os.path.exists(opsd_directory):
+        os.makedirs(opsd_directory, exist_ok=True)
+
     if not os.path.isfile(orig_csv_file) or overwrite:
         logging.warning("File not found. Try to download it from server.")
         logging.warning("Check URL if download does not work.")
@@ -237,6 +242,9 @@ def complete_opsd_geometries(df, category, time=None,
 
     # Store table of undefined sets to csv-file
     if incomplete.any():
+        dir_messages=cfg.get('paths', 'messages')
+        if not os.path.exists(dir_messages):
+            os.makedirs(dir_messages, exist_ok=True)
         df.loc[incomplete].to_csv(os.path.join(
             cfg.get('paths', 'messages'),
             '{0}_incomplete_geometries_before.csv'.format(category)))
@@ -361,6 +369,7 @@ def filter_wind_pp():
 
 
 if __name__ == "__main__":
+    #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
     logger.define_logging()
     print(filter_solar_pp())
 
