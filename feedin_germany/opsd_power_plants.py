@@ -388,12 +388,16 @@ def assign_turbine_types_by_windzone(register):
     -------
 
     """
+    # get windzones' polygons
     path = cfg.get('paths', 'geometry')
     filename = cfg.get('geometry', 'windzones')
-    windzones = geometries.load(path=path, filename=filename) # todo: how to paths work in ini?
-    register['coordinates'] = list(zip(register['lon'], register['lon']))
+    windzones = geometries.load(path=path, filename=filename)
+    #
+    register['coordinates'] = list(zip(register['lon'], register['lat']))
     register['geometry'] = register['coordinates'].apply(Point)
-    # add windzone to register
+    register['windzone'] = 'add windzone'
+    for index in register.index:
+        windzones['temp'] = windzones['geometry'].apply(lambda x: register.loc[index]['geometry'].within(x))
     return register
 
 
@@ -406,5 +410,5 @@ def helper_dummy_register():
 if __name__ == "__main__":
     #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
     logger.define_logging()
-    print(filter_solar_pp())
-    # assign_turbine_types_by_windzone(register=helper_dummy_register())
+    # print(filter_solar_pp())
+    assign_turbine_types_by_windzone(register=filter_wind_pp())
