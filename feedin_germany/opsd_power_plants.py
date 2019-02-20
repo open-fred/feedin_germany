@@ -35,6 +35,7 @@ import geopandas as gpd
 import pyproj
 import requests
 from shapely.wkt import loads as wkt_loads
+from shapely.geometry import Point, Polygon
 
 # oemof libraries
 from oemof.tools import logger
@@ -42,7 +43,9 @@ from oemof.tools import logger
 # Internal modules
 import config as cfg
 #import reegis.geometries as geo
+from feedin_germany import geometries
 
+# todo: delete unnecessary imports
 
 def load_original_opsd_file(category, overwrite, latest=False):
     """Read file if exists."""
@@ -91,6 +94,7 @@ def load_original_opsd_file(category, overwrite, latest=False):
         logging.error("Unknown category! Allowed: 'conventional, 'renewable'")
         df = None
     return df
+
 
 def convert_utm_code_opsd(df):
     # *** Convert utm if present ***
@@ -354,6 +358,7 @@ def prepare_opsd_file(category, overwrite):
     #df.to_csv('prepared_opsd_data.csv')
     return df
 
+
 def filter_solar_pp():
     df=prepare_opsd_file(category='renewable', overwrite=True)
     
@@ -363,14 +368,40 @@ def filter_solar_pp():
     solar_pp.to_csv('solar_opsd_data.csv')
     return solar_pp
 
+
 def filter_wind_pp():
     df=prepare_opsd_file(category='renewable', overwrite=True)
     df=df.loc[df['energy_source_level_2'] == 'Wind']
 
 
+def assign_turbine_types_by_windzone(register):
+    r"""
+    Assigns turbine types to a power plant register depending on windzones.
+
+    - windzones from file (adjustable)
+    - turbine types defined in ini
+
+    Returns
+    -------
+
+    """
+    path = cfg.get('paths', 'geometry')
+    filename = cfg.get('geometry', 'windzones')
+    windzones = geometries.load(path=path, filename=filename) # todo: how to paths work in ini?
+    register['coordinates'] = list(zip(register['lon'], register['lon']))
+    register['geometry'] = register['coordinates'].apply(Point)
+    # add windzone to register
+    return register
+
+
+def helper_dummy_register():
+    # todo: delete after OPSD works
+    with pd.HDFStore('opsd_temp.h5') as hdf_store:
+        register = hdf_store.get('pp_data')
+    return register.loc[register['energy_source_level_2'] == 'Wind'][0:10]
+
 if __name__ == "__main__":
     #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
     logger.define_logging()
     print(filter_solar_pp())
-
-
+    # assign_turbine_types_by_windzone(register=helper_dummy_register())
