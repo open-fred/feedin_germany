@@ -358,6 +358,7 @@ def prepare_opsd_file(category, overwrite):
     #df.to_csv('prepared_opsd_data.csv')
     return df
 
+# todo: general filter function? --> filter_pp_by_source(energy_source, keep_cols)
 
 def filter_solar_pp():
     df=prepare_opsd_file(category='renewable', overwrite=True)
@@ -370,8 +371,10 @@ def filter_solar_pp():
 
 
 def filter_wind_pp():
-    df=prepare_opsd_file(category='renewable', overwrite=True)
-    df=df.loc[df['energy_source_level_2'] == 'Wind']
+    df = prepare_opsd_file(category='renewable', overwrite=False)
+    df = df.loc[df['energy_source_level_2'] == 'Wind']
+    wind_pp = df # todo check which columns are needed
+    return wind_pp
 
 
 def assign_turbine_types_by_windzone(register):
