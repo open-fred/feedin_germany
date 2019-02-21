@@ -18,6 +18,8 @@ register_wind = opsd_power_plants.filter_wind_pp()
 
 register_pv = opsd_power_plants.filter_solar_pp()
 
+print('Missing coordinates pv: {}'.format(register_pv['lat'].isnull().sum()))
+print('Missing coordinates wind: {}'.format(register_wind['lat'].isnull().sum()))
 
 register_wind_locations = tools.add_weather_locations_to_register(
     register=register_wind, weather_coordinates=weather_df)
