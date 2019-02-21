@@ -19,8 +19,6 @@ Copyright (c) 2016-2018 Uwe Krien <uwe.krien@rl-institut.de>
 
 SPDX-License-Identifier: GPL-3.0-or-later
 """
-from __future__ import print_function
-
 __copyright__ = "Uwe Krien <uwe.krien@rl-institut.de>"
 __license__ = "GPLv3"
 
@@ -38,13 +36,14 @@ import pyproj
 import requests
 from shapely.wkt import loads as wkt_loads
 from shapely.geometry import Point, Polygon
+
 # oemof libraries
 from oemof.tools import logger
 
 # Internal modules
 import config as cfg
 #import reegis.geometries as geo
-import geometries
+from feedin_germany import geometries
 
 # todo: delete unnecessary imports
 
@@ -356,8 +355,10 @@ def prepare_opsd_file(category, overwrite):
 
     prepare_dates(df, date_cols, month)
 
-    df.to_csv('prepared_opsd_data.csv')
+    #df.to_csv('prepared_opsd_data.csv')
     return df
+
+# todo: general filter function? --> filter_pp_by_source(energy_source, keep_cols)
 
 def filter_solar_pp():
     df=prepare_opsd_file(category='renewable', overwrite=True)
@@ -374,8 +375,10 @@ def filter_solar_pp():
 
 
 def filter_wind_pp():
-    df=prepare_opsd_file(category='renewable', overwrite=True)
-    df=df.loc[df['energy_source_level_2'] == 'Wind']
+    df = prepare_opsd_file(category='renewable', overwrite=False)
+    df = df.loc[df['energy_source_level_2'] == 'Wind']
+    wind_pp = df # todo check which columns are needed
+    return wind_pp
 
 
 def assign_turbine_types_by_windzone(register):
@@ -389,12 +392,16 @@ def assign_turbine_types_by_windzone(register):
     -------
 
     """
+    # get windzones' polygons
     path = cfg.get('paths', 'geometry')
     filename = cfg.get('geometry', 'windzones')
-    windzones = geometries.load(path=path, filename=filename) # todo: how to paths work in ini?
-    register['coordinates'] = list(zip(register['lon'], register['lon']))
+    windzones = geometries.load(path=path, filename=filename)
+    #
+    register['coordinates'] = list(zip(register['lon'], register['lat']))
     register['geometry'] = register['coordinates'].apply(Point)
-    # add windzone to register
+    register['windzone'] = 'add windzone'
+    for index in register.index:
+        windzones['temp'] = windzones['geometry'].apply(lambda x: register.loc[index]['geometry'].within(x))
     return register
 
 
@@ -409,5 +416,5 @@ def helper_dummy_register():
 if __name__ == "__main__":
     #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
     logger.define_logging()
-    print(filter_solar_pp())
-    # assign_turbine_types_by_windzone(register=helper_dummy_register())
+    # print(filter_solar_pp())
+    assign_turbine_types_by_windzone(register=filter_wind_pp())
