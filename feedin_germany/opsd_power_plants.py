@@ -19,6 +19,8 @@ Copyright (c) 2016-2018 Uwe Krien <uwe.krien@rl-institut.de>
 
 SPDX-License-Identifier: GPL-3.0-or-later
 """
+from __future__ import print_function
+
 __copyright__ = "Uwe Krien <uwe.krien@rl-institut.de>"
 __license__ = "GPLv3"
 
@@ -36,14 +38,13 @@ import pyproj
 import requests
 from shapely.wkt import loads as wkt_loads
 from shapely.geometry import Point, Polygon
-
 # oemof libraries
 from oemof.tools import logger
 
 # Internal modules
 import config as cfg
 #import reegis.geometries as geo
-from feedin_germany import geometries
+import geometries
 
 # todo: delete unnecessary imports
 
@@ -355,9 +356,8 @@ def prepare_opsd_file(category, overwrite):
 
     prepare_dates(df, date_cols, month)
 
-    #df.to_csv('prepared_opsd_data.csv')
+    df.to_csv('prepared_opsd_data.csv')
     return df
-
 
 def filter_solar_pp():
     df=prepare_opsd_file(category='renewable', overwrite=True)
@@ -365,6 +365,10 @@ def filter_solar_pp():
     df=df.loc[df['energy_source_level_2'] == 'Solar']
     solar_pp= df[['lat', 'lon', 'commissioning_date', 'capacity']]
     
+    # remove_pp_with_missing_coordinates
+    if solar_pp[['lat', 'lon']].isnull().values.any():
+        solar_pp=solar_pp.dropna(subset = ['lat', 'lon'])
+
     solar_pp.to_csv('solar_opsd_data.csv')
     return solar_pp
 
@@ -399,6 +403,8 @@ def helper_dummy_register():
     with pd.HDFStore('opsd_temp.h5') as hdf_store:
         register = hdf_store.get('pp_data')
     return register.loc[register['energy_source_level_2'] == 'Wind'][0:10]
+
+
 
 if __name__ == "__main__":
     #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
