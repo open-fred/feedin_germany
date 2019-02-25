@@ -393,7 +393,7 @@ def get_pp_by_year(year, register, overwrite_capacity=False):
                                      (12 - pp.loc[c2, 'com_month']) / 12)
         c3 = pp['decom_year'] == year
         pp.loc[c3, filter_column] = (pp.loc[c3, orig_column] *
-                                     pp.loc[c3, 'com_month'] / 12)
+                                     pp.loc[c3, 'com_month'] / 12)  # todo FRAGE @ Inia: beide Male com_month oder auch decom_month?
 
         if overwrite_capacity:
             pp[orig_column] = 0
@@ -412,6 +412,8 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
 
     Parameters
     ----------
+    year : int
+        todo
     energy_source : string todo: note: could be list but I think in feedinlib we only want registers separated by source
         Energy source as named in column 'energy_source_level_2' of register.
     keep_cols : list or None
@@ -508,9 +510,10 @@ if __name__ == "__main__":
     print(filter_pp_by_source_and_year(2012, 'Solar'))
 
     if test_wind:
-        wind_register = filter_pp_by_source(
-            energy_source='Wind', keep_cols=['lat', 'lon',
-                                             'commissioning_date', 'capacity'])
+        keep_cols = ['lat', 'lon', 'commissioning_date', 'capacity',
+                     'com_year', 'decom_year', 'com_month', 'decom_month']
+        wind_register = filter_pp_by_source_and_year(
+            year=2012, energy_source='Wind', keep_cols=keep_cols)
         adapted_wind_register = assign_turbine_data_by_wind_zone(
             register=wind_register)
         print(adapted_wind_register[0:10])
