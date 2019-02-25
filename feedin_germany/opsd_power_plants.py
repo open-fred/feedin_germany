@@ -379,7 +379,7 @@ def filter_pp_by_source(energy_source, keep_cols=None):
 
     Parameters
     ----------
-    energy_source : string todo: note: could be list but I think in feedinlib we only want registered separated by source
+    energy_source : string todo: note: could be list but I think in feedinlib we only want registers separated by source
         Energy source as named in column 'energy_source_level_2' of register.
     keep_cols : list or None
         Column names to be selected from OPSD register. If None, all columns
