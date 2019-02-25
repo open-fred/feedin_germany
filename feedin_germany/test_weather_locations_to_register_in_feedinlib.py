@@ -4,7 +4,7 @@ import os
 import pandas as pd
 
 # loading weather data
-filename = os.path.abspath('/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
+filename = os.path.abspath('/home/local/RL-INSTITUT/inia.steinbach/mount_ordner/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
 if not os.path.isfile(filename):
     raise FileNotFoundError("Please adjust the path.")
 weather_df = pd.read_csv(filename,
