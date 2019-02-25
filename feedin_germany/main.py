@@ -41,7 +41,7 @@ def feedin_germany_pv():
     regions= oep.load_regions_file()
     
     # add region column 'nuts' to register
-    register=oep.register_per_region(register, regions)
+    register=oep.add_region_to_register(register, regions)
     # loop over regions and select all powerplants within region
     for nut in regions['nuts']:
         register_region=register.loc[register['nuts'] == nut]
