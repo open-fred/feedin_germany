@@ -6,11 +6,12 @@ Created on Fri Feb 15 16:07:57 2019
 @author: RL-INSTITUT\inia.steinbach
 """
 import pandas as pd
-import feedinlib
+#from feedinlib import region
 
 #import internal modules
 import pv_modules
 import opsd_power_plants as opsd
+import oep_regions as oep
 
 
 def feedin_germany_pv():
@@ -30,24 +31,33 @@ def feedin_germany_pv():
     
     
     """
+    #load register
+    register = opsd.filter_solar_pp()
     # load the dictionary of pv_modules
     pv_modules_set = pv_modules.create_pvmodule_dict()
     # load the distribution of the pv_modules
     distribution_dict = pv_modules.create_distribution_dict()
-    # load the register for solar powerplants
-    register = opsd.filter_solar_pp()
+    # load aggregation-regions
+    regions= oep.load_regions_file()
     
-    feedin= feedinlib.pv_feedin_distribution_register(distribution_dict, technical_parameters=pv_modules_set, register)
-    
-    
-    return feedin
-    
+    # add region column 'nuts' to register
+    register=oep.add_region_to_register(register, regions)
+    # loop over regions and select all powerplants within region
+    for nut in regions['nuts']:
+        register_region=register.loc[register['nuts'] == nut]
+        register_region=register_region['lat', 'lon', 'commissioning_date', 'capacity', 'Coordinates']
+        # open feedinlib to calculate feed in time series for that region
+        #feedin= region.pv_feedin_distribution_register(distribution_dict=distribution_dict, technical_parameters=pv_modules_set, register=register)
+        #save feedin
+        #feedin.to_csv('...')
+
+    #return feedin
+    pass
     
 if __name__ == "__main__":
 
-feedin=feedin_germany_pv()
+    print(feedin_germany_pv())
 
-feedin.fillna(0).plot()
-plt.show()
+
     
     

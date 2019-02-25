@@ -41,7 +41,7 @@ from shapely.geometry import Point, Polygon
 from oemof.tools import logger
 
 # Internal modules
-import config as cfg
+from feedin_germany import config as cfg
 #import reegis.geometries as geo
 from feedin_germany import geometries
 
@@ -358,6 +358,7 @@ def prepare_opsd_file(category, overwrite):
     #df.to_csv('prepared_opsd_data.csv')
     return df
 
+# todo: general filter function? --> filter_pp_by_source(energy_source, keep_cols)
 
 def filter_solar_pp():
     df=prepare_opsd_file(category='renewable', overwrite=True)
@@ -369,7 +370,7 @@ def filter_solar_pp():
     if solar_pp[['lat', 'lon']].isnull().values.any():
         solar_pp=solar_pp.dropna(subset = ['lat', 'lon'])
 
-    solar_pp.to_csv('solar_opsd_data.csv')
+    solar_pp.to_csv('data/opsd/solar_opsd_data.csv')
     return solar_pp
 
 
