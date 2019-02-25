@@ -18,9 +18,9 @@ weather_df.columns = [weather_df.axes[1].levels[0][
 
 keep_cols_wind = ['lat', 'lon', 'commissioning_date', 'capacity']
 register_wind = opsd_power_plants.filter_pp_by_source(
-    energy_source='Wind', keep_cols=keep_cols_wind)[0:1000] # todo: NOTE: long duration for long register. Looking for faster method.
+    energy_source='Wind', keep_cols=keep_cols_wind)
 
-register_pv = opsd_power_plants.filter_solar_pp()[0:1000]
+register_pv = opsd_power_plants.filter_solar_pp()
 
 # note: nans are dropped in filter function
 # print('Missing coordinates pv: {}'.format(register_pv['lat'].isnull().sum()))
