@@ -405,7 +405,7 @@ def filter_pp_by_source(energy_source, keep_cols=None):
     return register
 
 
-def assign_turbine_types_by_windzone(register):
+def assign_turbine_data_by_windzone(register):
     r"""
     Assigns turbine types to a power plant register depending on windzones.
 
@@ -448,5 +448,6 @@ if __name__ == "__main__":
         wind_register = filter_pp_by_source(energy_source='Wind',
                                             keep_cols=None)
         adapted_wind_register = assign_turbine_types_by_windzone(
+        adapted_wind_register = assign_turbine_data_by_windzone(
             register=wind_register)
         print(adapted_wind_register['turbine_type'][0:10])
