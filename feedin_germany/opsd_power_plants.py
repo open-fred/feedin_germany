@@ -359,21 +359,54 @@ def prepare_opsd_file(category, overwrite):
     return df
 
 
-def filter_solar_pp():
-    df=prepare_opsd_file(category='renewable', overwrite=True)
-    
-    df=df.loc[df['energy_source_level_2'] == 'Solar']
-    solar_pp= df[['lat', 'lon', 'commissioning_date', 'capacity']]
-    
-    # remove_pp_with_missing_coordinates
-    if solar_pp[['lat', 'lon']].isnull().values.any():
-        solar_pp=solar_pp.dropna(subset = ['lat', 'lon'])
+def get_pp_by_year(year, register, overwrite_capacity=False):
+    """
 
-    solar_pp.to_csv('data/opsd/solar_opsd_data.csv')
-    return solar_pp
+    Parameters
+    ----------
+    year : int
+    overwrite_capacity : bool
+        By default (False) a new column "capacity_<year>" is created. If set to
+        True the old capacity column will be overwritten.
+
+    Returns
+    -------
+
+    """
+    pp = pd.DataFrame(register)
+
+    filter_columns = ['capacity_{0}']
+
+    # Get all powerplants for the given year.
+    # If com_month exist the power plants will be considered month-wise.
+    # Otherwise the commission/decommission within the given year is not
+    # considered.
+
+    for fcol in filter_columns:
+        filter_column = fcol.format(year)
+        orig_column = fcol[:-4]
+        c1 = (pp['com_year'] < year) & (pp['decom_year'] > year)
+        pp.loc[c1, filter_column] = pp.loc[c1, orig_column]
+
+        c2 = pp['com_year'] == year
+        pp.loc[c2, filter_column] = (pp.loc[c2, orig_column] *
+                                     (12 - pp.loc[c2, 'com_month']) / 12)
+        c3 = pp['decom_year'] == year
+        pp.loc[c3, filter_column] = (pp.loc[c3, orig_column] *
+                                     pp.loc[c3, 'com_month'] / 12)
+
+        if overwrite_capacity:
+            pp[orig_column] = 0
+            pp[orig_column] = pp[filter_column]
+            del pp[filter_column]
+        
+        # delete all rows with NaNs in filter_column
+        pp=pp.dropna(subset = [filter_column])
+
+    return pp
 
 
-def filter_pp_by_source(energy_source, keep_cols=None):
+def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     r"""
     Returns by energy source filtered OPSD register.
 
@@ -401,7 +434,11 @@ def filter_pp_by_source(energy_source, keep_cols=None):
         logging.warning(
             "Removed {} {} power plants with missing coordinates.".format(
                 amount, energy_source.lower()))
-    return register
+    
+    # filter_by_year
+    register_filtered_by_year = get_pp_by_year(year=year, register=register)
+    print(register_filtered_by_year.columns)
+    return register_filtered_by_year
 
 
 def assign_turbine_data_by_wind_zone(register):
@@ -468,7 +505,7 @@ if __name__ == "__main__":
     test_wind = True
     #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
     logger.define_logging()
-    # print(filter_solar_pp())
+    print(filter_pp_by_source_and_year(2012, 'Solar'))
 
     if test_wind:
         wind_register = filter_pp_by_source(
