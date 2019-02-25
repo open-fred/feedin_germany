@@ -16,16 +16,20 @@ weather_df.columns = [weather_df.axes[1].levels[0][
                       weather_df.axes[1].levels[1][
                           weather_df.axes[1].labels[1]].astype(int)]
 
-register_wind = opsd_power_plants.filter_wind_pp()
+keep_cols_wind = ['lat', 'lon', 'commissioning_date', 'capacity']
+register_wind = opsd_power_plants.filter_pp_by_source(
+    energy_source='Wind', keep_cols=keep_cols_wind)[0:1000] # todo: NOTE: long duration for long register. Looking for faster method.
 
-register_pv = opsd_power_plants.filter_solar_pp()
+register_pv = opsd_power_plants.filter_solar_pp()[0:1000]
 
 # note: nans are dropped in filter function
 # print('Missing coordinates pv: {}'.format(register_pv['lat'].isnull().sum()))
 # print('Missing coordinates wind: {}'.format(
 #     register_wind['lat'].isnull().sum()))
 register_wind_locations = tools.add_weather_locations_to_register(
-    register=register_wind, weather_coordinates=weather_df)
+    register=register_wind, weather_coordinates=weather_df['wind_speed'])
+
+print(register_wind)
 
 register_pv_locations = tools.add_weather_locations_to_register(
     register=register_pv, weather_coordinates=weather_df)
