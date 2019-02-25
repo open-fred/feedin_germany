@@ -41,7 +41,7 @@ from shapely.geometry import Point, Polygon
 from oemof.tools import logger
 
 # Internal modules
-import config as cfg
+from feedin_germany import config as cfg
 #import reegis.geometries as geo
 from feedin_germany import geometries
 
@@ -370,7 +370,7 @@ def filter_solar_pp():
     if solar_pp[['lat', 'lon']].isnull().values.any():
         solar_pp=solar_pp.dropna(subset = ['lat', 'lon'])
 
-    solar_pp.to_csv('solar_opsd_data.csv')
+    solar_pp.to_csv('data/opsd/solar_opsd_data.csv')
     return solar_pp
 
 
@@ -416,5 +416,5 @@ def helper_dummy_register():
 if __name__ == "__main__":
     #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
     logger.define_logging()
-    # print(filter_solar_pp())
-    assign_turbine_types_by_windzone(register=filter_wind_pp())
+    print(filter_solar_pp())
+#    assign_turbine_types_by_windzone(register=filter_wind_pp())
