@@ -359,7 +359,7 @@ def prepare_opsd_file(category, overwrite):
     return df
 
 
-def get_pp_by_year(year, register, overwrite_capacity=False):
+def get_pp_by_year(year, register, overwrite_capacity=True):
     """
 
     Parameters
@@ -400,10 +400,10 @@ def get_pp_by_year(year, register, overwrite_capacity=False):
             pp[orig_column] = pp[filter_column]
             del pp[filter_column]
         
-        # delete all rows with NaNs in filter_column
-        pp=pp.dropna(subset = [filter_column])
+        # delete all rows with com_year > year
+        pp_filtered=pp.loc[pp['com_year'] < year+1]
 
-    return pp
+    return pp_filtered
 
 
 def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
@@ -439,7 +439,6 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     
     # filter_by_year
     register_filtered_by_year = get_pp_by_year(year=year, register=register)
-    print(register_filtered_by_year.columns)
     return register_filtered_by_year
 
 
