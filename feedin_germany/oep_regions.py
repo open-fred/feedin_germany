@@ -49,8 +49,8 @@ def load_regions_file():
     
     """
     # Create Engine:
-    user = 'Inia Steinbach'
-    token = 'ed027eb9f85a0444188a997f5ed65ee4c81f2317'
+    user = ''
+    token = ''
     engine = sa.create_engine(f'postgresql+oedialect://{user}:{token}@openenergy-platform.org')
 
     Base = declarative_base(engine)
@@ -79,7 +79,7 @@ def load_regions_file():
     return(gdf_new[['nuts', 'geom']])
     
     
-def register_per_region(register, region):
+def add_region_to_register(register, region):
     
     """
     filters out all powerplants within a region for a given region and register
