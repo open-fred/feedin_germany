@@ -374,11 +374,35 @@ def filter_solar_pp():
     return solar_pp
 
 
-def filter_wind_pp():
+def filter_pp_by_source(energy_source, keep_cols=None):
+    r"""
+    Returns by energy source filtered OPSD register.
+
+    Parameters
+    ----------
+    energy_source : string todo: note: could be list but I think in feedinlib we only want registers separated by source
+        Energy source as named in column 'energy_source_level_2' of register.
+    keep_cols : list or None
+        Column names to be selected from OPSD register. If None, all columns
+        are kept. Default: 'None'.
+
+    Returns
+    -------
+    register : pd.DataFrame
+        ...
+    """
     df = prepare_opsd_file(category='renewable', overwrite=False)
-    df = df.loc[df['energy_source_level_2'] == 'Wind']
-    wind_pp = df # todo check which columns are needed
-    return wind_pp
+    register = df.loc[df['energy_source_level_2'] == energy_source]
+    if keep_cols is not None:
+        register = register[keep_cols]
+    # remove_pp_with_missing_coordinates  # todo: check why they are missing. maybe adapt
+    if register[['lat', 'lon']].isnull().values.any():
+        amount = register[['lat', 'lon']].isnull().sum()[0]  # amount of lat
+        register = register.dropna(subset=['lat', 'lon'])
+        logging.warning(
+            "Removed {} {} power plants with missing coordinates.".format(
+                amount, energy_source.lower()))
+    return register
 
 
 def assign_turbine_types_by_windzone(register):
@@ -399,9 +423,10 @@ def assign_turbine_types_by_windzone(register):
     #
     register['coordinates'] = list(zip(register['lon'], register['lat']))
     register['geometry'] = register['coordinates'].apply(Point)
-    register['windzone'] = 'add windzone'
-    for index in register.index:
-        windzones['temp'] = windzones['geometry'].apply(lambda x: register.loc[index]['geometry'].within(x))
+    # add windzone to register
+    register['windzone'] = register['geometry'].apply(
+        lambda y: windzones['geometry'].loc[windzones['geometry'].apply(
+            lambda x: y.within(x)) == True].index.values[0])
     return register
 
 
@@ -414,7 +439,14 @@ def helper_dummy_register():
 
 
 if __name__ == "__main__":
+    test_wind = True
     #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
     logger.define_logging()
-    print(filter_solar_pp())
-#    assign_turbine_types_by_windzone(register=filter_wind_pp())
+    # print(filter_solar_pp())
+
+    if test_wind:
+        wind_register = filter_pp_by_source(energy_source='Wind',
+                                            keep_cols=None)
+        adapted_wind_register = assign_turbine_types_by_windzone(
+            register=wind_register)
+        print(adapted_wind_register['turbine_type'][0:10])
