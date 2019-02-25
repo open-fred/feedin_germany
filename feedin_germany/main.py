@@ -32,7 +32,7 @@ def feedin_germany_pv():
     
     """
     #load register
-    register = opsd.filter_solar_pp()
+    register = opsd.filter_pp_by_source_and_year()
     # load the dictionary of pv_modules
     pv_modules_set = pv_modules.create_pvmodule_dict()
     # load the distribution of the pv_modules
