@@ -35,7 +35,26 @@ def aslist(value, flatten=True):
     return result
 
 def todict(section):
+    
+    """
+    returns the values of a section as dictionary
+    """
     dictionary = {}
     for option in config.options(section):
         dictionary[option] = config.get(section, option)
     return dictionary
+
+
+def as_dict(section):
+    """
+    Converts a ConfigParser object into a dictionary.
+
+    The resulting dictionary has sections as keys which point to a dict of the
+    sections options as key => value pairs.
+    """
+    the_dict = {}
+   # if section in config.sections():
+   #     the_dict = {}
+    for key, val in config.items(section):
+        the_dict[key] = val
+    return the_dict
