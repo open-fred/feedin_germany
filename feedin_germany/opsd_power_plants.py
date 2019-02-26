@@ -53,7 +53,7 @@ def load_original_opsd_file(category, overwrite, latest=False):
     opsd_directory = cfg.get('paths', 'opsd')
     print(opsd_directory)
     orig_csv_file = os.path.join(
-        cfg.get('paths', 'opsd'),
+        os.path.dirname(__file__), cfg.get('paths', 'opsd'),
         cfg.get('opsd', 'original_file_pattern').format(cat=category))
 
     if latest:
@@ -126,8 +126,8 @@ def guess_coordinates_by_postcode_opsd(df):
     if 'postcode' in df:
         df_pstc = df.loc[(df.lon.isnull() & df.postcode.notnull())]
         if len(df_pstc) > 0:
-            pstc = pd.read_csv(
-                os.path.join(cfg.get('paths', 'geometry'),
+            pstc = pd.read_csv(os.path.join(
+                os.path.dirname(__file__), cfg.get('paths', 'geometry'),
                              cfg.get('geometry', 'postcode_polygon')),
                 index_col='zip_code')
         for idx, val in df_pstc.iterrows():
@@ -176,7 +176,8 @@ def guess_coordinates_by_spatial_names_opsd(df, fs_column, cap_col,
 
         # A simple table with the centroid of each federal state.
         f2c = pd.read_csv(
-            os.path.join(cfg.get('paths', 'geometry'),
+            os.path.join(
+                os.path.dirname(__file__), cfg.get('paths', 'geometry'),
                          cfg.get('geometry', 'federalstates_centroid')),
             index_col='name')
 
@@ -250,19 +251,20 @@ def complete_opsd_geometries(df, category, time=None,
         if not os.path.exists(dir_messages):
             os.makedirs(dir_messages, exist_ok=True)
         df.loc[incomplete].to_csv(os.path.join(
-            cfg.get('paths', 'messages'),
+            os.path.dirname(__file__), cfg.get('paths', 'messages'),
             '{0}_incomplete_geometries_before.csv'.format(category)))
 
     incomplete = df.lon.isnull()
     if incomplete.any():
         df.loc[incomplete].to_csv(os.path.join(
-            cfg.get('paths', 'messages'),
+            os.path.dirname(__file__), cfg.get('paths', 'messages'),
             '{0}_incomplete_geometries_after.csv'.format(category)))
     logging.debug("Gaps stored to: {0}".format(cfg.get('paths', 'messages')))
 
     statistics['total_capacity'] = total_capacity
-    statistics.to_csv(os.path.join(cfg.get('paths', 'messages'),
-                                   'statistics_{0}_pp.csv'.format(category)))
+    statistics.to_csv(os.path.join(
+        os.path.dirname(__file__), cfg.get('paths', 'messages'),
+        'statistics_{0}_pp.csv'.format(category)))
 
     # Log information
     geo_check = not df.lon.isnull().any()
