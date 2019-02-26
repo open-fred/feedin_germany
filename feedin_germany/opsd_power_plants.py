@@ -313,6 +313,7 @@ def prepare_dates(df, date_cols, month):
         df['com_month'] = 6
         df['decom_month'] = 6
 
+
 def prepare_opsd_file(category, overwrite):
     # Load original opsd file
     df = load_original_opsd_file(category, overwrite)
@@ -410,13 +411,15 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
 
 def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     r"""
-    Returns by energy source filtered OPSD register.
+    Returns by `energy_source` and `year` filtered OPSD register.
+
+    todo 'Wind' --> assign data
 
     Parameters
     ----------
     year : int
         todo
-    energy_source : string todo: note: could be list but I think in feedinlib we only want registers separated by source
+    energy_source : string todo: note: could be made possible as list but I think in feedinlib we only want registers separated by source
         Energy source as named in column 'energy_source_level_2' of register.
     keep_cols : list or None
         Column names to be selected from OPSD register. If None, all columns
@@ -424,7 +427,7 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
 
     Returns
     -------
-    register : pd.DataFrame
+    filtered_register : pd.DataFrame
         ...
     """
     df = prepare_opsd_file(category='renewable', overwrite=False)
