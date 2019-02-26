@@ -444,6 +444,8 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     
     # filter_by_year
     filtered_register = get_pp_by_year(year=year, register=register)
+    if energy_source == 'Wind':
+        filtered_register = assign_turbine_data_by_wind_zone(filtered_register)
     return filtered_register
 
 
