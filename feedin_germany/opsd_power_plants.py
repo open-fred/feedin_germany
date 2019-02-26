@@ -460,8 +460,8 @@ def assign_turbine_data_by_wind_zone(register):
     feedin_germany.ini.
     The following data is added as columns to `register`:
     - turbine type in column 'name',
-    - hub height in column 'hub_height' and
-    - rotor diameter in column 'rotor_diameter'.
+    - hub height in m in column 'hub_height' and
+    - rotor diameter in m in column 'rotor_diameter'.
 
     Parameters
     ----------
@@ -473,7 +473,7 @@ def assign_turbine_data_by_wind_zone(register):
     -------
     adapted_register : pd.DataFrame
         `register` which additionally contains turbine type ('name'), hub
-        height ('hub_height') and rotor diameter ('rotor_diameter').
+        height in m ('hub_height') and rotor diameter in m ('rotor_diameter').
 
     """
     # get wind zones polygons
