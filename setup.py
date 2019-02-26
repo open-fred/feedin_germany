@@ -18,4 +18,4 @@ setup(
     long_description=read('README.rst'),
     install_requires=[
         'pandas >= 0.13.1',
-        'feedinlib[Windpowerlib, PVlib]'])
+        'feedinlib >= 0.0.12']) # todo: adapt
