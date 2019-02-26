@@ -8,9 +8,10 @@ Created on Fri Feb 15 11:19:13 2019
 
 # Python libraries
 import configparser
+import os
 
 config = configparser.RawConfigParser()
-configFilePath = 'feedin_germany.ini'
+configFilePath = os.path.join(os.path.dirname(__file__), 'feedin_germany.ini')
 config.read(configFilePath)
 
 

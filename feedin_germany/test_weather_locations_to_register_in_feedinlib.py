@@ -16,11 +16,13 @@ weather_df.columns = [weather_df.axes[1].levels[0][
                       weather_df.axes[1].levels[1][
                           weather_df.axes[1].labels[1]].astype(int)]
 
-keep_cols_wind = ['lat', 'lon', 'commissioning_date', 'capacity']
-register_wind = opsd_power_plants.filter_pp_by_source(
-    energy_source='Wind', keep_cols=keep_cols_wind)
+keep_cols_wind =  ['lat', 'lon', 'commissioning_date', 'capacity',
+                   'com_year', 'decom_year', 'com_month', 'decom_month']
+register_wind = opsd_power_plants.filter_pp_by_source_and_year(
+    year=2012, energy_source='Wind', keep_cols=keep_cols_wind)
 
-register_pv = opsd_power_plants.filter_solar_pp()
+register_pv = opsd_power_plants.filter_pp_by_source_and_year(
+    year=2012, energy_source='Wind')
 
 # note: nans are dropped in filter function
 # print('Missing coordinates pv: {}'.format(register_pv['lat'].isnull().sum()))

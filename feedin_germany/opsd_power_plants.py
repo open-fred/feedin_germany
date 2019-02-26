@@ -396,7 +396,7 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
                                      (12 - pp.loc[c2, 'com_month']) / 12)
         c3 = pp['decom_year'] == year
         pp.loc[c3, filter_column] = (pp.loc[c3, orig_column] *
-                                     pp.loc[c3, 'com_month'] / 12)
+                                     pp.loc[c3, 'com_month'] / 12)  # todo FRAGE @ Inia: beide Male com_month oder auch decom_month?
 
         if overwrite_capacity:
             pp[orig_column] = 0
@@ -415,6 +415,8 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
 
     Parameters
     ----------
+    year : int
+        todo
     energy_source : string todo: note: could be list but I think in feedinlib we only want registers separated by source
         Energy source as named in column 'energy_source_level_2' of register.
     keep_cols : list or None
@@ -443,38 +445,64 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     return register_filtered_by_year
 
 
-def assign_turbine_types_by_windzone(register):
+def assign_turbine_data_by_wind_zone(register):
     r"""
-    Assigns turbine types to a power plant register depending on windzones.
+    Assigns turbine data to a power plant register depending on wind zones.
 
-    - windzones from file (adjustable)
-    - turbine types defined in ini
+    The wind zones are read from a shape file in the directory 'data/geometries' todo: source?! DIBt.
+    Turbine types are selected per wind zone as typical turbine types for
+    coastal, near-coastal, inland, far-inland areas. You can use your own file
+    and specify your own turbine types per wind zone by adjusting the data in
+    feedin_germany.ini.
+    The following data is added as columns to `register`:
+    - turbine type in column 'name',
+    - hub height in column 'hub_height' and
+    - rotor diameter in column 'rotor_diameter'.
+
+    Parameters
+    ----------
+    register : pd.DataFrame
+        Power plants register. Contains power plants' locations in columns
+        'lat' and 'lon'. Other columns are ignored but are part of the output.
 
     Returns
     -------
+    adapted_register : pd.DataFrame
+        `register` which additionally contains turbine type ('name'), hub
+        height ('hub_height') and rotor diameter ('rotor_diameter').
 
     """
-    # get windzones' polygons
+    # get wind zones polygons
     path = cfg.get('paths', 'geometry')
-    filename = cfg.get('geometry', 'windzones')
-    windzones = geometries.load(path=path, filename=filename)
-    #
+    filename = cfg.get('geometry', 'wind_zones') # todo use dibt wind zones!!
+    wind_zones = geometries.load(path=path, filename=filename)
+    wind_zones.set_index('zone', inplace=True)
+
+    # create geopandas.DataFrame from register
     register['coordinates'] = list(zip(register['lon'], register['lat']))
     register['geometry'] = register['coordinates'].apply(Point)
-    # add windzone to register
-    register['windzone'] = register['geometry'].apply(
-        lambda y: windzones['geometry'].loc[windzones['geometry'].apply(
-            lambda x: y.within(x)) == True].index.values[0])
-    return register
+    gdf_register = gpd.GeoDataFrame(register, geometry='geometry')
+    # add wind zones by sjoin
+    jgdf = gpd.sjoin(gdf_register, wind_zones, how='left', op='within').rename(
+        columns={'index_right': 'wind_zone'})
+    adapted_register = pd.DataFrame(jgdf).drop(['coordinates',
+                                                'geometry'], axis=1)
 
+    # add data of typical turbine types to wind zones
+    wind_zones['turbine_type'] = [cfg.get('wind_set{}'.format(wind_zone), 'name')
+                                 for wind_zone in wind_zones.index]
+    wind_zones['hub_height'] = [
+        cfg.get('wind_set{}'.format(wind_zone), 'hub_height')
+        for wind_zone in wind_zones.index]
+    wind_zones['rotor_diameter'] = [
+        cfg.get('wind_set{}'.format(wind_zone), 'rotor_diameter')
+        for wind_zone in wind_zones.index]
 
-def helper_dummy_register():
-    # todo: delete after OPSD works
-    with pd.HDFStore('opsd_temp.h5') as hdf_store:
-        register = hdf_store.get('pp_data')
-    return register.loc[register['energy_source_level_2'] == 'Wind'][0:10]
-
-
+    # add data of typical turbine types by wind zone to power plant register
+    adapted_register = pd.merge(adapted_register, wind_zones[
+        ['turbine_type', 'hub_height', 'rotor_diameter']], how='inner',
+                        left_on='wind_zone', right_index=True)
+    return adapted_register
 
 
 if __name__ == "__main__":
@@ -483,9 +511,11 @@ if __name__ == "__main__":
     logger.define_logging()
     print(filter_pp_by_source_and_year(2012, 'Solar'))
 
-#    if test_wind:
-#        wind_register = filter_pp_by_source(energy_source='Wind',
-#                                            keep_cols=None)
-#        adapted_wind_register = assign_turbine_types_by_windzone(
-#            register=wind_register)
-#        print(adapted_wind_register['turbine_type'][0:10])
+    # if test_wind:
+    #     keep_cols = ['lat', 'lon', 'commissioning_date', 'capacity',
+    #                  'com_year', 'decom_year', 'com_month', 'decom_month']
+    #     wind_register = filter_pp_by_source_and_year(
+    #         year=2012, energy_source='Wind', keep_cols=keep_cols)
+    #     adapted_wind_register = assign_turbine_data_by_wind_zone(
+    #         register=wind_register)
+    #     print(adapted_wind_register[0:10])
