@@ -443,8 +443,8 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
                 amount, energy_source.lower()))
     
     # filter_by_year
-    register_filtered_by_year = get_pp_by_year(year=year, register=register)
-    return register_filtered_by_year
+    filtered_register = get_pp_by_year(year=year, register=register)
+    return filtered_register
 
 
 def assign_turbine_data_by_wind_zone(register):
