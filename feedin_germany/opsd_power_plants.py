@@ -508,11 +508,11 @@ if __name__ == "__main__":
     logger.define_logging()
     print(filter_pp_by_source_and_year(2012, 'Solar'))
 
-    if test_wind:
-        keep_cols = ['lat', 'lon', 'commissioning_date', 'capacity',
-                     'com_year', 'decom_year', 'com_month', 'decom_month']
-        wind_register = filter_pp_by_source_and_year(
-            year=2012, energy_source='Wind', keep_cols=keep_cols)
-        adapted_wind_register = assign_turbine_data_by_wind_zone(
-            register=wind_register)
-        print(adapted_wind_register[0:10])
+    # if test_wind:
+    #     keep_cols = ['lat', 'lon', 'commissioning_date', 'capacity',
+    #                  'com_year', 'decom_year', 'com_month', 'decom_month']
+    #     wind_register = filter_pp_by_source_and_year(
+    #         year=2012, energy_source='Wind', keep_cols=keep_cols)
+    #     adapted_wind_register = assign_turbine_data_by_wind_zone(
+    #         register=wind_register)
+    #     print(adapted_wind_register[0:10])
