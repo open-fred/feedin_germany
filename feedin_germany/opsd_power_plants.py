@@ -53,8 +53,9 @@ def load_original_opsd_file(category, overwrite, latest=False):
     opsd_directory = cfg.get('paths', 'opsd')
     print(opsd_directory)
     orig_csv_file = os.path.join(
-        cfg.get('paths', 'opsd'),
-        cfg.get('opsd', 'original_file_pattern').format(cat=category))
+            os.path.dirname(__file__),
+            cfg.get('paths', 'opsd'),
+            cfg.get('opsd', 'original_file_pattern').format(cat=category))
 
     if latest:
         url_section = 'opsd_url_latest'
@@ -127,7 +128,9 @@ def guess_coordinates_by_postcode_opsd(df):
         df_pstc = df.loc[(df.lon.isnull() & df.postcode.notnull())]
         if len(df_pstc) > 0:
             pstc = pd.read_csv(
-                os.path.join(cfg.get('paths', 'geometry'),
+                os.path.join(
+                        os.path.dirname(__file__),
+                        cfg.get('paths', 'geometry'),
                              cfg.get('geometry', 'postcode_polygon')),
                 index_col='zip_code')
         for idx, val in df_pstc.iterrows():
