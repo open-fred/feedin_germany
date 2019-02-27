@@ -1,9 +1,11 @@
 
 # imports
-import pandas as pd
 import os
+from matplotlib import pyplot as plt
+
 from feedinlib import tools
 from feedinlib import region
+
 
 # import internal modules
 from feedin_germany import opsd_power_plants as opsd
@@ -20,6 +22,7 @@ register = opsd.filter_pp_by_source_and_year(year=2012, energy_source='Wind',
                                              keep_cols=keep_cols)
 
 # feedinlib region feed-in
-example_region = region.Region(geom='no_geom', weather=weather_df).wind_feedin(register)
-
-
+feedin = region.Region(geom='no_geom',
+                               weather=weather_df).wind_feedin(register)
+feedin.plot()
+plt.show()
