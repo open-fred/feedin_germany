@@ -452,8 +452,9 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
 def assign_turbine_data_by_wind_zone(register):
     r"""
     Assigns turbine data to a power plant register depending on wind zones.
-
-    The wind zones are read from a shape file in the directory 'data/geometries' todo: source?! DIBt.
+    todo: source?! DIBt.
+    todo: load from oedb when they are there
+    The wind zones are read from a shape file in the directory 'data/geometries'
     Turbine types are selected per wind zone as typical turbine types for
     coastal, near-coastal, inland, far-inland areas. You can use your own file
     and specify your own turbine types per wind zone by adjusting the data in
@@ -496,13 +497,13 @@ def assign_turbine_data_by_wind_zone(register):
                                                 'geometry'], axis=1)
 
     # add data of typical turbine types to wind zones
-    wind_zones['turbine_type'] = [cfg.get('wind_set{}'.format(wind_zone), 'name')
-                                 for wind_zone in wind_zones.index]
+    wind_zones['name'] = [cfg.get('wind_set{}'.format(wind_zone), 'name')
+                          for wind_zone in wind_zones.index]
     wind_zones['hub_height'] = [
-        cfg.get('wind_set{}'.format(wind_zone), 'hub_height')
+        int(cfg.get('wind_set{}'.format(wind_zone), 'hub_height'))
         for wind_zone in wind_zones.index]
     wind_zones['rotor_diameter'] = [
-        cfg.get('wind_set{}'.format(wind_zone), 'rotor_diameter')
+        int(cfg.get('wind_set{}'.format(wind_zone), 'rotor_diameter'))
         for wind_zone in wind_zones.index]
     wind_zones['id'] = [
         cfg.get('wind_set{}'.format(wind_zone), 'set_name')
@@ -510,8 +511,8 @@ def assign_turbine_data_by_wind_zone(register):
 
     # add data of typical turbine types by wind zone to power plant register
     adapted_register = pd.merge(adapted_register, wind_zones[
-        ['turbine_type', 'hub_height', 'rotor_diameter']], how='inner',
-                        left_on='wind_zone', right_index=True)
+        ['name', 'hub_height', 'rotor_diameter', 'id']], how='inner',
+                                left_on='wind_zone', right_index=True)
     return adapted_register
 
 
