@@ -21,7 +21,21 @@ import shapely
 from feedin_germany import config as cfg
 from feedin_germany import opsd_power_plants as opsd
 
+
 def as_pandas(query, geometry="geom", params=None, crs=None, hex=True):
+    r"""
+    returns Geopandas.DataFrame from query with Point/Polygon geometry
+
+    parameters
+    ----------
+    query: session-query()
+    geometry: str
+    hex: boolean
+
+    return
+    ---------
+    Geopandas.DataFrame
+    """
     df = pd.read_sql(query.statement, query.session.bind, params=params)
    
     if geometry not in df:
@@ -35,17 +49,19 @@ def as_pandas(query, geometry="geom", params=None, crs=None, hex=True):
 
     return gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
+
 def load_regions_file():
     """
     loads the region file from the oep-database
     
     Notes
     ----------------
-    login and token need to be adapted/automatized
+    todo: login and token need to be adapted/automatized
     
     returns
     --------------
-    geopandas.GeoDataFrame with the nuts-id and the geom as shaply polygons
+    geopandas.GeoDataFrame
+        with the nuts-id and the geom as shaply polygons
     
     """
     # Create Engine:
@@ -65,7 +81,6 @@ def load_regions_file():
     try:
         # Stuff in session
         p = session.query(BkgVg2502Lan)
-        #gdf = gpd.read_postgis(p.statement, session.bind)
         gdf=as_pandas(p, geometry="geom", params=None, crs=None, hex=True)
         gdf_new=gdf.to_crs(epsg=4326)
         
@@ -75,7 +90,6 @@ def load_regions_file():
     finally:
         session.close()
 
-    #gdf.to_csv('regions.csv')
     return(gdf_new[['nuts', 'geom']])
     
     
@@ -83,33 +97,29 @@ def add_region_to_register(register, region):
     
     """
     filters out all powerplants within a region for a given region and register
-    
-    Notes
-    ----------------
-    login and token need to be adapted/automatized
-    
+
     Input
     ---------------
-    register: pandas.DataFrame with collumns lat, lon
-    region: geopandas.GeoDataFrame with only one row for the specific region
+    'register': pandas.DataFrame
+        with columns lat, lon
+    'region': geopandas.GeoDataFrame
+        with only one row for the specific region
     
     returns
     --------------
-    pandas.DataFrame with the nuts-id and the geom as shaply polygon
+    pandas.DataFrame
+        with the nuts-id and the geom as shaply polygon
     
-    """ 
-    #register=opsd.filter_solar_pp()
-    #regions = load_regions_file()
-    
-    # transform the lat/lon coordinates into a shapely point coordinates and add column named "coordinates"
+    """
+
+    #transform the lat/lon coordinates into a shapely point coordinates and add
+    #column named "coordinates"
     register['Coordinates'] = list(zip(register.lon, register.lat))
     register['Coordinates'] = register['Coordinates'].apply(Point)
-    # create GeoDataFrames
     register_gdf = gpd.GeoDataFrame(register, geometry='Coordinates')
     region_gdf = gpd.GeoDataFrame(region, geometry='geom')
-    # spacial join on the register
     new_register=gpd.sjoin(register_gdf, region_gdf, op='within')
-    #new_register.plot()
+
     return(new_register)
 
 if __name__ == "__main__":

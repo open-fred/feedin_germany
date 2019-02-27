@@ -36,25 +36,28 @@ import pyproj
 import requests
 from shapely.wkt import loads as wkt_loads
 from shapely.geometry import Point, Polygon
+import io
 
 # oemof libraries
 from oemof.tools import logger
 
 # Internal modules
 from feedin_germany import config as cfg
-#import reegis.geometries as geo
 from feedin_germany import geometries
 
-# todo: delete unnecessary imports
 
-def load_original_opsd_file(category, overwrite, latest=False):
-    """Read file if exists."""
-    
-    opsd_directory = cfg.get('paths', 'opsd')
-    print(opsd_directory)
-    orig_csv_file = os.path.join(
-        os.path.dirname(__file__), cfg.get('paths', 'opsd'),
-        cfg.get('opsd', 'original_file_pattern').format(cat=category))
+def load_original_opsd_file(latest=False):
+    r"""
+    loads register from server
+
+    parameters
+    ----------
+    'latest': boolean
+
+    :return
+    pd.DataFrame
+
+    """
 
     if latest:
         url_section = 'opsd_url_latest'
@@ -63,36 +66,13 @@ def load_original_opsd_file(category, overwrite, latest=False):
 
     # Download non existing files. If you think that there are newer files you
     # have to set overwrite=True to overwrite existing with downloaded files.
-    if not os.path.exists(opsd_directory):
-        os.makedirs(opsd_directory, exist_ok=True)
 
-    if not os.path.isfile(orig_csv_file) or overwrite:
-        logging.warning("File not found. Try to download it from server.")
-        logging.warning("Check URL if download does not work.")
-        req = requests.get(cfg.get(url_section, '{0}_data'.format(category)))
-        with open(orig_csv_file, 'wb') as fout:
-            fout.write(req.content)
-        logging.warning("Downloaded from {0} and copied to '{1}'.".format(
-            cfg.get(url_section, '{0}_data'.format(category)), orig_csv_file))
-        req = requests.get(cfg.get(url_section, '{0}_readme'.format(category)))
-        with open(
-                os.path.join(
-                    cfg.get('paths', 'opsd'),
-                    cfg.get('opsd', 'readme_file_pattern').format(
-                        cat=category)), 'wb') as fout:
-            fout.write(req.content)
-        req = requests.get(cfg.get(url_section, '{0}_json'.format(category)))
-        with open(os.path.join(
-                cfg.get('paths', 'opsd'),
-                cfg.get('opsd', 'json_file_pattern').format(
-                    cat=category)), 'wb') as fout:
-            fout.write(req.content)
+    logging.warning("Start downloading the register file from server.")
+    logging.warning("Check URL if download does not work.")
+    req = requests.get(cfg.get(url_section, 'renewable_data')).content
 
-    if category == 'renewable':
-        df = pd.read_csv(orig_csv_file)
-    else:
-        logging.error("Unknown category! Allowed: 'conventional, 'renewable'")
-        df = None
+    df = pd.read_csv(io.StringIO(req.decode('utf-8')))
+
     return df
 
 
@@ -203,7 +183,7 @@ def log_undefined_capacity(df, cap_col, total_cap, msg):
     return undefined_cap
 
 
-def complete_opsd_geometries(df, category, time=None,
+def complete_opsd_geometries(df, time=None,
                              fs_column='federal_state'):
     """
     Try different methods to fill missing coordinates.
@@ -251,20 +231,19 @@ def complete_opsd_geometries(df, category, time=None,
         if not os.path.exists(dir_messages):
             os.makedirs(dir_messages, exist_ok=True)
         df.loc[incomplete].to_csv(os.path.join(
-            os.path.dirname(__file__), cfg.get('paths', 'messages'),
-            '{0}_incomplete_geometries_before.csv'.format(category)))
+            cfg.get('paths', 'messages'),
+            'incomplete_geometries_before.csv'))
 
     incomplete = df.lon.isnull()
     if incomplete.any():
         df.loc[incomplete].to_csv(os.path.join(
-            os.path.dirname(__file__), cfg.get('paths', 'messages'),
-            '{0}_incomplete_geometries_after.csv'.format(category)))
+            cfg.get('paths', 'messages'),
+            'incomplete_geometries_after.csv'))
     logging.debug("Gaps stored to: {0}".format(cfg.get('paths', 'messages')))
 
-    statistics['total_capacity'] = total_capacity
-    statistics.to_csv(os.path.join(
-        os.path.dirname(__file__), cfg.get('paths', 'messages'),
-        'statistics_{0}_pp.csv'.format(category)))
+    #statistics['total_capacity'] = total_capacity
+    #statistics.to_csv(os.path.join(cfg.get('paths', 'messages'),
+    #                               'statistics_renewable_pp.csv'))
 
     # Log information
     geo_check = not df.lon.isnull().any()
@@ -314,51 +293,69 @@ def prepare_dates(df, date_cols, month):
         df['decom_month'] = 6
 
 
-def prepare_opsd_file(category, overwrite):
-    # Load original opsd file
-    df = load_original_opsd_file(category, overwrite)
+def prepare_opsd_file(overwrite):
+    r"""
+    loads original opsd file and processes it
 
-    # Load original file and set differences between conventional and
-    # renewable power plants.
-    if category == 'renewable':
-        # capacity_column = 'electrical_capacity'
-        remove_list = [
-                'tso', 'dso', 'dso_id', 'eeg_id', 'bnetza_id', 'federal_state',
-                'postcode', 'municipality_code', 'municipality', 'address',
-                'address_number', 'utm_zone', 'utm_east', 'utm_north',
-                'data_source']
-        date_cols = ('commissioning_date', 'decommissioning_date')
-        month = True
+    The processing includes: renaming columns, comleting geometries, removing
+    powerplants without capacity, remove columns that are not used
 
-    else:
-        logging.error("Unknown category!")
-        return None
-        # This function is adapted to the OPSD data set structure and might not
-        # work with other data sets. Set opsd=False to skip it.
+
+    parameters
+     -----------
+    overwrite: boolean
+
+    :return
+    ---------
+    pd. DataFrame()
+    """
+    opsd_directory = cfg.get('paths', 'opsd')
+    prepared_filename = os.path.join(
+            os.path.dirname(__file__),
+            cfg.get('paths', 'opsd'),
+            cfg.get('opsd', 'opsd_prepared'))
+
+    if os.path.isfile(prepared_filename):
+        logging.warning("prepared-register already exist and is loaded from csv")
+        df=pd.read_csv(prepared_filename)
+        return df
+
+    if not os.path.exists(opsd_directory):
+        os.makedirs(opsd_directory, exist_ok=True)
+
+    df = load_original_opsd_file(overwrite)
+
+    remove_list = [
+            'tso', 'dso', 'dso_id', 'eeg_id', 'bnetza_id', 'federal_state',
+            'postcode', 'municipality_code', 'municipality', 'address',
+            'address_number', 'utm_zone', 'utm_east', 'utm_north',
+            'data_source']
+    date_cols = ('commissioning_date', 'decommissioning_date')
+    month = True
 
     df = df.rename(columns={'electrical_capacity': 'capacity',
                             'capacity_net_bnetza': 'capacity',
                             'efficiency_estimate': 'efficiency'})
 
     if len(df.loc[df.lon.isnull()]) > 0:
-        df = complete_opsd_geometries(df, category, fs_column='state')
+        df = complete_opsd_geometries(df, fs_column='state')
     else:
         logging.info("Skipped 'complete_opsd_geometries' function.")
 
-        # Remove power plants with no capacity:
+    # Remove power plants with no capacity:
     number = len(df[df['capacity'].isnull()])
     df = df[df['capacity'].notnull()]
     if number > 0:
         msg = "{0} power plants have been removed, because the capacity was 0."
         logging.warning(msg.format(number))
 
-        # To save disc and RAM capacity unused column are removed.
+    # To save disc and RAM capacity unused column are removed.
     if remove_list is not None:
         df = remove_cols(df, remove_list)
 
     prepare_dates(df, date_cols, month)
 
-    #df.to_csv('prepared_opsd_data.csv')
+    df.to_csv(prepared_filename)
     return df
 
 
@@ -419,7 +416,7 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     ----------
     year : int
         todo
-    energy_source : string todo: note: could be made possible as list but I think in feedinlib we only want registers separated by source
+    energy_source : string
         Energy source as named in column 'energy_source_level_2' of register.
     keep_cols : list or None
         Column names to be selected from OPSD register. If None, all columns
@@ -430,7 +427,9 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     filtered_register : pd.DataFrame
         ...
     """
-    df = prepare_opsd_file(category='renewable', overwrite=False)
+    df = prepare_opsd_file(overwrite=False)
+    if energy_source not in ['Wind', 'Solar']:
+        logging.warning("category must be 'Wind' or 'Solar'")
     register = df.loc[df['energy_source_level_2'] == energy_source]
     if keep_cols is not None:
         register = register[keep_cols]
@@ -519,7 +518,6 @@ def assign_turbine_data_by_wind_zone(register):
 if __name__ == "__main__":
     test_wind = True
     #load_original_opsd_file(category='renewable', overwrite=True, latest=False)
-    logger.define_logging()
     print(filter_pp_by_source_and_year(2012, 'Solar'))
 
     # if test_wind:
