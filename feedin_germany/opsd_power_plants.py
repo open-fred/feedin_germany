@@ -35,14 +35,16 @@ import geopandas as gpd
 import pyproj
 import requests
 from shapely.wkt import loads as wkt_loads
-from shapely.geometry import Point
+from shapely.geometry import Point, Polygon
 import io
+
+# oemof libraries
+from oemof.tools import logger
 
 # Internal modules
 from feedin_germany import config as cfg
 from feedin_germany import geometries
 
-# todo: delete unnecessary imports: done (Inia)
 
 def load_original_opsd_file(latest=False):
     r"""
@@ -104,10 +106,8 @@ def guess_coordinates_by_postcode_opsd(df):
     if 'postcode' in df:
         df_pstc = df.loc[(df.lon.isnull() & df.postcode.notnull())]
         if len(df_pstc) > 0:
-            pstc = pd.read_csv(
-                os.path.join(
-                        os.path.dirname(__file__),
-                        cfg.get('paths', 'geometry'),
+            pstc = pd.read_csv(os.path.join(
+                os.path.dirname(__file__), cfg.get('paths', 'geometry'),
                              cfg.get('geometry', 'postcode_polygon')),
                 index_col='zip_code')
         for idx, val in df_pstc.iterrows():
@@ -156,7 +156,8 @@ def guess_coordinates_by_spatial_names_opsd(df, fs_column, cap_col,
 
         # A simple table with the centroid of each federal state.
         f2c = pd.read_csv(
-            os.path.join(cfg.get('paths', 'geometry'),
+            os.path.join(
+                os.path.dirname(__file__), cfg.get('paths', 'geometry'),
                          cfg.get('geometry', 'federalstates_centroid')),
             index_col='name')
 
@@ -392,7 +393,7 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
                                      (12 - pp.loc[c2, 'com_month']) / 12)
         c3 = pp['decom_year'] == year
         pp.loc[c3, filter_column] = (pp.loc[c3, orig_column] *
-                                     pp.loc[c3, 'decom_month'] / 12)
+                                     pp.loc[c3, 'com_month'] / 12)  # todo FRAGE @ Inia: beide Male com_month oder auch decom_month?
 
         if overwrite_capacity:
             pp[orig_column] = 0
@@ -407,11 +408,14 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
 
 def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     r"""
-    Returns by energy source filtered OPSD register.
+    Returns by `energy_source` and `year` filtered OPSD register.
+
+    todo 'Wind' --> assign data
 
     Parameters
     ----------
     year : int
+        todo
     energy_source : string
         Energy source as named in column 'energy_source_level_2' of register.
     keep_cols : list or None
@@ -420,7 +424,7 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
 
     Returns
     -------
-    register : pd.DataFrame
+    filtered_register : pd.DataFrame
         ...
     """
     df = prepare_opsd_file(overwrite=False)
@@ -438,23 +442,28 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
                 amount, energy_source.lower()))
     
     # filter_by_year
-    register_filtered_by_year = get_pp_by_year(year=year, register=register)
-    return register_filtered_by_year
+    filtered_register = get_pp_by_year(year=year, register=register)
+    if energy_source == 'Wind':
+        filtered_register = assign_turbine_data_by_wind_zone(filtered_register)
+    return filtered_register
 
 
 def assign_turbine_data_by_wind_zone(register):
     r"""
     Assigns turbine data to a power plant register depending on wind zones.
-
-    The wind zones are read from a shape file in the directory 'data/geometries' todo: source?! DIBt.
+    todo: source?! DIBt.
+    todo: load from oedb when they are there
+    The wind zones are read from a shape file in the directory 'data/geometries'
     Turbine types are selected per wind zone as typical turbine types for
     coastal, near-coastal, inland, far-inland areas. You can use your own file
     and specify your own turbine types per wind zone by adjusting the data in
     feedin_germany.ini.
     The following data is added as columns to `register`:
     - turbine type in column 'name',
-    - hub height in column 'hub_height' and
-    - rotor diameter in column 'rotor_diameter'.
+    - hub height in m in column 'hub_height' and
+    - rotor diameter in m in column 'rotor_diameter',
+    - unambiguous turbine id in column 'id' with the pattern
+      'name_height_diameter'.
 
     Parameters
     ----------
@@ -466,7 +475,8 @@ def assign_turbine_data_by_wind_zone(register):
     -------
     adapted_register : pd.DataFrame
         `register` which additionally contains turbine type ('name'), hub
-        height ('hub_height') and rotor diameter ('rotor_diameter').
+        height in m ('hub_height'), rotor diameter in m ('rotor_diameter') and
+        unambiguous turbine id ('id').
 
     """
     # get wind zones polygons
@@ -486,19 +496,22 @@ def assign_turbine_data_by_wind_zone(register):
                                                 'geometry'], axis=1)
 
     # add data of typical turbine types to wind zones
-    wind_zones['turbine_type'] = [cfg.get('wind_set{}'.format(wind_zone), 'name')
-                                 for wind_zone in wind_zones.index]
+    wind_zones['name'] = [cfg.get('wind_set{}'.format(wind_zone), 'name')
+                          for wind_zone in wind_zones.index]
     wind_zones['hub_height'] = [
-        cfg.get('wind_set{}'.format(wind_zone), 'hub_height')
+        int(cfg.get('wind_set{}'.format(wind_zone), 'hub_height'))
         for wind_zone in wind_zones.index]
     wind_zones['rotor_diameter'] = [
-        cfg.get('wind_set{}'.format(wind_zone), 'rotor_diameter')
+        int(cfg.get('wind_set{}'.format(wind_zone), 'rotor_diameter'))
         for wind_zone in wind_zones.index]
+    wind_zones['id'] = [
+        cfg.get('wind_set{}'.format(wind_zone), 'set_name')
+        for wind_zone in wind_zones.index] # todo with less code
 
     # add data of typical turbine types by wind zone to power plant register
     adapted_register = pd.merge(adapted_register, wind_zones[
-        ['turbine_type', 'hub_height', 'rotor_diameter']], how='inner',
-                        left_on='wind_zone', right_index=True)
+        ['name', 'hub_height', 'rotor_diameter', 'id']], how='inner',
+                                left_on='wind_zone', right_index=True)
     return adapted_register
 
 
