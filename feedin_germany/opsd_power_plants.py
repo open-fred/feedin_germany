@@ -461,7 +461,9 @@ def assign_turbine_data_by_wind_zone(register):
     The following data is added as columns to `register`:
     - turbine type in column 'name',
     - hub height in m in column 'hub_height' and
-    - rotor diameter in m in column 'rotor_diameter'.
+    - rotor diameter in m in column 'rotor_diameter',
+    - unambiguous turbine id in column 'id' with the pattern
+      'name_height_diameter'.
 
     Parameters
     ----------
@@ -473,7 +475,8 @@ def assign_turbine_data_by_wind_zone(register):
     -------
     adapted_register : pd.DataFrame
         `register` which additionally contains turbine type ('name'), hub
-        height in m ('hub_height') and rotor diameter in m ('rotor_diameter').
+        height in m ('hub_height'), rotor diameter in m ('rotor_diameter') and
+        unambiguous turbine id ('id').
 
     """
     # get wind zones polygons
@@ -501,6 +504,9 @@ def assign_turbine_data_by_wind_zone(register):
     wind_zones['rotor_diameter'] = [
         cfg.get('wind_set{}'.format(wind_zone), 'rotor_diameter')
         for wind_zone in wind_zones.index]
+    wind_zones['id'] = [
+        cfg.get('wind_set{}'.format(wind_zone), 'set_name')
+        for wind_zone in wind_zones.index] # todo with less code
 
     # add data of typical turbine types by wind zone to power plant register
     adapted_register = pd.merge(adapted_register, wind_zones[
