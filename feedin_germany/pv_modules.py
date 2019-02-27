@@ -15,24 +15,29 @@ import collections
 
 
 def create_pvmodule_dict():
-    
+    r"""
+    creates dictionary of all pv-modules
+
+    """
     pvlib_list = config.get('solar_sets', 'set_list')
     pvlib_sets = config.aslist(pvlib_list, flatten=True)
     modules = collections.OrderedDict()
     
     for pvlib_set in pvlib_sets:
         modules[pvlib_set]= config.as_dict(pvlib_set)
-        #content = module_name, inverter_name, azimuth, tilt, albedo
-        #pvsets[set_name] = {content}
-        #pvsets = collections.OrderedDict(pvsets)
     return modules
 
 
 
 def create_distribution_dict():
+    r"""
+    creates dictionary of the pv-module's distribution
+
+    """
     
     distribution = config.todict('pv_types')
     return distribution
+
 
 def parse_module_dict():
     module_dict = create_pvmodule_dict()
@@ -43,6 +48,6 @@ def parse_module_dict():
 
 if __name__ == "__main__":
     
-    print(create_pvmodule_dict2())
+    print(create_pvmodule_dict())
     #pvsets=create_pvmodule_dict()
     #print(pvsets['BP2150S_3'])
