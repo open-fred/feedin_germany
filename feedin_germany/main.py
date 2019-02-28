@@ -6,7 +6,7 @@ Created on Fri Feb 15 16:07:57 2019
 @author: RL-INSTITUT\inia.steinbach
 """
 import pandas as pd
-# from feedinlib import region
+from feedinlib import pv_region
 
 # import internal modules
 from feedin_germany import pv_modules
@@ -66,10 +66,11 @@ def feedin_germany(year, category):
         if category == 'Solar':
             register_pv=register_region[['lat', 'lon', 'commissioning_date', 'capacity', 'Coordinates']]
             # open feedinlib to calculate feed in time series for that region
-            # feedin= region.pv_feedin_distribution_register(distribution_dict=distribution_dict, technical_parameters=pv_modules_set, register=register)
+            feedin= pv_region.pv_feedin_distribution_register(distribution_dict=distribution_dict ,
+                                                technical_parameters= pv_modules_set, register=register_pv)
             # save feedin
-            # feedin.to_csv('...')
-            print(register_pv)
+            feedin.to_csv('./data/feedin_pv')
+            break
 
         if category == 'Wind':
             #todo Sabine: Aufbereitung des registers, Aufrufen der feedinlib, Aggregierung über regionen
@@ -79,4 +80,4 @@ def feedin_germany(year, category):
 
 
 if __name__ == "__main__":
-    print(feedin_germany_pv(2012, 'Solar'))
+    print(feedin_germany(2012, 'Solar'))
