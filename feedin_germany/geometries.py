@@ -22,7 +22,7 @@ def load(path=None, filename=None, fullname=None, hdf_key=None,
          index_col=None, crs=None):
     """Load csv-file into a DataFrame and a GeoDataFrame."""
     if fullname is None:
-        fullname = os.path.join(path, filename)
+        fullname = os.path.join(os.path.dirname(__file__), path, filename)
 
     if fullname[-4:] == '.csv':
         df = load_csv(fullname=fullname, index_col=index_col)
@@ -43,13 +43,13 @@ def load(path=None, filename=None, fullname=None, hdf_key=None,
 
 def load_shp(path=None, filename=None, fullname=None):
     if fullname is None:
-        fullname = os.path.join(path, filename)
+        fullname = os.path.join(os.path.dirname(__file__), path, filename)
     return gpd.read_file(fullname)
 
 
 def load_hdf(path=None, filename=None, fullname=None, key=None):
     if fullname is None:
-        fullname = os.path.join(path, filename)
+        fullname = os.path.join(os.path.dirname(__file__), path, filename)
     return pd.read_hdf(fullname, key, mode='r')
 
 def lat_lon2point(df):
@@ -61,7 +61,7 @@ def load_csv(path=None, filename=None, fullname=None,
              index_col=None):
     """Load csv-file into a DataFrame."""
     if fullname is None:
-        fullname = os.path.join(path, filename)
+        fullname = os.path.join(os.path.dirname(__file__), path, filename)
     df = pd.read_csv(fullname)
 
     # Make the first column the index if all values are unique.
