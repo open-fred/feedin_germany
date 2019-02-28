@@ -12,8 +12,9 @@ from feedinlib import pv_region
 from feedin_germany import pv_modules
 from feedin_germany import opsd_power_plants as opsd
 from feedin_germany import oep_regions as oep
-import logging
 
+import logging
+import matplotlib.pyplot as plt
 
 def feedin_germany(year, category):
     r"""
@@ -76,8 +77,11 @@ def feedin_germany(year, category):
             #todo Sabine: Aufbereitung des registers, Aufrufen der feedinlib, Aggregierung über regionen
             pass
     # return feedin
-    pass
+    return feedin
 
 
 if __name__ == "__main__":
-    print(feedin_germany(2012, 'Solar'))
+    feedin=feedin_germany(2012, 'Solar')
+    feedin.fillna(0).plot()
+    # feedin.fillna(0).plot()
+    plt.show()
