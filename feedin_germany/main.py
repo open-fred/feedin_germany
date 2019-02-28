@@ -69,14 +69,16 @@ def feedin_germany(year, category):
             # open feedinlib to calculate feed in time series for that region
             feedin= pv_region.pv_feedin_distribution_register(distribution_dict=distribution_dict ,
                                                 technical_parameters= pv_modules_set, register=register_pv)
-            # save feedin
-            feedin.to_csv('./data/feedin_pv')
+
+            #todo: Hoichladeń der Zeitreihen pro region
+            #save feedin
+            #feedin.to_csv('./data/feedin_pv')
             break
 
         if category == 'Wind':
             #todo Sabine: Aufbereitung des registers, Aufrufen der feedinlib, Aggregierung über regionen
             pass
-    # return feedin
+
     return feedin
 
 
