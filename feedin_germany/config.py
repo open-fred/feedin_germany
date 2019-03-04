@@ -35,16 +35,6 @@ def aslist(value, flatten=True):
         result.extend(subvalues)
     return result
 
-def todict(section):
-    
-    """
-    returns the values of a section as dictionary
-    """
-    dictionary = {}
-    for option in config.options(section):
-        dictionary[option] = config.get(section, option)
-    return dictionary
-
 
 def as_dict(section):
     """
@@ -57,5 +47,30 @@ def as_dict(section):
    # if section in config.sections():
    #     the_dict = {}
     for key, val in config.items(section):
+        val = get(section, key)
         the_dict[key] = val
     return the_dict
+
+
+def get(section, key):
+    """Returns the value of a given key in a given section.
+    """
+    try:
+        return config.getint(section, key)
+    except ValueError:
+        try:
+            return config.getfloat(section, key)
+        except ValueError:
+            try:
+                return config.getboolean(section, key)
+            except ValueError:
+                try:
+                    value = config.get(section, key)
+                    if value == 'None':
+                        value = None
+                    return value
+                except ValueError:
+                    logging.error(
+                        "section {0} with key {1} not found in {2}".format(
+                            section, key, FILE))
+                    return config.get(section, key)
