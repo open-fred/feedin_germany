@@ -57,7 +57,7 @@ def load_regions_file():
     Notes
     ----------------
     todo: login and token need to be adapted/automatized
-    
+    todo: possibility of selecting different region files - Landkreise, Übertragunsnetzbetreiberzonen, ...
     returns
     --------------
     geopandas.GeoDataFrame
@@ -94,9 +94,9 @@ def load_regions_file():
     
     
 def add_region_to_register(register, region):
-    
     """
     filters out all powerplants within a region for a given region and register
+    # todo Frage an Inia: die Funktion fügt nur die Spalte mit nuts hinzu, keine Filterung oder?
 
     Input
     ---------------
