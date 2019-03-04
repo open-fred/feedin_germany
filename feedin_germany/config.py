@@ -1,12 +1,17 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb 15 11:19:13 2019
 
-@author: RL-INSTITUT\inia.steinbach
+The code in this module is partly based on third party code which has been
+licensed under GNU-LGPL3. The following functions are copied and adapted from:
+https://github.com/reegis/reegis
+*
+# todo @ Inia: please check
+
 """
 
-# Python libraries
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
+
 import configparser
 import os
 

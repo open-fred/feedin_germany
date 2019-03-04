@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 21 10:05:23 2019
-
-@author: RL-INSTITUT\inia.steinbach
+todo add description
 """
+
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
 
 import pandas as pd
 import geopandas as gpd

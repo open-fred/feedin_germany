@@ -1,11 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-todo: module description
-The code in this module is partly based on third party code which has been
-licensed under GNU-LGPL3. The following functions are copied and adapted from:
+The `geometries` module contains functions for loading geometry data from
+different file types and for creating geopandas.GeoDataFrames.
+
+The code in this module is based on third party code which has been licensed
+under GNU-LGPL3. The following functions are copied from:
 https://github.com/reegis/reegis
-* todo add functions - change text if just copied, not adapted
+* load()
+* load_shp()
+* load_hdf()
+* lat_lon2point()
+* load_csv()
+* create_geo_df()
+
 """
+
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
 
 # imports
 import os

@@ -1,10 +1,12 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 14 16:25:35 2019
+todo add description
 
-@author: RL-INSTITUT\inia.steinbach
 """
+
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
+
 # Internal modules
 from feedin_germany import config
 # Python libraries

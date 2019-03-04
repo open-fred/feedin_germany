@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
-
-"""Download and process the opsd power plants for Germany.
-
-functions:
-    * load_original_opsd_file()
-    * convert_utm_code_opsd
-    * guess_coordinates_by_postcode_opsd()
-    * log_undefined_capacity
-    * complete_opsd_geometries()
-    * remove_cols()
-    * prepare_dates()
-    * prepare_opsd_file()
-    * filter_solar_pp()
-    * filter_wind_pp()
-    
-    
-Copyright (c) 2016-2018 Uwe Krien <uwe.krien@rl-institut.de>
-
-SPDX-License-Identifier: GPL-3.0-or-later
 """
-__copyright__ = "Uwe Krien <uwe.krien@rl-institut.de>"
+The `opsd_power_plant` module contains functions for downloading and processing
+renewable power plant data for Germany from opsd
+(https://data.open-power-system-data.org/).
+
+The code in this module is partly based on third party code which has been
+licensed under GNU-LGPL3. The following functions are copied and adapted from:
+https://github.com/reegis/reegis
+* load_original_opsd_file()
+* convert_utm_code_opsd
+* guess_coordinates_by_postcode_opsd()
+* log_undefined_capacity
+* complete_opsd_geometries()
+* remove_cols()
+* prepare_dates()
+* prepare_opsd_file()
+# todo @ Inia: please check
+
+"""
+
+__copyright__ = "Copyright oemof developer group"
 __license__ = "GPLv3"
 
 

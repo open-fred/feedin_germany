@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+The `feedin` module contains functions for calculating feed-in time series of
+renewable power plants.
+calculate_feedin_germany() is a Germany specific function and automatically
+downloads data needed for the calculations.
+
+"""
+
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
+
 # imports
 import pandas as pd
 import geopandas as gpd
