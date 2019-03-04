@@ -1,17 +1,18 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 14 16:25:35 2019
+todo add description
 
-@author: RL-INSTITUT\inia.steinbach
 """
+
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
+
 # Internal modules
 from feedin_germany import config
 # Python libraries
 import os
 import logging
 import collections
-
 
 
 def create_pvmodule_dict():
@@ -26,8 +27,6 @@ def create_pvmodule_dict():
     for pvlib_set in pvlib_sets:
         modules[pvlib_set]= config.as_dict(pvlib_set)
     return modules
-
-
 
 def create_distribution_dict():
     r"""

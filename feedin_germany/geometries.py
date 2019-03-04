@@ -1,16 +1,26 @@
 # -*- coding: utf-8 -*-
 """
-todo: module description
-The code in this module is partly based on third party code which has been
-licensed under GNU-LGPL3. The following functions are copied and adapted from:
+The `geometries` module contains functions for loading geometry data from
+different file types and for creating geopandas.GeoDataFrames.
+
+The code in this module is based on third party code which has been licensed
+under GNU-LGPL3. The following functions are copied from:
 https://github.com/reegis/reegis
-* todo add functions - change text if just copied, not adapted
+* load()
+* load_shp()
+* load_hdf()
+* lat_lon2point()
+* load_csv()
+* create_geo_df()
+
 """
+
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
 
 # imports
 import os
 import logging
-
 import pandas as pd
 import geopandas as gpd
 from shapely.wkt import loads as wkt_loads
@@ -52,6 +62,7 @@ def load_hdf(path=None, filename=None, fullname=None, key=None):
         fullname = os.path.join(os.path.dirname(__file__), path, filename)
     return pd.read_hdf(fullname, key, mode='r')
 
+
 def lat_lon2point(df):
     """Create shapely point object of latitude and longitude."""
     return Point(df['longitude'], df['latitude'])
@@ -72,6 +83,7 @@ def load_csv(path=None, filename=None, fullname=None,
     else:
         df.set_index(index_col, drop=True, inplace=True)
     return df
+
 
 def create_geo_df(df, wkt_column=None, lon_column=None, lat_column=None,
                   crs=None):

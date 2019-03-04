@@ -1,4 +1,3 @@
-
 # internal imports
 from feedin_germany import feedin
 

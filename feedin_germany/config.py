@@ -1,14 +1,21 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb 15 11:19:13 2019
 
-@author: RL-INSTITUT\inia.steinbach
+The code in this module is partly based on third party code which has been
+licensed under GNU-LGPL3. The following functions are copied and adapted from:
+https://github.com/reegis/reegis
+*
+# todo @ Inia: please check
+
 """
 
-# Python libraries
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
+
+# imports
 import configparser
 import os
+import logging
 
 config = configparser.RawConfigParser()
 configFilePath = os.path.join(os.path.dirname(__file__), 'feedin_germany.ini')
@@ -16,11 +23,13 @@ config.read(configFilePath)
 
 
 def get(section, key):
-    return config.get(section, key)
-    
+    return config.get(section, key)  # todo any use of this second two get() functions? @ Inia
+
+
 def aslist_cronly(value):
     value = filter(None, [x.strip() for x in value.splitlines()])
     return list(value)
+
 
 def aslist(value, flatten=True):
     """ Return a list of strings, separating the input based on newlines
@@ -44,8 +53,8 @@ def as_dict(section):
     sections options as key => value pairs.
     """
     the_dict = {}
-   # if section in config.sections():
-   #     the_dict = {}
+    # if section in config.sections():
+    #     the_dict = {}
     for key, val in config.items(section):
         val = get(section, key)
         the_dict[key] = val
@@ -72,5 +81,5 @@ def get(section, key):
                 except ValueError:
                     logging.error(
                         "section {0} with key {1} not found in {2}".format(
-                            section, key, FILE))
+                            section, key, FILE))  # todo ??
                     return config.get(section, key)
