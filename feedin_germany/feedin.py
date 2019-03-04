@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+The `feedin` module contains functions for calculating feed-in time series of
+renewable power plants.
+calculate_feedin_germany() is a Germany specific function and automatically
+downloads data needed for the calculations.
+
+"""
+
+__copyright__ = "Copyright oemof developer group"
+__license__ = "GPLv3"
+
 # imports
 import pandas as pd
 import geopandas as gpd
@@ -7,12 +19,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from feedinlib import region
-# from feedinlib import pv_region
+from feedinlib import pv_region
 from feedinlib import tools
 
 # import internal modules
 from feedin_germany import opsd_power_plants as opsd
 from feedin_germany import oep_regions as oep
+from feedin_germany import pv_modules
 
 
 # Planung Funktionalitäten:
@@ -64,10 +77,10 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     else: None.
 
     """
-    # if category == 'Solar': # todo uncomment
-    #     # prepare technical parameters and pv modules
-    #     pv_modules_set = pv_modules.create_pvmodule_dict()
-    #     distribution_dict = pv_modules.create_distribution_dict()
+    if category == 'Solar':
+        # prepare technical parameters and pv modules
+        pv_modules_set = pv_modules.create_pvmodule_dict()
+        distribution_dict = pv_modules.create_distribution_dict()
 
     # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
     if category == 'Wind':
@@ -183,19 +196,20 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
                                                          keep_cols=keep_cols)
         elif register_name == 'MaStR':
             if category == 'Wind':
-                pass # todo add MaStR
+                pass  # todo add MaStR
             else:
                 raise ValueError("Option 'MaStR' as `register_name` up to "
                                  "now only available for `category` 'Wind'.")
         else:
-            raise ValueError("Invalid register name {}.".format(register_name)+
-                             " Must be 'opsd' or 'MaStR.")
+            raise ValueError("Invalid register name {}.".format(
+                    register_name) + " Must be 'opsd' or 'MaStR.")
         # add region column 'nuts' to register
         register = oep.add_region_to_register(register, region_gdf)
 
         feedin = calculate_feedin(
             year=year, register=register, regions=region_gdf,
-            category=category, return_feedin=return_feedin, oep_upload=oep_upload)
+            category=category, return_feedin=return_feedin,
+            oep_upload=oep_upload)
         if return_feedin:
             feedin_df = pd.concat([feedin_df, feedin], axis=1)
     if return_feedin:
