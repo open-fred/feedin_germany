@@ -22,7 +22,6 @@ https://github.com/reegis/reegis
 __copyright__ = "Copyright oemof developer group"
 __license__ = "GPLv3"
 
-
 # Python libraries
 import os
 import logging
@@ -35,7 +34,7 @@ import geopandas as gpd
 import pyproj
 import requests
 from shapely.wkt import loads as wkt_loads
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point
 import io
 
 # oemof libraries
@@ -108,8 +107,7 @@ def guess_coordinates_by_postcode_opsd(df):
         if len(df_pstc) > 0:
             pstc = pd.read_csv(os.path.join(
                 os.path.dirname(__file__), cfg.get('paths', 'geometry'),
-                             cfg.get('geometry', 'postcode_polygon')),
-                index_col='zip_code')
+                cfg.get('geometry', 'postcode_polygon')), index_col='zip_code')
         for idx, val in df_pstc.iterrows():
             try:
                 # If the postcode is not number the integer conversion will
@@ -158,8 +156,8 @@ def guess_coordinates_by_spatial_names_opsd(df, fs_column, cap_col,
         f2c = pd.read_csv(
             os.path.join(
                 os.path.dirname(__file__), cfg.get('paths', 'geometry'),
-                         cfg.get('geometry', 'federalstates_centroid')),
-            index_col='name')
+                cfg.get('geometry', 'federalstates_centroid')),
+                    index_col='name')
 
         # Use the centroid of each federal state if the federal state is given.
         # This is not very precise and should not be used for a high fraction
@@ -227,7 +225,7 @@ def complete_opsd_geometries(df, time=None,
 
     # Store table of undefined sets to csv-file
     if incomplete.any():
-        dir_messages=cfg.get('paths', 'messages')
+        dir_messages = cfg.get('paths', 'messages')
         if not os.path.exists(dir_messages):
             os.makedirs(dir_messages, exist_ok=True)
         df.loc[incomplete].to_csv(os.path.join(
@@ -316,8 +314,9 @@ def prepare_opsd_file(overwrite):
             cfg.get('opsd', 'opsd_prepared'))
 
     if os.path.isfile(prepared_filename):
-        logging.warning("prepared-register already exist and is loaded from csv")
-        df=pd.read_csv(prepared_filename)
+        logging.warning("prepared-register already exist and is loaded "
+                        "from csv")
+        df = pd.read_csv(prepared_filename)
         return df
 
     if not os.path.exists(opsd_directory):
@@ -399,9 +398,9 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
             pp[orig_column] = 0
             pp[orig_column] = pp[filter_column]
             del pp[filter_column]
-        
+
         # delete all rows with com_year > year
-        pp_filtered=pp.loc[pp['com_year'] < year+1]
+        pp_filtered = pp.loc[pp['com_year'] < year+1]
 
     return pp_filtered
 
@@ -438,7 +437,7 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
         logging.warning(
             "Removed {} {} power plants with missing coordinates.".format(
                 amount, energy_source.lower()))
-    
+
     # filter_by_year
     filtered_register = get_pp_by_year(year=year, register=register)
     if keep_cols is not None:
@@ -454,11 +453,11 @@ def assign_turbine_data_by_wind_zone(register):
     todo: source?! DIBt.
     todo: load from oedb when they are there
     todo: move to feedinlib when oedb load works
-    The wind zones are read from a shape file in the directory 'data/geometries'
-    Turbine types are selected per wind zone as typical turbine types for
-    coastal, near-coastal, inland, far-inland areas. You can use your own file
-    and specify your own turbine types per wind zone by adjusting the data in
-    feedin_germany.ini.
+    The wind zones are read from a shape file in the directory
+    'data/geometries'. Turbine types are selected per wind zone as typical
+    turbine types for coastal, near-coastal, inland, far-inland areas. You can
+    use your own file and specify your own turbine types per wind zone by
+    adjusting the data in feedin_germany.ini.
 
     The following data is added as columns to `register`:
     - turbine type in column 'name',
@@ -483,7 +482,7 @@ def assign_turbine_data_by_wind_zone(register):
     """
     # get wind zones polygons
     path = cfg.get('paths', 'geometry')
-    filename = cfg.get('geometry', 'wind_zones') # todo use dibt wind zones!!
+    filename = cfg.get('geometry', 'wind_zones')  # todo use dibt wind zones!!
     wind_zones = geometries.load(path=path, filename=filename)
     wind_zones.set_index('zone', inplace=True)
 
@@ -508,7 +507,7 @@ def assign_turbine_data_by_wind_zone(register):
         for wind_zone in wind_zones.index]
     wind_zones['id'] = [
         cfg.get('wind_set{}'.format(wind_zone), 'set_name')
-        for wind_zone in wind_zones.index] # todo with less code
+        for wind_zone in wind_zones.index]  # todo with less code
 
     # add data of typical turbine types by wind zone to power plant register
     adapted_register = pd.merge(adapted_register, wind_zones[

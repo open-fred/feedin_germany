@@ -15,7 +15,6 @@ import logging
 import collections
 
 
-
 def create_pvmodule_dict():
     r"""
     creates dictionary of all pv-modules
@@ -28,8 +27,6 @@ def create_pvmodule_dict():
     for pvlib_set in pvlib_sets:
         modules[pvlib_set]= config.as_dict(pvlib_set)
     return modules
-
-
 
 def create_distribution_dict():
     r"""
