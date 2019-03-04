@@ -431,8 +431,6 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     if energy_source not in ['Wind', 'Solar']:
         logging.warning("category must be 'Wind' or 'Solar'")
     register = df.loc[df['energy_source_level_2'] == energy_source]
-    if keep_cols is not None:
-        register = register[keep_cols]
     # remove_pp_with_missing_coordinates  # todo: check why they are missing. maybe adapt
     if register[['lat', 'lon']].isnull().values.any():
         amount = register[['lat', 'lon']].isnull().sum()[0]  # amount of lat
@@ -443,6 +441,8 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     
     # filter_by_year
     filtered_register = get_pp_by_year(year=year, register=register)
+    if keep_cols is not None:
+        filtered_register = filtered_register[keep_cols]
     if energy_source == 'Wind':
         filtered_register = assign_turbine_data_by_wind_zone(filtered_register)
     return filtered_register
@@ -453,11 +453,13 @@ def assign_turbine_data_by_wind_zone(register):
     Assigns turbine data to a power plant register depending on wind zones.
     todo: source?! DIBt.
     todo: load from oedb when they are there
+    todo: move to feedinlib when oedb load works
     The wind zones are read from a shape file in the directory 'data/geometries'
     Turbine types are selected per wind zone as typical turbine types for
     coastal, near-coastal, inland, far-inland areas. You can use your own file
     and specify your own turbine types per wind zone by adjusting the data in
     feedin_germany.ini.
+
     The following data is added as columns to `register`:
     - turbine type in column 'name',
     - hub height in m in column 'hub_height' and

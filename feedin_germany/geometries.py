@@ -117,4 +117,3 @@ def create_geo_df(df, wkt_column=None, lon_column=None, lat_column=None,
     logging.debug("GeoDataFrame created.")
 
     return gdf
-
