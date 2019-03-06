@@ -44,9 +44,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     This function can be used for any region/country as long as you have the
     input data. # todo MERRA in feedinlib? oder Erklärung, dass eigenes Wetter in feedinlib eingegeben werden kann.
     For calculating feed-in time series for Germany it is recommended to use
-    ::py:func:`~.calculate_feedin_germany`.
-
-    # Möglichkeit: time split
+    :py:func:`~.calculate_feedin_germany`.
 
     Parameters
     ----------
@@ -186,7 +184,7 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
     if regions == 'landkreise':
         region_gdf = oep.load_regions_file()
         if debug_mode:
-            region_gdf = region_gdf[0:5]
+            region_gdf = region_gdf[0:15]
     elif regions == 'uebertragunsnetzzonen':
         pass
     elif isinstance(regions, gpd.GeoDataFrame):
@@ -239,15 +237,15 @@ def upload_time_series_to_oep(feedin, technology, nut):
     feedin : pd.Series
         Feed-in time series with datetime index.
     technology : string
-
-    nut : int, string todo?
+        todo
+    nut : ... todo
 
     """
     # prepare data frame for upload
     df = pd.DataFrame(feedin).reset_index('time')
     df['nut'] = nut
     df['technology'] = technology
-    # todo upload  # @ Inia, könntest du das machen? mein login funktioniert nicht - habe keinen token
+    # todo upload  # @ Inia, könntest du das machen?
 
 
 if __name__ == "__main__":

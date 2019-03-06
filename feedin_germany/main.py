@@ -1,3 +1,6 @@
+# imports
+from matplotlib import pyplot as plt
+
 # internal imports
 from feedin_germany import feedin
 
@@ -16,3 +19,6 @@ for year in years:
             register_name='opsd', weather_data_name='open_FRED',
             oep_upload=True, debug_mode=debug_mode, wake_losses_model=None)
         print(feedin)
+
+        # feedin.plot()
+        # plt.show()
