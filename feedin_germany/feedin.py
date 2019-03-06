@@ -37,7 +37,7 @@ from feedin_germany import pv_modules
 
 
 def calculate_feedin(year, register, regions, category, return_feedin=False,
-                     oep_upload=False):
+                     oep_upload=False, **kwargs):
     r"""
     Calculates feed-in of power plants in `register` for different `regions`.
 
@@ -66,6 +66,10 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
          small. Default: False. todo what means small?
     oep_upload : boolean
         If True time series are uploaded to OEP. Default: False.
+
+    Other parameters
+    ----------------
+    todo parameters for windpowerlib modelchains, pvlib modelchain
 
     Returns
     -------
@@ -104,7 +108,8 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
                 technical_parameters=pv_modules_set, register=register_pv)
         elif category == 'Wind':
             feedin = region.Region(geom='no_geom',
-                                   weather=weather_df).wind_feedin(register)
+                                   weather=weather_df).wind_feedin(register,
+                                                                   **kwargs)
         elif category == 'Hydro':
             pass
         else:
@@ -124,7 +129,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
 def calculate_feedin_germany(year, categories, regions='landkreise',
                              register_name='opsd',
                              weather_data_name='open_FRED', oep_upload=False,
-                             debug_mode=False):
+                             debug_mode=False, **kwargs):
     r"""
 
     Es sollen eigene Regionen eingegeben werden können,
@@ -154,6 +159,10 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
         If True time series are uploaded to OEP. Default: False.
     debug_mode : boolean
         might be deleted
+
+    Other parameters
+    ----------------
+    todo parameters for windpowerlib modelchains, pvlib modelchain
 
     Notes
     -----
@@ -209,7 +218,7 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
         feedin = calculate_feedin(
             year=year, register=register, regions=region_gdf,
             category=category, return_feedin=return_feedin,
-            oep_upload=oep_upload)
+            oep_upload=oep_upload, **kwargs)
         if return_feedin:
             feedin_df = pd.concat([feedin_df, feedin], axis=1)
     if return_feedin:
