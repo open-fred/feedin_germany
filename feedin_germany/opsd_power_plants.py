@@ -359,6 +359,9 @@ def prepare_opsd_file(overwrite):
 
     prepare_dates(df, date_cols, month)
 
+    # capacity in W  todo @Inia: feedinlib wants to give back feedin ts in W. Capacity input in pvlib in W convenient?
+    df['capacity'] = df['capacity'] * (10 ** 6)
+
     df.to_csv(prepared_filename)
     return df
 
