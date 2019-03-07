@@ -14,6 +14,7 @@ __license__ = "GPLv3"
 import pandas as pd
 import geopandas as gpd
 import os
+import logging
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -37,16 +38,14 @@ from feedin_germany import pv_modules
 
 
 def calculate_feedin(year, register, regions, category, return_feedin=False,
-                     oep_upload=False):
+                     oep_upload=False, **kwargs):
     r"""
     Calculates feed-in of power plants in `register` for different `regions`.
 
     This function can be used for any region/country as long as you have the
     input data. # todo MERRA in feedinlib? oder Erklärung, dass eigenes Wetter in feedinlib eingegeben werden kann.
     For calculating feed-in time series for Germany it is recommended to use
-    ::py:func:`~.calculate_feedin_germany`.
-
-    # Möglichkeit: time split
+    :py:func:`~.calculate_feedin_germany`.
 
     Parameters
     ----------
@@ -66,6 +65,10 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
          small. Default: False. todo what means small?
     oep_upload : boolean
         If True time series are uploaded to OEP. Default: False.
+
+    Other parameters
+    ----------------
+    todo parameters for windpowerlib modelchains, pvlib modelchain
 
     Returns
     -------
@@ -93,28 +96,34 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
         feedin_df = pd.DataFrame(columns=cols)
     for nut in regions['nuts']:
         register_region = register.loc[register['nuts'] == nut]
-        # todo: wenn feedinlib weiterentwickelt: feedinlib Aufruf für alle gleich möglich?
-        if category == 'Solar':
-            register_pv = register_region[
-                ['lat', 'lon', 'commissioning_date', 'capacity',
-                 'Coordinates']]
-            # open feedinlib to calculate feed in time series for that region
-            feedin = pv_region.pv_feedin_distribution_register(
-                distribution_dict=distribution_dict,
-                technical_parameters=pv_modules_set, register=register_pv)
-        elif category == 'Wind':
-            feedin = region.Region(geom='no_geom',
-                                   weather=weather_df).wind_feedin(register)
-        elif category == 'Hydro':
-            pass
+        if register_region.empty:
+            logging.debug(
+                "No {} power plants in region {} in register.".format(category,
+                                                                      nut))
         else:
-            raise ValueError("Invalid category {}".format(category) +
-                             "Choose from: 'Wind', 'Solar', 'Hydro'.")
-        if oep_upload:
-            upload_time_series_to_oep(feedin=feedin, technology=category,
-                                      nut=nut)
-        if return_feedin is True:
-            feedin_df[nut, category.lower()] = feedin
+            # todo: wenn feedinlib weiterentwickelt: feedinlib Aufruf für alle gleich möglich?
+            if category == 'Solar':
+                register_pv = register_region[
+                    ['lat', 'lon', 'commissioning_date', 'capacity',
+                     'Coordinates']]
+                # open feedinlib to calculate feed in time series for region
+                feedin = pv_region.pv_feedin_distribution_register(
+                    distribution_dict=distribution_dict,
+                    technical_parameters=pv_modules_set, register=register_pv)
+            elif category == 'Wind':
+                feedin = region.Region(geom='no_geom',
+                                       weather=weather_df).wind_feedin(
+                    register_region, **kwargs)
+            elif category == 'Hydro':
+                pass
+            else:
+                raise ValueError("Invalid category {}".format(category) +
+                                 "Choose from: 'Wind', 'Solar', 'Hydro'.")
+            if oep_upload:
+                upload_time_series_to_oep(feedin=feedin, technology=category,
+                                          nut=nut)
+            if return_feedin is True:
+                feedin_df[nut, category.lower()] = feedin
     if return_feedin is True:
         return feedin_df
     else:
@@ -124,7 +133,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
 def calculate_feedin_germany(year, categories, regions='landkreise',
                              register_name='opsd',
                              weather_data_name='open_FRED', oep_upload=False,
-                             debug_mode=False):
+                             debug_mode=False, **kwargs):
     r"""
 
     Es sollen eigene Regionen eingegeben werden können,
@@ -155,6 +164,10 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
     debug_mode : boolean
         might be deleted
 
+    Other parameters
+    ----------------
+    todo parameters for windpowerlib modelchains, pvlib modelchain
+
     Notes
     -----
     The returned feed-in is in the form as needed by the heat and power model
@@ -177,7 +190,7 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
     if regions == 'landkreise':
         region_gdf = oep.load_regions_file()
         if debug_mode:
-            region_gdf = region_gdf[0:5]
+            region_gdf = region_gdf[0:15]
     elif regions == 'uebertragunsnetzzonen':
         pass
     elif isinstance(regions, gpd.GeoDataFrame):
@@ -209,7 +222,7 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
         feedin = calculate_feedin(
             year=year, register=register, regions=region_gdf,
             category=category, return_feedin=return_feedin,
-            oep_upload=oep_upload)
+            oep_upload=oep_upload, **kwargs)
         if return_feedin:
             feedin_df = pd.concat([feedin_df, feedin], axis=1)
     if return_feedin:
@@ -230,15 +243,15 @@ def upload_time_series_to_oep(feedin, technology, nut):
     feedin : pd.Series
         Feed-in time series with datetime index.
     technology : string
-
-    nut : int, string todo?
+        todo
+    nut : ... todo
 
     """
     # prepare data frame for upload
     df = pd.DataFrame(feedin).reset_index('time')
     df['nut'] = nut
     df['technology'] = technology
-    # todo upload  # @ Inia, könntest du das machen? mein login funktioniert nicht - habe keinen token
+    # todo upload  # @ Inia, könntest du das machen?
 
 
 if __name__ == "__main__":

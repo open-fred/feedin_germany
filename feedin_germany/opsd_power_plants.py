@@ -53,9 +53,12 @@ def load_original_opsd_file(latest=False):
     ----------
     'latest': boolean
 
-    :return
-    pd.DataFrame
-
+    Returns
+    -------
+    df : pd.DataFrame
+        OPSD power plant data. todo: describe most important columns with units
+        For description of further columns see
+        https://data.open-power-system-data.org/renewable_power_plants/.
     """
 
     if latest:
@@ -293,19 +296,21 @@ def prepare_dates(df, date_cols, month):
 
 def prepare_opsd_file(overwrite):
     r"""
-    loads original opsd file and processes it
+    Loads original opsd file and processes it.
 
     The processing includes: renaming columns, comleting geometries, removing
     powerplants without capacity, remove columns that are not used
 
+    capacity in W
 
-    parameters
-     -----------
-    overwrite: boolean
+    Parameters
+    ----------
+    overwrite : boolean
 
-    :return
-    ---------
-    pd. DataFrame()
+    Returns
+    -------
+    df : pd. DataFrame()
+        todo..
     """
     opsd_directory = cfg.get('paths', 'opsd')
     prepared_filename = os.path.join(
@@ -353,6 +358,9 @@ def prepare_opsd_file(overwrite):
         df = remove_cols(df, remove_list)
 
     prepare_dates(df, date_cols, month)
+
+    # capacity in W  todo @Inia: feedinlib wants to give back feedin ts in W. Capacity input in pvlib in W convenient?
+    df['capacity'] = df['capacity'] * (10 ** 6)
 
     df.to_csv(prepared_filename)
     return df
@@ -409,12 +417,15 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     r"""
     Returns by `energy_source` and `year` filtered OPSD register.
 
-    todo 'Wind' --> assign data
+    If the `energy_source` is 'Wind' typical wind turbine types depending on
+    the wind zones as well as wind power plant specific data is added to the
+    register (see :py:func:`~.assign_turbine_data_by_wind_zone`).
 
     Parameters
     ----------
     year : int
-        todo
+        Power plants already installed and still running during this year are
+        contemplated.
     energy_source : string
         Energy source as named in column 'energy_source_level_2' of register.
     keep_cols : list or None
