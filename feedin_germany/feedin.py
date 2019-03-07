@@ -14,6 +14,7 @@ __license__ = "GPLv3"
 import pandas as pd
 import geopandas as gpd
 import os
+import logging
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -95,29 +96,34 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
         feedin_df = pd.DataFrame(columns=cols)
     for nut in regions['nuts']:
         register_region = register.loc[register['nuts'] == nut]
-        # todo: wenn feedinlib weiterentwickelt: feedinlib Aufruf für alle gleich möglich?
-        if category == 'Solar':
-            register_pv = register_region[
-                ['lat', 'lon', 'commissioning_date', 'capacity',
-                 'Coordinates']]
-            # open feedinlib to calculate feed in time series for that region
-            feedin = pv_region.pv_feedin_distribution_register(
-                distribution_dict=distribution_dict,
-                technical_parameters=pv_modules_set, register=register_pv)
-        elif category == 'Wind':
-            feedin = region.Region(geom='no_geom',
-                                   weather=weather_df).wind_feedin(register,
-                                                                   **kwargs)
-        elif category == 'Hydro':
-            pass
+        if register_region.empty:
+            logging.debug(
+                "No {} power plants in region {} in register.".format(category,
+                                                                      nut))
         else:
-            raise ValueError("Invalid category {}".format(category) +
-                             "Choose from: 'Wind', 'Solar', 'Hydro'.")
-        if oep_upload:
-            upload_time_series_to_oep(feedin=feedin, technology=category,
-                                      nut=nut)
-        if return_feedin is True:
-            feedin_df[nut, category.lower()] = feedin
+            # todo: wenn feedinlib weiterentwickelt: feedinlib Aufruf für alle gleich möglich?
+            if category == 'Solar':
+                register_pv = register_region[
+                    ['lat', 'lon', 'commissioning_date', 'capacity',
+                     'Coordinates']]
+                # open feedinlib to calculate feed in time series for region
+                feedin = pv_region.pv_feedin_distribution_register(
+                    distribution_dict=distribution_dict,
+                    technical_parameters=pv_modules_set, register=register_pv)
+            elif category == 'Wind':
+                feedin = region.Region(geom='no_geom',
+                                       weather=weather_df).wind_feedin(
+                    register_region, **kwargs)
+            elif category == 'Hydro':
+                pass
+            else:
+                raise ValueError("Invalid category {}".format(category) +
+                                 "Choose from: 'Wind', 'Solar', 'Hydro'.")
+            if oep_upload:
+                upload_time_series_to_oep(feedin=feedin, technology=category,
+                                          nut=nut)
+            if return_feedin is True:
+                feedin_df[nut, category.lower()] = feedin
     if return_feedin is True:
         return feedin_df
     else:
