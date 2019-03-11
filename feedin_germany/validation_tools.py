@@ -14,6 +14,54 @@ import pandas as pd
 #         - slice time series: saisonale schwankungen. (einfacher: Jahresabschnitte einzeln berechnen, eingeben)
 
 
+# Funktion
+#     bekommt
+#         df mit berechneter und validierungszeitreihe. (nenne spaltennamen)
+#         spalten, nach denen erst noch gefiltert werden sollte (optional) z.B. in unserem Fall: technology, region
+
+
+def calculate_validation_metrics(df, val_cols, metrics='standard',
+                                 filter_cols=None, filename='test.csv',
+                                 print_out=False):
+    r"""
+
+    Parameters
+    ----------
+    df
+        darf mehrere Zeitreihen im Datenbankformat enthalten.. wird gefiltet.
+    val_cols : list of strings
+        Contains columns names of (1) time series to be validated and (2)
+        validation time series in the form [(1), (2)].
+    metrics
+
+    filter_cols : list of strings
+        Contains column names by which `df` is filtered before the validation.
+        col an erster Stelle wird Index
+        see example todo example
+    filename
+        -- for saving
+    print_out
+        todo
+
+    """
+    # todo: beliebig viele Spalten zur Filterung möglich
+    col_1 = filter_cols[0]
+    col_2 = filter_cols[1]
+    metrics_df = pd.DataFrame(columns=[val_cols])  # todo multiindex filter_1, filter_2
+    for filter_1 in df[col_1].groupby():  # oder unique()
+        for filter_2 in df[col_2].groupby():  # oder unique()
+            val_df = df.loc[(df[col_1] == filter_1) & (df[col_2] == filter_2)].drop([col_1, col_2], axis=1)
+            if metrics == 'standard':
+                metrics = ['rmse_norm', 'mean_bias', 'pearson']
+            for metric in metrics:
+                pass
+                # alle metrics in df schreiben
+                #metrics_df mit index filter_1, filter_2 [metric] = ...
+            # val metrics für diese beiden Zeitreihen
+            # todo vllt in eigener Funktion, die schon gefilterte Zeitreihen bekommt - dann könnte man auch nur die verwenden
+            # speichern
+
+
 def get_standard_deviation(data_series):
     r"""
     Calculates the standard deviation of a data series.
