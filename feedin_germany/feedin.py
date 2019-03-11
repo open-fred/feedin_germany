@@ -249,9 +249,9 @@ def upload_time_series_to_oep(feedin, technology, nut):
     """
     # prepare data frame for upload
     df = pd.DataFrame(feedin).reset_index('time')
-    df['nut'] = nut
+    df['nuts'] = nut  # todo singular of nuts = nuts ??
     df['technology'] = technology
-    # todo upload  # @ Inia, könntest du das machen?
+    # todo upload  --> maybe form of Günni.... er weiß Bescheid, dass er uns Input geben soll.
 
 
 if __name__ == "__main__":
