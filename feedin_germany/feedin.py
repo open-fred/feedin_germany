@@ -190,7 +190,7 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
     if regions == 'landkreise':
         region_gdf = oep.load_regions_file()
         if debug_mode:
-            region_gdf = region_gdf[0:15]
+            region_gdf = region_gdf[0:4]
     elif regions == 'uebertragunsnetzzonen':
         pass
     elif isinstance(regions, gpd.GeoDataFrame):
