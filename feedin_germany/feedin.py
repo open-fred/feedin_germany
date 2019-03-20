@@ -81,6 +81,19 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
 
     """
     if category == 'Solar':
+        # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
+        filename = os.path.abspath(
+            "/home/local/RL-INSTITUT/inia.steinbach/mount_ordner/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_test_2016.csv")
+        weather_df = pd.read_csv(filename, skiprows=range(1, 50), nrows=(5000),
+                                 index_col=0,
+                                 date_parser=lambda idx: pd.to_datetime(idx,
+                                                                        utc=True))
+        weather_df.index = pd.to_datetime(weather_df.index).tz_convert(
+            'Europe/Berlin')
+        # calculate ghi
+        weather_df['ghi'] = weather_df.dirhi + weather_df.dhi
+        weather_pv = weather_df.dropna()
+
         # prepare technical parameters and pv modules
         pv_modules_set = pv_modules.create_pvmodule_dict()
         distribution_dict = pv_modules.create_distribution_dict()
