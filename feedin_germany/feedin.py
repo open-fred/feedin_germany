@@ -31,10 +31,8 @@ from feedin_germany import pv_modules
 
 # Planung Funktionalitäten:
 # - hochladen in OEP nach ausgemachtem Muster (machen nur wir)
-# - Rückgabe für deflex - Muster siehe Jann (nur bei geringer Anzahl an Regionen)
-# - für die Validierung: nur eine Kategorie --> calculate_feedin_germany() mit
-#   einer Kategorie. geringe Regionananzahl --> Rückgabe wie für deflex. Kann
-#   auch gut zur Validierung verwendet werden.
+# - Rückgabe für die Validierung:  db format.(nur bei geringer Anzahl an Regionen)
+# - Umformungsfunktion für deflex - Muster siehe Jann
 
 
 def calculate_feedin(year, register, regions, category, return_feedin=False,
@@ -56,13 +54,13 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     regions : pandas.geoDataFrame
         Regions for which feed-in time series are calculated.
         todo: add required form of GeoDataFrame
-    category : string # todo vllt kein Parameter sondern aus Anlagenregister - sonst verwirrend, da register hier schon gefiltert sein soll.
+    category : string # todo kein Parameter sondern aus Anlagenregister - sonst verwirrend, da register hier schon gefiltert sein soll. Fehlermeldung wenn nicht gefiltert
         Energy source category for which feed-in time series are calculated.
         Options: 'Wind', 'Solar', 'Hydro'.
     return_feedin : boolean
-        If True calculated feed-in is returned as MultiIndexDataFrame
-        (see `feedin_df`). Should only be set to True if number of regions is
-         small. Default: False. todo what means small?
+        If True calculated feed-in is returned as pd.DataFrame. Columns see
+        `feedin_df`. Should only be set to True if number of regions is
+         small. Default: False. todo what does small mean?
     oep_upload : boolean
         If True time series are uploaded to OEP. Default: False.
 
@@ -73,10 +71,8 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     Returns
     -------
     If return_feedin is True:
-    feedin_df : pd.MuliIndex.DataFrame
-        Contains calculated feed-in for each region in `regions`. First level
-        columns contain nuts of regions, second level columns contain
-        `category`.
+    feedin_df : pd.DataFrame
+        Contains calculated feed-in for each region in `regions`. # todo form of return
     else: None.
 
     """
@@ -104,9 +100,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
         '/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
         weather_df = tools.example_weather_wind(filename)
     if return_feedin:
-        # initialize data frame for output
-        cols = pd.MultiIndex(levels=[[], []], codes=[[], []])
-        feedin_df = pd.DataFrame(columns=cols)
+        feedin_df = pd.DataFrame()
     for nut in regions['nuts']:
         register_region = register.loc[register['nuts'] == nut]
         if register_region.empty:
@@ -132,21 +126,39 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
             else:
                 raise ValueError("Invalid category {}".format(category) +
                                  "Choose from: 'Wind', 'Solar', 'Hydro'.")
-            if oep_upload:
+            if oep_upload:  # todo zusammenfassen if oep_upload or ...
                 upload_time_series_to_oep(feedin=feedin, technology=category,
-                                          nut=nut)
-            if return_feedin is True:
-                feedin_df[nut, category.lower()] = feedin
-    if return_feedin is True:
+                                          nuts=nut)
+            if return_feedin:
+                feedin = feedin_to_db_format(feedin=feedin, technology=category,
+                                          nuts=nut)
+                feedin_df = pd.concat([feedin_df, feedin])
+    if return_feedin:
         return feedin_df
     else:
         pass
 
 
+# todo: form to deflex function
+
+# to deflex
+# initialize data frame for output
+    #     cols = pd.MultiIndex(levels=[[], []], codes=[[], []])
+    #     feedin_df = pd.DataFrame(columns=cols)
+# feedin_df.loc[(feedin_df['nuts'] == 'DE804') & (feedin_df['technology'] == 'Wind')].drop(columns=['nuts', 'technology']).set_index('time')
+# df['DE804', 'wind'] = test['feedin']
+
+# feedin_df : pd.MuliIndex.DataFrame
+#         Contains calculated feed-in for each region in `regions`. First level
+#         columns contain nuts of regions, second level columns contain
+#         `category`.
+
+
+
 def calculate_feedin_germany(year, categories, regions='landkreise',
                              register_name='opsd',
                              weather_data_name='open_FRED', oep_upload=False,
-                             debug_mode=False, **kwargs):
+                             return_feedin=False, debug_mode=False, **kwargs):
     r"""
 
     Es sollen eigene Regionen eingegeben werden können,
@@ -174,6 +186,10 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
          Default: 'open_FRED'. todo check
     oep_upload : boolean
         If True time series are uploaded to OEP. Default: False.
+    return_feedin : boolean
+        If True calculated feed-in is returned as pd.DataFrame. Columns see
+        `feedin_df`. Should only be set to True if number of regions is
+         small. Default: False. todo what does small mean?
     debug_mode : boolean
         might be deleted
 
@@ -192,10 +208,8 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
     Returns
     -------
     If `regions` contains less than 26 regions:
-    feedin_df : pd.MuliIndex.DataFrame
-        Contains calculated feed-in for each region in `regions`. First level
-        columns contain nuts of regions, second level columns contain
-        `category`.
+    feedin_df : pd.DataFrame
+        Contains calculated feed-in for each region in `regions`. # todo form of return
     else: None.
 
     """
@@ -203,17 +217,17 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
     if regions == 'landkreise':
         region_gdf = oep.load_regions_file()
         if debug_mode:
-            region_gdf = region_gdf[0:15]
+            region_gdf = region_gdf[0:5]
     elif regions == 'uebertragunsnetzzonen':
-        pass
+        pass  # todo add
     elif isinstance(regions, gpd.GeoDataFrame):
         region_gdf = regions
-
-    if len(region_gdf) <= 25:
-        return_feedin = True
-        feedin_df = pd.DataFrame()
     else:
-        return_feedin = False
+        raise ValueError("`regions` should be 'landkreise',"
+                         "'uebertragunsnetzzonen' or gpd.GeoDataFrame.")
+
+    if return_feedin:
+        feedin_df = pd.DataFrame()
     for category in categories:
         # get power plant register for all power plants in Germany
         if register_name == 'opsd':
@@ -237,7 +251,7 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
             category=category, return_feedin=return_feedin,
             oep_upload=oep_upload, **kwargs)
         if return_feedin:
-            feedin_df = pd.concat([feedin_df, feedin], axis=1)
+            feedin_df = pd.concat([feedin_df, feedin])  # todo check axis when solar + wind
     if return_feedin:
         return feedin_df
     else:
@@ -285,19 +299,3 @@ def upload_time_series_to_oep(feedin, technology, nuts):
     # prepare data frame for upload
     df = feedin_to_db_format(feedin=feedin, technology=technology, nuts=nuts)
     # todo upload  --> maybe form of Günni.... er weiß Bescheid, dass er uns Input geben soll.
-
-
-if __name__ == "__main__":
-    # main.py
-    years = [2012]
-    categories = [
-        'Wind',
-        # 'Solar',
-        # 'Hydro'
-    ]
-    for year in years:
-            feedin = calculate_feedin_germany(
-                year=year, categories=categories, regions='landkreise',
-                register_name='opsd', weather_data_name='open_FRED',
-                oep_upload=True, debug_mode=True)
-            print(feedin)

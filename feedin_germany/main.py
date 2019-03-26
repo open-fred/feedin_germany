@@ -1,5 +1,6 @@
 # imports
 import os
+import pandas as pd
 from matplotlib import pyplot as plt
 
 # internal imports
@@ -45,22 +46,25 @@ for year in years:
     feedin = feedin.calculate_feedin_germany(
         year=year, categories=categories, regions='landkreise', # todo: uebertragungsnetzzonen
         register_name=register_name, weather_data_name=weather_data_name,
-        oep_upload=True, debug_mode=debug_mode, wake_losses_model=None)
+        oep_upload=True, return_feedin=True, debug_mode=debug_mode,
+        wake_losses_model=None)
 
     # get validation feed-in time series
     # val_feedin = val_data.load_feedin_data()  # todo adapt
     val_feedin = feedin.rename(columns={'feedin': 'feedin_val'}) # todo delete
 
     # join data frame in the form needed by calculate_validation_metrics()
-    validation_df = feedin  # todo!!
+    validation_df = pd.merge(left=feedin, right=val_feedin, how='inner')  # todo check with real data
 
     # calculate metrics and save to file
-    filename = os.path.join(os.path.dirname(__file__),
-                            cfg.get('paths', 'validation'),
+    validation_path = cfg.get('paths', 'validation')
+    if not os.path.exists(validation_path):
+        os.makedirs(validation_path, exist_ok=True)
+    filename = os.path.join(os.path.dirname(__file__), validation_path,
                             cfg.get('validation', 'filename').format(
                                 reg=register_name, weather=weather_data_name,
                                 year=year))
     val_tools.calculate_validation_metrics(
-        df=validation_df, val_cols=['feedin', 'feedin_val'],
+        df=validation_df.set_index('time'), val_cols=['feedin', 'feedin_val'],
         metrics='standard', filter_cols=['nuts', 'technology'],
         filename=filename, print_out=True)

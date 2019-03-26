@@ -44,22 +44,45 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         todo
 
     """
-    # todo: beliebig viele Spalten zur Filterung möglich
-    col_1 = filter_cols[0]
-    col_2 = filter_cols[1]
-    metrics_df = pd.DataFrame(columns=[val_cols])  # todo multiindex filter_1, filter_2
-    for filter_1 in df[col_1].groupby():  # oder unique()
-        for filter_2 in df[col_2].groupby():  # oder unique()
-            val_df = df.loc[(df[col_1] == filter_1) & (df[col_2] == filter_2)].drop([col_1, col_2], axis=1)
-            if metrics == 'standard':
-                metrics = ['rmse_norm', 'mean_bias', 'pearson']
-            for metric in metrics:
-                pass
-                # alle metrics in df schreiben
-                #metrics_df mit index filter_1, filter_2 [metric] = ...
-            # val metrics für diese beiden Zeitreihen
-            # todo vllt in eigener Funktion, die schon gefilterte Zeitreihen bekommt - dann könnte man auch nur die verwenden
-            # speichern
+    if metrics == 'standard':
+        metrics = ['rmse_norm', 'mean_bias', 'pearson'] # get all pairs of `filter_cols`
+    filter_df = df.groupby(filter_cols).size().reset_index().drop(columns=[0],
+                                                                   axis=1)
+    metrics_df = pd.DataFrame()
+    for filters, index in zip(filter_df.values, filter_df.index):
+        df['temp'] = df[filter_cols].isin(filters).all(axis=1)
+        val_df = df.loc[df['temp'] == True][val_cols]
+        df.drop(columns=['temp'], inplace=True)
+
+        metrics_temp_df = pd.DataFrame(data=filters[0],
+                                       columns=[filter_cols[0]], index=[index])
+        metrics_temp_df[filter_cols[1]] = filters[1] # todo schöner!- hatte keine Zeit
+        for metric in metrics:
+            metrics_temp_df[metric] = get_metric(
+                metric=metric, validation_data=val_df, val_cols=val_cols)
+        metrics_df = pd.concat([metrics_df, metrics_temp_df])
+    # save results
+    metrics_df.to_csv(filename)
+
+
+def get_metric(metric, validation_data, val_cols):
+    r"""
+
+    """
+    if metric == 'rmse_norm':
+        metric_value = get_rmse(
+            simulation_series=validation_data[val_cols[0]],
+            validation_series=validation_data[val_cols[1]], normalized=True)[0]
+    elif metric == 'mean_bias':
+        metric_value = get_mean_bias(
+            simulation_series=validation_data[val_cols[0]],
+            validation_series=validation_data[val_cols[1]])
+    elif metric == 'pearson':
+        metric_value = get_pearson_s_r(df=validation_data, min_periods=None)  # todo min periods
+    else:
+        raise ValueError("Metric {} not added, yet.".format(metric))
+
+    return metric_value
 
 
 def get_standard_deviation(data_series):
@@ -138,7 +161,7 @@ def get_pearson_s_r(df, min_periods=None):
     ----------
     df : pd.DataFrame
         todo description
-    min_periods : integer
+    min_periods : integer or None
         Minimum amount of periods for correlation. Default: None.
 
     Returns
