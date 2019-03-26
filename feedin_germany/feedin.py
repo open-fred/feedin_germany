@@ -244,7 +244,29 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
         pass
 
 
-def upload_time_series_to_oep(feedin, technology, nut):
+def feedin_to_db_format(feedin, technology, nuts):
+    r"""
+    ..... todo
+
+    Column 'time' contains the datetime index of `feedin`, 'feedin' the
+    feed-in time series itself as in `feedin`, 'technology' the technology
+    the feed-in origins from as in `technology` and 'nut' the region nut of the
+    calculated feed-in as given in `nut`
+
+    feedin : pd.Series
+        Feed-in time series with datetime index.
+    technology : string
+        todo
+    nuts : ... todo
+
+    """
+    df = pd.DataFrame(feedin).reset_index('time')
+    df['nuts'] = nuts
+    df['technology'] = technology
+    return df
+
+
+def upload_time_series_to_oep(feedin, technology, nuts):
     r"""
     Uploads feed-in time series to OEP 'model_draft' schema.
 
@@ -257,13 +279,11 @@ def upload_time_series_to_oep(feedin, technology, nut):
         Feed-in time series with datetime index.
     technology : string
         todo
-    nut : ... todo
+    nuts : ... todo
 
     """
     # prepare data frame for upload
-    df = pd.DataFrame(feedin).reset_index('time')
-    df['nuts'] = nut  # todo singular of nuts = nuts ??
-    df['technology'] = technology
+    df = feedin_to_db_format(feedin=feedin, technology=technology, nuts=nuts)
     # todo upload  --> maybe form of Günni.... er weiß Bescheid, dass er uns Input geben soll.
 
 
