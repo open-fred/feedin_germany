@@ -492,7 +492,8 @@ def assign_turbine_data_by_wind_zone(register):
 
     """
     # get wind zones polygons
-    path = cfg.get('paths', 'geometry')
+    # path = cfg.get('paths', 'geometry')
+    path = '/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP3 4 Kraftwerks und Grunddaten/AP3 Kraftwerke/windzonen'
     filename = cfg.get('geometry', 'wind_zones')  # todo use dibt wind zones!!
     wind_zones = geometries.load(path=path, filename=filename)
     wind_zones.set_index('zone', inplace=True)
