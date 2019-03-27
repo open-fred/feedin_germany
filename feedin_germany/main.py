@@ -27,12 +27,12 @@ categories = [
 #  auswählbar, je nachdem was noch umgesetzt wird; opsd/mastr, versch. parameter der pvlib/windpowerlib
 
 # Upload of feed-in time series for "Landkreise" Germany
-for year in years:
-        feedin = feedin.calculate_feedin_germany(
-            year=year, categories=categories, regions='landkreise',
-            register_name='opsd', weather_data_name='open_FRED',
-            oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
-        print(feedin)
+#for year in years:
+#        feedin = feedin.calculate_feedin_germany(
+#            year=year, categories=categories, regions='landkreise',
+#            register_name='opsd', weather_data_name='open_FRED',
+#            oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
+#        print(feedin)
 
         # feedin.plot()
         # plt.show()
@@ -46,12 +46,11 @@ for year in years:
     feedin = feedin.calculate_feedin_germany(
         year=year, categories=categories, regions='landkreise', # todo: uebertragungsnetzzonen
         register_name=register_name, weather_data_name=weather_data_name,
-        oep_upload=True, return_feedin=True, debug_mode=debug_mode,
+        oep_upload=False, return_feedin=True, debug_mode=debug_mode,
         wake_losses_model=None)
 
     # get validation feed-in time series
-    # val_feedin = val_data.load_feedin_data()  # todo adapt
-    val_feedin = feedin.rename(columns={'feedin': 'feedin_val'}) # todo delete
+    val_feedin = val_data.load_feedin_data(categories, year, latest=False)
 
     # join data frame in the form needed by calculate_validation_metrics()
     validation_df = pd.merge(left=feedin, right=val_feedin, how='inner')  # todo check with real data
