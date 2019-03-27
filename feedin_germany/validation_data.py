@@ -18,7 +18,7 @@ import io
 
 from feedin_germany import config as cfg
 
-def load_feedin_data(category, year, latest=False): # _from_...? todo get data
+def load_feedin_data(categories, year, latest=False): # _from_...? todo get data
 
     r"""
     loads register from server
@@ -52,27 +52,61 @@ def load_feedin_data(category, year, latest=False): # _from_...? todo get data
 
     df['utc_timestamp'] = pd.to_datetime(df['utc_timestamp'])
     df_year = df[df['utc_timestamp'].dt.year == year]
+    df_agg = df.set_index('utc_timestamp').resample('30Min').sum().reset_index()
 
-    if category == 'Solar':
-        dpv=df_year[['utc_timestamp',
-                     'DE_solar_capacity',
-                     'DE_solar_generation_actual',
-                     'DE_solar_profile',
-                     'DE_50hertz_solar_generation_actual',
-                     'DE_amprion_solar_generation_actual',
-                     'DE_tennet_solar_generation_actual',
-                     'DE_transnetbw_solar_generation_actual']]
 
-        return dpv
+    for category in categories:
+        if category == 'Solar':
+            dpv=df_agg[['utc_timestamp',
+                         'DE_50hertz_solar_generation_actual',
+                         'DE_amprion_solar_generation_actual',
+                         'DE_tennet_solar_generation_actual',
+                         'DE_transnetbw_solar_generation_actual']]
+            dpv_new=dpv.rename(index=str, columns={"utc_timestamp": "time",
+                                                   "DE_50hertz_solar_generation_actual": "50herz",
+                                                   "DE_amprion_solar_generation_actual": "amprion",
+                                                   "DE_tennet_solar_generation_actual": "tennet",
+                                                   "DE_transnetbw_solar_generation_actual": "transnetbw"})
+
+            dpv_melt=dpv_new.melt(id_vars=['time'], var_name='nuts',
+                                  value_name='feedin_val')
+
+            dpv_melt['technology'] = 'Solar'
+            dpv_melt['capacity'] = dpv_melt['feedin_val'] * (10 ** 6)
+
+            val_data_pv= dpv_melt[['time', 'feedin_val', 'nuts', 'technology']]
+
+            if len(categories) > 1:
+                pass
+            else: return val_data_pv
+
     
-    if category == 'Wind':
-        dwind= df_year[['utc_timestamp','DE_wind_capacity',
-       'DE_wind_generation_actual', 'DE_wind_profile',
-       'DE_wind_offshore_capacity', 'DE_wind_offshore_generation_actual',
-       'DE_wind_offshore_profile', 'DE_wind_onshore_capacity',
-       'DE_wind_onshore_generation_actual', 'DE_wind_onshore_profile']]
+        if category == 'Wind':
+            dwind= df_agg[['utc_timestamp',
+                            'DE_50hertz_wind_generation_actual',
+                            'DE_amprion_wind_generation_actual',
+                            'DE_tennet_wind_generation_actual',
+                            'DE_transnetbw_wind_generation_actual'
+                            ]]
+            dwind_new = dwind.rename(index=str, columns={"utc_timestamp": "time",
+                                                     "DE_50hertz_wind_generation_actual": "50herz",
+                                                     "DE_amprion_wind_generation_actual": "amprion",
+                                                     "DE_tennet_wind_generation_actual": "tennet",
+                                                     "DE_transnetbw_wind_generation_actual": "transnetbw"})
 
-        return dwind
+            dwind_melt = dwind_new.melt(id_vars=['time'], var_name='nuts',
+                                    value_name='feedin_val')
+
+            dwind_melt['technology'] = 'Wind'
+            dwind_melt['feedin_val'] = dwind_melt['feedin_val'] * (10 ** 6)
+            val_data_wind=dwind_melt[['time', 'feedin_val', 'nuts', 'technology']]
+
+            if len(categories) > 1:
+                pass
+            else:
+                return val_data_wind
+
+    return pd.concat([val_data_pv, val_data_wind])
 
     # load übertragunsnetz feed-in time series
     # prepare like our feed-in time series (columns: time, technology, nuts, feedin_val)
@@ -81,10 +115,10 @@ def load_feedin_data(category, year, latest=False): # _from_...? todo get data
 
 if __name__ == "__main__":
 
-    category='Wind'
+    categories=['Wind', 'Solar']
     year=2012
 
-    df=  load_feedin_data(category, year, latest=False)
+    df=  load_feedin_data(categories, year, latest=False)
     print(df.columns)
 
 
