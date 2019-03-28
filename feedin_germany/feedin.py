@@ -120,7 +120,8 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
                     ['lat', 'lon', 'commissioning_date', 'capacity',
                      'Coordinates']]
                 # open feedinlib to calculate feed in time series for region
-                feedin = pv_region.pv_feedin_distribution_register(
+                feedin = region.Region(geom='no_geom',
+                                       weather=weather_pv).pv_feedin_distribution_register(
                     distribution_dict=distribution_dict,
                     technical_parameters=pv_modules_set, register=register_pv)
             elif category == 'Wind':
