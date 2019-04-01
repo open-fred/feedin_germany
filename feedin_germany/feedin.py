@@ -26,6 +26,7 @@ from feedinlib import tools
 from feedin_germany import opsd_power_plants as opsd
 from feedin_germany import oep_regions as oep
 from feedin_germany import pv_modules
+from feedin_germany import mastr_power_plants as mastr
 
 
 # Planung Funktionalitäten:
@@ -257,7 +258,8 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
                                                          keep_cols=keep_cols)
         elif register_name == 'MaStR':
             if category == 'Wind':
-                pass  # todo add MaStR
+                register = mastr.get_mastr_pp_filtered_by_year(
+                    category=category, year=year)
             else:
                 raise ValueError("Option 'MaStR' as `register_name` up to "
                                  "now only available for `category` 'Wind'.")
