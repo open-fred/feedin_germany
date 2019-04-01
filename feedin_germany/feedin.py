@@ -20,7 +20,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from feedinlib import region
-from feedinlib import pv_region
+#from feedinlib import pv_region
 from feedinlib import tools
 
 # import internal modules
@@ -139,20 +139,24 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
         pass
 
 
-# todo: form to deflex function
+def form_feedin_for_deflex(feedin):
+    r"""
 
-# to deflex
-# initialize data frame for output
-    #     cols = pd.MultiIndex(levels=[[], []], codes=[[], []])
-    #     feedin_df = pd.DataFrame(columns=cols)
-# feedin_df.loc[(feedin_df['nuts'] == 'DE804') & (feedin_df['technology'] == 'Wind')].drop(columns=['nuts', 'technology']).set_index('time')
-# df['DE804', 'wind'] = test['feedin']
+    Returns
+    -------
+    feedin_df : pd.MuliIndex.DataFrame
+        Contains calculated feed-in for each region in `regions`. First level
+        columns contain nuts of regions, second level columns contain
+        `category`.
 
-# feedin_df : pd.MuliIndex.DataFrame
-#         Contains calculated feed-in for each region in `regions`. First level
-#         columns contain nuts of regions, second level columns contain
-#         `category`.
+    """
+    # initialize data frame for output
+    cols = pd.MultiIndex(levels=[[], []], codes=[[], []])
+    deflex_feedin = pd.DataFrame(columns=cols)
+    df = feedin.loc[(feedin['nuts'] == 'DE804') & (feedin['technology'] == 'Wind')].drop(columns=['nuts', 'technology']).set_index('time')
+   #df['DE804', 'wind'] = test['feedin']
 
+    return deflex_feedin
 
 
 def calculate_feedin_germany(year, categories, regions='landkreise',
@@ -299,3 +303,13 @@ def upload_time_series_to_oep(feedin, technology, nuts):
     # prepare data frame for upload
     df = feedin_to_db_format(feedin=feedin, technology=technology, nuts=nuts)
     # todo upload  --> maybe form of Günni.... er weiß Bescheid, dass er uns Input geben soll.
+
+
+if __name__ == "__main__":
+    feedin = calculate_feedin_germany(
+        year=2012, categories=['Wind'], regions='landkreise',
+        register_name='opsd', weather_data_name='open_FRED',
+        oep_upload=False, return_feedin=True, debug_mode=True,
+        wake_losses_model=None)
+    deflex_feedin = form_feedin_for_deflex(feedin=feedin)
+    print(deflex_feedin.head())
