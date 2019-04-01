@@ -18,7 +18,7 @@ debug_mode = True  # Only 4 regions are calculated.
 
 years = [2012]
 categories = [
-    #'Wind',
+    'Wind',
     'Solar',
     # 'Hydro'
 ]
@@ -49,11 +49,15 @@ for year in years:
         oep_upload=False, return_feedin=True, debug_mode=debug_mode,
         wake_losses_model=None)
 
+    # # todo delete: is for debugging
+    # import pickle
+    # feedin = pickle.load(open('debug_dump.p', 'rb'))
+
     # get validation feed-in time series
     val_feedin = val_data.load_feedin_data(categories, year, latest=False)
 
     # join data frame in the form needed by calculate_validation_metrics()
-    validation_df = pd.merge(left=feedin, right=val_feedin, how='inner')  # todo check with real data
+    validation_df = pd.merge(left=feedin, right=val_feedin, how='inner')  # todo check with real data   maybe on=['time', 'technology', 'nuts']
 
     # calculate metrics and save to file
     validation_path = cfg.get('paths', 'validation')
