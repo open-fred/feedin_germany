@@ -122,7 +122,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
                                        weather=weather_df).wind_feedin(
                     register_region, **kwargs)
             elif category == 'Hydro':
-                pass
+                raise ValueError("Hydro not working, yet.")
             else:
                 raise ValueError("Invalid category {}".format(category) +
                                  "Choose from: 'Wind', 'Solar', 'Hydro'.")
