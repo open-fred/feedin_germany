@@ -141,6 +141,17 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
 
 def form_feedin_for_deflex(feedin):
     r"""
+    Forms feed-in to the form deflex needs it.
+
+    Feed-in from :py:func:`calculate_feedin` or
+    :py:func:`calculate_feedin_germany` is formed to a MultiIndex data frame as
+    needed by deflex. todo link ...
+
+    Parameters
+    ----------
+    feedin : pd.DataFrame
+        Feed-in as returned from :py:func:`calculate_feedin` or
+        :py:func:`calculate_feedin_germany`.
 
     Returns
     -------
@@ -153,9 +164,13 @@ def form_feedin_for_deflex(feedin):
     # initialize data frame for output
     cols = pd.MultiIndex(levels=[[], []], codes=[[], []])
     deflex_feedin = pd.DataFrame(columns=cols)
-    df = feedin.loc[(feedin['nuts'] == 'DE804') & (feedin['technology'] == 'Wind')].drop(columns=['nuts', 'technology']).set_index('time')
-   #df['DE804', 'wind'] = test['feedin']
-
+    filter_df = feedin.groupby(['nuts', 'technology']).size().reset_index().drop(columns=[0],
+                                                                   axis=1)
+    for filters in filter_df.values:
+        df = feedin.loc[(feedin['nuts'] == filters[0]) &
+                        (feedin['technology'] == filters[1])].drop(
+            columns=['nuts', 'technology']).set_index('time')
+        deflex_feedin[filters[0], filters[1].lower()] = df['feedin']
     return deflex_feedin
 
 
@@ -306,10 +321,18 @@ def upload_time_series_to_oep(feedin, technology, nuts):
 
 
 if __name__ == "__main__":
-    feedin = calculate_feedin_germany(
-        year=2012, categories=['Wind'], regions='landkreise',
-        register_name='opsd', weather_data_name='open_FRED',
-        oep_upload=False, return_feedin=True, debug_mode=True,
-        wake_losses_model=None)
-    deflex_feedin = form_feedin_for_deflex(feedin=feedin)
-    print(deflex_feedin.head())
+    # main.py
+    years = [2012]
+    categories = [
+        'Wind',
+        # 'Solar',
+        # 'Hydro'
+    ]
+    for year in years:
+        feedin = calculate_feedin_germany(
+            year=year, categories=categories, regions='landkreise',
+            register_name='opsd', weather_data_name='open_FRED',
+            return_feedin=True, oep_upload=True, debug_mode=True)
+        print(feedin)
+        deflex_feedin = form_feedin_for_deflex(feedin=feedin)
+        print(deflex_feedin.head())
