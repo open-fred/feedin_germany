@@ -384,7 +384,7 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
 
     filter_columns = ['capacity_{0}']
 
-    # Get all powerplants for the given year.
+    # Get all power plants for the given year.
     # If com_month exist the power plants will be considered month-wise.
     # Otherwise the commission/decommission within the given year is not
     # considered.
@@ -400,7 +400,7 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
                                      (12 - pp.loc[c2, 'com_month']) / 12)
         c3 = pp['decom_year'] == year
         pp.loc[c3, filter_column] = (pp.loc[c3, orig_column] *
-                                     pp.loc[c3, 'com_month'] / 12)  # todo FRAGE @ Inia: beide Male com_month oder auch decom_month?
+                                     pp.loc[c3, 'decom_month'] / 12)
 
         if overwrite_capacity:
             pp[orig_column] = 0
