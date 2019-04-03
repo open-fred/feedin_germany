@@ -53,7 +53,7 @@ def load_feedin_data(categories, year, latest=False):
 
     df['utc_timestamp'] = pd.to_datetime(df['utc_timestamp'])
     df_year = df[df['utc_timestamp'].dt.year == year]
-    df_agg = df.set_index('utc_timestamp').resample('30Min').sum().reset_index()
+    df_agg = df_year.set_index('utc_timestamp').resample('30Min').sum().reset_index()
 
 
     for category in categories:
