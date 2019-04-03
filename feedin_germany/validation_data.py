@@ -64,7 +64,7 @@ def load_feedin_data(categories, year, latest=False):
                          'DE_tennet_solar_generation_actual',
                          'DE_transnetbw_solar_generation_actual']]
             dpv_new=dpv.rename(index=str, columns={"utc_timestamp": "time",
-                                                   "DE_50hertz_solar_generation_actual": "50herz",
+                                                   "DE_50hertz_solar_generation_actual": "50hertz",
                                                    "DE_amprion_solar_generation_actual": "amprion",
                                                    "DE_tennet_solar_generation_actual": "tennet",
                                                    "DE_transnetbw_solar_generation_actual": "transnetbw"})
@@ -90,7 +90,7 @@ def load_feedin_data(categories, year, latest=False):
                             'DE_transnetbw_wind_generation_actual'
                             ]]
             dwind_new = dwind.rename(index=str, columns={"utc_timestamp": "time",
-                                                     "DE_50hertz_wind_generation_actual": "50herz",
+                                                     "DE_50hertz_wind_generation_actual": "50hertz",
                                                      "DE_amprion_wind_generation_actual": "amprion",
                                                      "DE_tennet_wind_generation_actual": "tennet",
                                                      "DE_transnetbw_wind_generation_actual": "transnetbw"})
