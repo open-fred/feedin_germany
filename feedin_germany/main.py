@@ -50,9 +50,15 @@ for register_name in register_names:
             oep_upload=False, return_feedin=True, debug_mode=debug_mode,
             wake_losses_model=None)
 
-    # # todo delete: is for debugging
-    # import pickle
-    # feedin = pickle.load(open('debug_dump.p', 'rb'))
+        # # todo delete: is for debugging
+        # import pickle
+        # pickle.dump(feedin, open('debug_dump.p', 'wb'))
+        # feedin = pickle.load(open('debug_dump.p', 'rb'))
+        # todo delete: just for trying..
+        feedin.loc[feedin['nuts'] == 'DE804', 'nuts'] = '50hertz'
+        feedin.loc[feedin['nuts'] == 'DE917', 'nuts'] = 'amprion'
+        feedin.loc[feedin['nuts'] == 'DE40F', 'nuts'] = 'tennet'
+        feedin.loc[feedin['nuts'] == 'DEB34', 'nuts'] = 'transnetbw'
 
         # get validation feed-in time series
         val_feedin = val_data.load_feedin_data(categories, year, latest=False)
