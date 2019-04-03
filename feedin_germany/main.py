@@ -29,13 +29,13 @@ register_names = [
 weather_data_name = 'open_FRED'
 
 # Upload of feed-in time series for "Landkreise" Germany
-# for register_name in register_names:
-#     for year in years:
-#        feedin = feedin.calculate_feedin_germany(
-#            year=year, categories=categories, regions='landkreise',
-#            register_name='opsd', weather_data_name='open_FRED',
-#            oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
-#        print(feedin)
+for register_name in register_names:
+    for year in years:
+       feedin = feedin.calculate_feedin_germany(
+           year=year, categories=categories, regions='landkreise',
+           register_name='opsd', weather_data_name='open_FRED',
+           oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
+       print(feedin)
 
         # feedin.plot()
         # plt.show()
