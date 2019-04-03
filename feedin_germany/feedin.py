@@ -20,7 +20,6 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 
 from feedinlib import region
-from feedinlib import pv_region
 from feedinlib import tools
 
 # import internal modules
@@ -97,7 +96,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
     if category == 'Wind':
         filename = os.path.abspath(
-        '/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
+        '/home/local/RL-INSTITUT/inia.steinbach/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
         weather_df = tools.example_weather_wind(filename)
     if return_feedin:
         feedin_df = pd.DataFrame()
@@ -114,7 +113,8 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
                     ['lat', 'lon', 'commissioning_date', 'capacity',
                      'Coordinates']]
                 # open feedinlib to calculate feed in time series for region
-                feedin = pv_region.pv_feedin_distribution_register(
+                feedin = region.Region(geom='no_geom',
+                                       weather=weather_pv).pv_feedin_distribution_register(
                     distribution_dict=distribution_dict,
                     technical_parameters=pv_modules_set, register=register_pv)
             elif category == 'Wind':
