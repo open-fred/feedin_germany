@@ -26,6 +26,7 @@ from feedinlib import tools
 from feedin_germany import opsd_power_plants as opsd
 from feedin_germany import oep_regions as oep
 from feedin_germany import pv_modules
+from feedin_germany import mastr_power_plants as mastr
 
 
 # Planung Funktionalitäten:
@@ -96,7 +97,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
     if category == 'Wind':
         filename = os.path.abspath(
-        '/home/local/RL-INSTITUT/inia.steinbach/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
+        '/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
         weather_df = tools.example_weather_wind(filename)
     if return_feedin:
         feedin_df = pd.DataFrame()
@@ -113,16 +114,18 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
                     ['lat', 'lon', 'commissioning_date', 'capacity',
                      'Coordinates']]
                 # open feedinlib to calculate feed in time series for region
-                feedin = region.Region(geom='no_geom',
-                                       weather=weather_pv).pv_feedin_distribution_register(
+                feedin = region.Region(
+                    geom='no_geom',
+                    weather=weather_pv).pv_feedin_distribution_register(
                     distribution_dict=distribution_dict,
-                    technical_parameters=pv_modules_set, register=register_pv)
+                    technical_parameters=pv_modules_set,
+                    register=register_pv)
             elif category == 'Wind':
                 feedin = region.Region(geom='no_geom',
                                        weather=weather_df).wind_feedin(
                     register_region, **kwargs)
             elif category == 'Hydro':
-                pass
+                raise ValueError("Hydro not working, yet.")
             else:
                 raise ValueError("Invalid category {}".format(category) +
                                  "Choose from: 'Wind', 'Solar', 'Hydro'.")
@@ -139,20 +142,39 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
         pass
 
 
-# todo: form to deflex function
+def form_feedin_for_deflex(feedin):
+    r"""
+    Forms feed-in to the form deflex needs it.
 
-# to deflex
-# initialize data frame for output
-    #     cols = pd.MultiIndex(levels=[[], []], codes=[[], []])
-    #     feedin_df = pd.DataFrame(columns=cols)
-# feedin_df.loc[(feedin_df['nuts'] == 'DE804') & (feedin_df['technology'] == 'Wind')].drop(columns=['nuts', 'technology']).set_index('time')
-# df['DE804', 'wind'] = test['feedin']
+    Feed-in from :py:func:`calculate_feedin` or
+    :py:func:`calculate_feedin_germany` is formed to a MultiIndex data frame as
+    needed by deflex. todo link ...
 
-# feedin_df : pd.MuliIndex.DataFrame
-#         Contains calculated feed-in for each region in `regions`. First level
-#         columns contain nuts of regions, second level columns contain
-#         `category`.
+    Parameters
+    ----------
+    feedin : pd.DataFrame
+        Feed-in as returned from :py:func:`calculate_feedin` or
+        :py:func:`calculate_feedin_germany`.
 
+    Returns
+    -------
+    feedin_df : pd.MuliIndex.DataFrame
+        Contains calculated feed-in for each region in `regions`. First level
+        columns contain nuts of regions, second level columns contain
+        `category`.
+
+    """
+    # initialize data frame for output
+    cols = pd.MultiIndex(levels=[[], []], codes=[[], []])
+    deflex_feedin = pd.DataFrame(columns=cols)
+    filter_df = feedin.groupby(['nuts', 'technology']).size().reset_index().drop(columns=[0],
+                                                                   axis=1)
+    for filters in filter_df.values:
+        df = feedin.loc[(feedin['nuts'] == filters[0]) &
+                        (feedin['technology'] == filters[1])].drop(
+            columns=['nuts', 'technology']).set_index('time')
+        deflex_feedin[filters[0], filters[1].lower()] = df['feedin']
+    return deflex_feedin
 
 
 def calculate_feedin_germany(year, categories, regions='landkreise',
@@ -236,7 +258,8 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
                                                          keep_cols=keep_cols)
         elif register_name == 'MaStR':
             if category == 'Wind':
-                pass  # todo add MaStR
+                register = mastr.get_mastr_pp_filtered_by_year(
+                    category=category, year=year)
             else:
                 raise ValueError("Option 'MaStR' as `register_name` up to "
                                  "now only available for `category` 'Wind'.")
@@ -299,3 +322,21 @@ def upload_time_series_to_oep(feedin, technology, nuts):
     # prepare data frame for upload
     df = feedin_to_db_format(feedin=feedin, technology=technology, nuts=nuts)
     # todo upload  --> maybe form of Günni.... er weiß Bescheid, dass er uns Input geben soll.
+
+
+if __name__ == "__main__":
+    # main.py
+    years = [2012]
+    categories = [
+        'Wind',
+        # 'Solar',
+        # 'Hydro'
+    ]
+    for year in years:
+        feedin = calculate_feedin_germany(
+            year=year, categories=categories, regions='landkreise',
+            register_name='opsd', weather_data_name='open_FRED',
+            return_feedin=True, oep_upload=True, debug_mode=True)
+        print(feedin)
+        deflex_feedin = form_feedin_for_deflex(feedin=feedin)
+        print(deflex_feedin.head())

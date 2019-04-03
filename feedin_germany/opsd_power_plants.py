@@ -13,7 +13,6 @@ https://github.com/reegis/reegis
 * log_undefined_capacity
 * complete_opsd_geometries()
 * remove_cols()
-* prepare_dates()
 * prepare_opsd_file()
 # todo @ Inia: please check
 
@@ -43,6 +42,7 @@ from oemof.tools import logger
 # Internal modules
 from feedin_germany import config as cfg
 from feedin_germany import geometries
+from feedin_germany import power_plant_register_tools as ppr_tools
 
 
 def load_original_opsd_file(latest=False):
@@ -269,31 +269,6 @@ def remove_cols(df, cols):
     return df
 
 
-def prepare_dates(df, date_cols, month):
-    # Commission year from float or string
-    if df[date_cols[0]].dtype == np.float64:
-        df['com_year'] = df[date_cols[0]].fillna(1800).astype(np.int64)
-    else:
-        df['com_year'] = pd.to_datetime(df[date_cols[0]].fillna(
-            '1800-01-01')).dt.year
-
-    # Decommission year from float or string
-    if df[date_cols[1]].dtype == np.float64:
-        df['decom_year'] = df[date_cols[1]].fillna(2050).astype(np.int64)
-    else:
-        df['decom_year'] = pd.to_datetime(df[date_cols[1]].fillna(
-            '2050-12-31')).dt.year
-
-    if month:
-        df['com_month'] = pd.to_datetime(df[date_cols[0]].fillna(
-            '1800-01-01')).dt.month
-        df['decom_month'] = pd.to_datetime(df[date_cols[1]].fillna(
-            '2050-12-31')).dt.month
-    else:
-        df['com_month'] = 6
-        df['decom_month'] = 6
-
-
 def prepare_opsd_file(overwrite):
     r"""
     Loads original opsd file and processes it.
@@ -357,7 +332,8 @@ def prepare_opsd_file(overwrite):
     if remove_list is not None:
         df = remove_cols(df, remove_list)
 
-    prepare_dates(df, date_cols, month)
+    ppr_tools.prepare_dates(df=df, date_cols=date_cols,
+                            month=month)
 
     # capacity in W  todo @Inia: feedinlib wants to give back feedin ts in W. Capacity input in pvlib in W convenient?
     df['capacity'] = df['capacity'] * (10 ** 6)
@@ -366,54 +342,7 @@ def prepare_opsd_file(overwrite):
     return df
 
 
-def get_pp_by_year(year, register, overwrite_capacity=True):
-    """
-
-    Parameters
-    ----------
-    year : int
-    overwrite_capacity : bool
-        By default (False) a new column "capacity_<year>" is created. If set to
-        True the old capacity column will be overwritten.
-
-    Returns
-    -------
-
-    """
-    pp = pd.DataFrame(register)
-
-    filter_columns = ['capacity_{0}']
-
-    # Get all powerplants for the given year.
-    # If com_month exist the power plants will be considered month-wise.
-    # Otherwise the commission/decommission within the given year is not
-    # considered.
-
-    for fcol in filter_columns:
-        filter_column = fcol.format(year)
-        orig_column = fcol[:-4]
-        c1 = (pp['com_year'] < year) & (pp['decom_year'] > year)
-        pp.loc[c1, filter_column] = pp.loc[c1, orig_column]
-
-        c2 = pp['com_year'] == year
-        pp.loc[c2, filter_column] = (pp.loc[c2, orig_column] *
-                                     (12 - pp.loc[c2, 'com_month']) / 12)
-        c3 = pp['decom_year'] == year
-        pp.loc[c3, filter_column] = (pp.loc[c3, orig_column] *
-                                     pp.loc[c3, 'com_month'] / 12)  # todo FRAGE @ Inia: beide Male com_month oder auch decom_month?
-
-        if overwrite_capacity:
-            pp[orig_column] = 0
-            pp[orig_column] = pp[filter_column]
-            del pp[filter_column]
-
-        # delete all rows with com_year > year
-        pp_filtered = pp.loc[pp['com_year'] < year+1]
-
-    return pp_filtered
-
-
-def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
+def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):  # todo evtl get
     r"""
     Returns by `energy_source` and `year` filtered OPSD register.
 
@@ -441,16 +370,12 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):
     if energy_source not in ['Wind', 'Solar']:
         logging.warning("category must be 'Wind' or 'Solar'")
     register = df.loc[df['energy_source_level_2'] == energy_source]
-    # remove_pp_with_missing_coordinates  # todo: check why they are missing. maybe adapt
-    if register[['lat', 'lon']].isnull().values.any():
-        amount = register[['lat', 'lon']].isnull().sum()[0]  # amount of lat
-        register = register.dropna(subset=['lat', 'lon'])
-        logging.warning(
-            "Removed {} {} power plants with missing coordinates.".format(
-                amount, energy_source.lower()))
+    register = ppr_tools.remove_pp_with_missing_coordinates(
+        register=register, category=energy_source, register_name='opsd')
 
-    # filter_by_year
-    filtered_register = get_pp_by_year(year=year, register=register)
+    # filter by year
+    filtered_register = ppr_tools.get_pp_by_year(year=year,
+                                                 register=register)
     if keep_cols is not None:
         filtered_register = filtered_register[keep_cols]
     if energy_source == 'Wind':
