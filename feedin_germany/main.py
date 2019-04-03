@@ -22,12 +22,15 @@ categories = [
     'Solar',
     # 'Hydro'
 ]
-
-# todo f. später evtl functions oder loops, sodass ein oder das andere gemacht wird;
-#  auswählbar, je nachdem was noch umgesetzt wird; opsd/mastr, versch. parameter der pvlib/windpowerlib
+register_names = [
+    'opsd',
+    # 'MaStR'  # only use for category 'Wind'
+]
+weather_data_name = 'open_FRED'
 
 # Upload of feed-in time series for "Landkreise" Germany
-#for year in years:
+# for register_name in register_names:
+#     for year in years:
 #        feedin = feedin.calculate_feedin_germany(
 #            year=year, categories=categories, regions='landkreise',
 #            register_name='opsd', weather_data_name='open_FRED',
@@ -39,35 +42,34 @@ categories = [
 
 # Validation of PVlib and windpowerlib feed-in time series via
 # "Übertragungsnetzzonen"
-# parameters for validation
-register_name = 'opsd'
-weather_data_name = 'open_FRED'
-for year in years:
-    feedin = feedin.calculate_feedin_germany(
-        year=year, categories=categories, regions='landkreise', # todo: uebertragungsnetzzonen
-        register_name=register_name, weather_data_name=weather_data_name,
-        oep_upload=False, return_feedin=True, debug_mode=debug_mode,
-        wake_losses_model=None)
+for register_name in register_names:
+    for year in years:
+        feedin = feedin.calculate_feedin_germany(
+            year=year, categories=categories, regions='landkreise', # todo: uebertragungsnetzzonen
+            register_name=register_name, weather_data_name=weather_data_name,
+            oep_upload=False, return_feedin=True, debug_mode=debug_mode,
+            wake_losses_model=None)
 
     # # todo delete: is for debugging
     # import pickle
     # feedin = pickle.load(open('debug_dump.p', 'rb'))
 
-    # get validation feed-in time series
-    val_feedin = val_data.load_feedin_data(categories, year, latest=False)
+        # get validation feed-in time series
+        val_feedin = val_data.load_feedin_data(categories, year, latest=False)
 
-    # join data frame in the form needed by calculate_validation_metrics()
-    validation_df = pd.merge(left=feedin, right=val_feedin, how='inner')  # todo check with real data   maybe on=['time', 'technology', 'nuts']
-
-    # calculate metrics and save to file
-    validation_path = cfg.get('paths', 'validation')
-    if not os.path.exists(validation_path):
-        os.makedirs(validation_path, exist_ok=True)
-    filename = os.path.join(os.path.dirname(__file__), validation_path,
-                            cfg.get('validation', 'filename').format(
-                                reg=register_name, weather=weather_data_name,
-                                year=year))
-    val_tools.calculate_validation_metrics(
-        df=validation_df.set_index('time'), val_cols=['feedin', 'feedin_val'],
-        metrics='standard', filter_cols=['nuts', 'technology'],
-        filename=filename, print_out=True)
+        # join data frame in the form needed by calculate_validation_metrics()
+        validation_df = pd.merge(left=feedin, right=val_feedin, how='left',
+                                 on=['time', 'technology', 'nuts'])
+        # calculate metrics and save to file
+        validation_path = cfg.get('paths', 'validation')
+        if not os.path.exists(validation_path):
+            os.makedirs(validation_path, exist_ok=True)
+        filename = os.path.join(os.path.dirname(__file__), validation_path,
+                                cfg.get('validation', 'filename').format(
+                                    reg=register_name, weather=weather_data_name,
+                                    year=year))
+        val_tools.calculate_validation_metrics(
+            df=validation_df.set_index('time'),
+            val_cols=['feedin', 'feedin_val'], metrics='standard',
+            filter_cols=['nuts', 'technology'],
+            filename=filename, print_out=True)
