@@ -78,4 +78,4 @@ for register_name in register_names:
             df=validation_df.set_index('time'),
             val_cols=['feedin', 'feedin_val'], metrics='standard',
             filter_cols=['nuts', 'technology'],
-            filename=filename, print_out=True)
+            filename=filename)
