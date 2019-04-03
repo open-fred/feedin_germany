@@ -16,7 +16,7 @@ from feedin_germany import validation_tools as val_tools
 
 debug_mode = True  # Only 4 regions are calculated.
 
-years = [2012]
+years = [2016]
 categories = [
     'Wind',
     'Solar',
