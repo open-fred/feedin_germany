@@ -2,50 +2,41 @@
 import numpy as np
 import pandas as pd
 
-# Überlegungen
-# 4 Zonen, 2-3 Technologien (wind, pv, evtl wasser)
-#
-# Metrics:
-#     rmse: normiert auf mittlere Leistungsabgabe der Region,
-#     mittlerer bias,
-#     pearson (?)
+# possible todos
 #     Möglichkeit metrics für versch. Perioden zu berechnen: Jahr, Monat, Woche..
 #         - mittelung: ausgleich übers Jahr, Monat, Woche möglich
 #         - slice time series: saisonale schwankungen. (einfacher: Jahresabschnitte einzeln berechnen, eingeben)
 
 
-# Funktion
-#     bekommt
-#         df mit berechneter und validierungszeitreihe. (nenne spaltennamen)
-#         spalten, nach denen erst noch gefiltert werden sollte (optional) z.B. in unserem Fall: technology, region
-
-
 def calculate_validation_metrics(df, val_cols, metrics='standard',
-                                 filter_cols=None, filename='test.csv',
-                                 print_out=False):
+                                 filter_cols=None, filename='test.csv'):
     r"""
+    Calculates metrics for validating simulated data and saves results to file.
 
     Parameters
     ----------
-    df
-        darf mehrere Zeitreihen im Datenbankformat enthalten.. wird gefiltet.
+    df : pd.DataFrame
+        Contains simulation results and validation data in the columns as
+        specified in `val_cols`. May include other columns which are filtered
+        with column names as specified in `filter_cols` or other columns which
+        will be ignored.
     val_cols : list of strings
         Contains columns names of (1) time series to be validated and (2)
         validation time series in the form [(1), (2)].
-    metrics
-
+    metrics : list of strings or string
+        Contains metrics (strings) to be calculated. If it is set to 'standard'
+         standard metrics are used. Default: 'standard'.
     filter_cols : list of strings
         Contains column names by which `df` is filtered before the validation.
         col an erster Stelle wird Index
         see example todo example
-    filename
-        -- for saving
-    print_out
-        todo
+    filename : string
+        File name including path for saving validation metrics.
 
     """
     if metrics == 'standard':
-        metrics = ['rmse_norm', 'mean_bias', 'pearson'] # get all pairs of `filter_cols`
+        metrics = ['rmse_norm', 'mean_bias', 'pearson']
+    # get all pairs of `filter_cols`
     filter_df = df.groupby(filter_cols).size().reset_index().drop(columns=[0],
                                                                    axis=1)
     metrics_df = pd.DataFrame()
@@ -67,6 +58,25 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
 
 def get_metric(metric, validation_data, val_cols):
     r"""
+    Fetches metric of `validation_data` from single functions.
+
+    Parameters
+    ----------
+    metric : string
+        Specifies the metric that is calculated for `validation_data`. Options:
+        'rsme_norm' (normalized RMSE), 'mean_bias' (mean bias), 'pearson'
+        (pearson correlation coefficient).
+    validation_data : pd.DataFrame
+        Contains simulation results and validation data in the columns as
+        specified in `val_cols`.
+    val_cols : list of strings
+        Contains columns names of (1) time series to be validated and (2)
+        validation time series in the form [(1), (2)].
+
+    Returns
+    -------
+    metric_value : float
+        Calculated metric value.
 
     """
     if metric == 'rmse_norm':
@@ -92,8 +102,8 @@ def get_standard_deviation(data_series):
     Parameters
     ----------
     data_series : list or pandas.Series
-        Input data series (data points) of which the standard deviation
-        will be calculated.
+        Input data series (data points) of which the standard deviation is
+        calculated.
 
     Return
     ------

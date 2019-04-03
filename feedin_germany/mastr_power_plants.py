@@ -125,13 +125,15 @@ def prepare_mastr_data(mastr_data, category):
     ----------
     mastr_data : pd.DataFrame
         Contains raw MaStR data as loaded in
-        `:py:func:helper_load_mastr_from_file`.
+        `:py:func:helper_load_mastr_from_file`. # todo adapt
     category : string
         Energy source category for which the register is loaded. Options:
-        'Wind', ... to be added.
+        'Wind', ... todo to be added.
 
     Returns
     -------
+    prepared_df : pd.DataFrame
+        Prepared data. todo form
 
     """
     if category == 'Wind':  # todo: add 'name' column of name matching from Ludwig!!!
@@ -154,7 +156,15 @@ def prepare_mastr_data(mastr_data, category):
 
 def get_mastr_pp_filtered_by_year(category, year):
     r"""
+    Loads MaStR power plant data by `energy_source` and `year`.
 
+    Parameters
+    ----------
+    energy_source : str
+        Energy source for which register is loaded.
+    year : int
+        Year for which the register is filtered. See filter function
+        :py:func:`~.power_plant_register_tools.get_pp_by_year`.
 
     """
     mastr_pp = helper_load_mastr_from_file(category=category)

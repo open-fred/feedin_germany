@@ -18,7 +18,8 @@ import io
 
 from feedin_germany import config as cfg
 
-def load_feedin_data(categories, year, latest=False): # _from_...? todo get data
+
+def load_feedin_data(categories, year, latest=False):
 
     r"""
     loads register from server
@@ -30,7 +31,7 @@ def load_feedin_data(categories, year, latest=False): # _from_...? todo get data
     Returns
     -------
     df : pd.DataFrame
-        OPSD power plant data. todo: describe most important columns with units
+        OPSD feed-in time series. todo: describe most important columns with units
         For description of further columns see
         https://data.open-power-system-data.org/renewable_power_plants/.
     """
