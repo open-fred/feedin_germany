@@ -28,6 +28,7 @@ import requests
 # internal imports
 from feedin_germany import oep_regions
 from feedin_germany import power_plant_register_tools as ppr_tools
+from feedin_germany import database_tools as db_tools
 
 
 def load_mastr_data_from_oedb():
@@ -36,31 +37,19 @@ def load_mastr_data_from_oedb():
 
     Notes
     -----
-    todo: login and token need to be adapted/automatized
-    todo: possible --> engine creation as separate function
-
-    todo: use sessionmaker um Anlagen auszuwählen
+    todo: use sessionmaker um Anlagen auszuwählen ??
+    then todo: login and token need to be adapted/automatized
+         todo: possible --> engine creation as separate function
 
     Returns
     -------
 
 
     """
-    # url of OpenEnergy Platform that contains the oedb
-    oep_url = 'http://oep.iks.cs.ovgu.de/'
-    # location of data
-    schema = 'model_draft'
-    table = 'bnetza_mastr_stromerzeuger'
-    # load data
-    result = requests.get(
-        oep_url + '/api/v0/schema/{}/tables/{}/rows/?'.format(
-            schema, table), )
-    if not result.status_code == 200:
-        raise ConnectionError("Database connection not successful. "
-                              "Error: {}".format(result.status_code))
-    # extract data
-    register = pd.DataFrame(result.json())
-    print(register)
+    table_name = 'bnetza_mastr_stromerzeuger'
+    register = db_tools.load_data_from_oedb_with_api(schema='model_draft',
+                                           table=table_name)
+    return register
 
 
 def helper_load_mastr_from_file(category):
