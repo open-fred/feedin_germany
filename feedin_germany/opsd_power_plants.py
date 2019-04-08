@@ -295,7 +295,7 @@ def prepare_opsd_file(overwrite):
             cfg.get('opsd', 'opsd_prepared'))
 
     if os.path.isfile(prepared_filename):
-        logging.warning("OPSD prepared-register already exist and is loaded "
+        logging.warning("OPSD prepared-register already exists and is loaded "
                         "from csv")
         df = pd.read_csv(prepared_filename)
         return df

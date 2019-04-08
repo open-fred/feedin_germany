@@ -1,7 +1,6 @@
 # imports
 import os
 import pandas as pd
-from matplotlib import pyplot as plt
 
 # internal imports
 from feedin_germany import feedin as f
@@ -35,10 +34,6 @@ for register_name in register_names:
            year=year, categories=categories, regions='landkreise',
            register_name=register_name, weather_data_name='open_FRED',
            oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
-       print(feedin)
-
-        # feedin.plot()
-        # plt.show()
 
 # Validation of PVlib and windpowerlib feed-in time series via
 # "Übertragungsnetzzonen"
