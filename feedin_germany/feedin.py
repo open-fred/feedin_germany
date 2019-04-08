@@ -261,7 +261,7 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
         elif register_name == 'MaStR':
             if category == 'Wind':
                 register = mastr.get_mastr_pp_filtered_by_year(
-                    category=category, year=year)
+                    energy_source=category, year=year)
             else:
                 raise ValueError("Option 'MaStR' as `register_name` up to "
                                  "now only available for `category` 'Wind'.")
