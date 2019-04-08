@@ -43,6 +43,7 @@ from oemof.tools import logger
 from feedin_germany import config as cfg
 from feedin_germany import geometries
 from feedin_germany import power_plant_register_tools as ppr_tools
+from feedin_germany import database_tools as db_tools
 
 
 def load_original_opsd_file(latest=False):
@@ -416,12 +417,10 @@ def assign_turbine_data_by_wind_zone(register):
         unambiguous turbine id ('id').
 
     """
-    # get wind zones polygons
-    # path = cfg.get('paths', 'geometry')
-    path = '/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP3 4 Kraftwerks und Grunddaten/AP3 Kraftwerke/windzonen'
-    filename = cfg.get('geometry', 'wind_zones')  # todo use dibt wind zones!!
-    wind_zones = geometries.load(path=path, filename=filename)
-    wind_zones.set_index('zone', inplace=True)
+    wind_zones = db_tools.load_data_from_oedb_with_oedialect(
+        schema='model_draft', table_name='rli_dibt_windzone')
+    wind_zones = wind_zones[['dibt_wind_zone', 'geom']]
+    wind_zones.set_index('dibt_wind_zone', inplace=True)
 
     # create geopandas.DataFrame from register
     register['coordinates'] = list(zip(register['lon'], register['lat']))
@@ -430,6 +429,8 @@ def assign_turbine_data_by_wind_zone(register):
     # add wind zones by sjoin
     jgdf = gpd.sjoin(gdf_register, wind_zones, how='left', op='within').rename(
         columns={'index_right': 'wind_zone'})
+    # set missing wind zones to 4
+    jgdf.loc[jgdf['wind_zone'].isnull(), 'wind_zone'] = 4.0
     adapted_register = pd.DataFrame(jgdf).drop(['coordinates',
                                                 'geometry'], axis=1)
 
