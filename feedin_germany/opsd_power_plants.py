@@ -295,7 +295,7 @@ def prepare_opsd_file(overwrite):
             cfg.get('opsd', 'opsd_prepared'))
 
     if os.path.isfile(prepared_filename):
-        logging.warning("prepared-register already exist and is loaded "
+        logging.warning("OPSD prepared-register already exist and is loaded "
                         "from csv")
         df = pd.read_csv(prepared_filename)
         return df
@@ -336,7 +336,7 @@ def prepare_opsd_file(overwrite):
     ppr_tools.prepare_dates(df=df, date_cols=date_cols,
                             month=month)
 
-    # capacity in W  todo @Inia: feedinlib wants to give back feedin ts in W. Capacity input in pvlib in W convenient?
+    # capacity in W
     df['capacity'] = df['capacity'] * (10 ** 6)
 
     df.to_csv(prepared_filename)
