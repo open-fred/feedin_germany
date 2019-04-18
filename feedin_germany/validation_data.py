@@ -18,7 +18,8 @@ import io
 
 from feedin_germany import config as cfg
 
-def load_feedin_data(categories, year, latest=False): # _from_...? todo get data
+
+def load_feedin_data(categories, year, latest=False):
 
     r"""
     loads register from server
@@ -30,7 +31,7 @@ def load_feedin_data(categories, year, latest=False): # _from_...? todo get data
     Returns
     -------
     df : pd.DataFrame
-        OPSD power plant data. todo: describe most important columns with units
+        OPSD feed-in time series. todo: describe most important columns with units
         For description of further columns see
         https://data.open-power-system-data.org/renewable_power_plants/.
     """
@@ -52,7 +53,7 @@ def load_feedin_data(categories, year, latest=False): # _from_...? todo get data
 
     df['utc_timestamp'] = pd.to_datetime(df['utc_timestamp'])
     df_year = df[df['utc_timestamp'].dt.year == year]
-    df_agg = df.set_index('utc_timestamp').resample('30Min').sum().reset_index()
+    df_agg = df_year.set_index('utc_timestamp').resample('30Min').sum().reset_index()
 
 
     for category in categories:
@@ -63,7 +64,7 @@ def load_feedin_data(categories, year, latest=False): # _from_...? todo get data
                          'DE_tennet_solar_generation_actual',
                          'DE_transnetbw_solar_generation_actual']]
             dpv_new=dpv.rename(index=str, columns={"utc_timestamp": "time",
-                                                   "DE_50hertz_solar_generation_actual": "50herz",
+                                                   "DE_50hertz_solar_generation_actual": "50hertz",
                                                    "DE_amprion_solar_generation_actual": "amprion",
                                                    "DE_tennet_solar_generation_actual": "tennet",
                                                    "DE_transnetbw_solar_generation_actual": "transnetbw"})
@@ -89,7 +90,7 @@ def load_feedin_data(categories, year, latest=False): # _from_...? todo get data
                             'DE_transnetbw_wind_generation_actual'
                             ]]
             dwind_new = dwind.rename(index=str, columns={"utc_timestamp": "time",
-                                                     "DE_50hertz_wind_generation_actual": "50herz",
+                                                     "DE_50hertz_wind_generation_actual": "50hertz",
                                                      "DE_amprion_wind_generation_actual": "amprion",
                                                      "DE_tennet_wind_generation_actual": "tennet",
                                                      "DE_transnetbw_wind_generation_actual": "transnetbw"})

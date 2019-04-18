@@ -84,8 +84,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
                                  index_col=0,
                                  date_parser=lambda idx: pd.to_datetime(idx,
                                                                         utc=True))
-        weather_df.index = pd.to_datetime(weather_df.index).tz_convert(
-            'Europe/Berlin')
+        weather_df.index = pd.to_datetime(weather_df.index)
         # calculate ghi
         weather_df['ghi'] = weather_df.dirhi + weather_df.dhi
         weather_pv = weather_df.dropna()
