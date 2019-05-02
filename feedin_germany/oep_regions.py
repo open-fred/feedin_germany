@@ -52,7 +52,9 @@ def as_pandas(query, geometry="geom", params=None, crs=None, hex=True):
     return gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
 
-def load_regions_file():
+def load_regions_file(type='tso'):
+
+
     """
     loads the region file from the oep-database
 
@@ -79,23 +81,47 @@ def load_regions_file():
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    class BkgVg2502Lan(Base):
-        __tablename__ = "bkg_vg250_4_krs"
-        __table_args__ = {'schema': 'boundaries', 'autoload': True}
+    if type == 'landkreise':
+        class BkgVg2502Lan(Base):
+            __tablename__ = "bkg_vg250_4_krs"
+            __table_args__ = {'schema': 'boundaries', 'autoload': True}
 
-    try:
-        # Stuff in session
-        p = session.query(BkgVg2502Lan)
-        gdf = as_pandas(p, geometry="geom", params=None, crs=None, hex=True)
-        gdf_new = gdf.to_crs(epsg=4326)
+        try:
+            # Stuff in session
+            p = session.query(BkgVg2502Lan)
+            gdf = as_pandas(p, geometry="geom", params=None, crs=None,
+                            hex=True)
+            gdf_new = gdf.to_crs(epsg=4326)
 
-        session.commit()
-    except:
-        session.rollback()
-    finally:
-        session.close()
+            session.commit()
+        except:
+            session.rollback()
+        finally:
+            session.close()
 
-    return(gdf_new[['nuts', 'geom']])
+        return (gdf_new[['nuts', 'geom']])
+
+    if type == 'tso':
+        class Ffe_tso_controlarea(Base):
+            __tablename__ = "ffe_tso_controlarea"
+            __table_args__ = {'schema': 'model_draft', 'autoload': True}
+
+        try:
+            # Stuff in session
+            p = session.query(Ffe_tso_controlarea)
+            gdf = as_pandas(p, geometry="geom", params=None, crs=None,
+                            hex=True)
+            gdf_new = gdf.to_crs(epsg=4326)
+
+            session.commit()
+        except:
+            session.rollback()
+        finally:
+            session.close()
+
+        gdf_new.rename(columns={"uenb": "nuts"}, inplace=True)
+
+        return (gdf_new[['nuts', 'geom']])
 
 
 def add_region_to_register(register, region):
