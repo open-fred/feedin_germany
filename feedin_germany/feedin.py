@@ -84,8 +84,8 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
             "/home/local/RL-INSTITUT/inia.steinbach/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_test_2016.csv")
         weather_df = pd.read_csv(filename, skiprows=range(1, 50), nrows=(5000),
                                  index_col=0,
-                                 date_parser=lambda idx: pd.to_datetime(idx,
-                                                                        utc=True))
+                                 date_parser=lambda idx: pd.to_datetime(
+                                     idx, utc=True))
         weather_df.index = pd.to_datetime(weather_df.index, utc=True)
         # calculate ghi
         weather_df['ghi'] = weather_df.dirhi + weather_df.dhi
@@ -238,7 +238,7 @@ def calculate_feedin_germany(year, categories, regions='tso',
 
     """
     # get regions from OEP if regions is not a geopandas.GeoDataFrame
-    if (regions == 'landkreise' or regions =='tso'):
+    if regions == 'landkreise' or regions =='tso':
         region_gdf = oep.load_regions_file(regions)
         if debug_mode:
             region_gdf = region_gdf[0:5]
@@ -247,7 +247,7 @@ def calculate_feedin_germany(year, categories, regions='tso',
         region_gdf = regions
     else:
         raise ValueError("`regions` should be 'landkreise',"
-                         "'uebertragunsnetzzonen' or gpd.GeoDataFrame.")
+                         "'tso' or gpd.GeoDataFrame.")
 
     if return_feedin:
         feedin_df = pd.DataFrame()
@@ -263,7 +263,7 @@ def calculate_feedin_germany(year, categories, regions='tso',
                 register = mastr.get_mastr_pp_filtered_by_year(
                     energy_source=category, year=year)
             else:
-                raise ValueError("Option 'MaStR' as `register_name` up to "
+                raise ValueError("Option 'MaStR' as `register_name` until "
                                  "now only available for `category` 'Wind'.")
         else:
             raise ValueError("Invalid register name {}.".format(
