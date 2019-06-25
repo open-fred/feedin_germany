@@ -262,6 +262,8 @@ def calculate_feedin_germany(year, categories, regions='tso',
             if category == 'Wind':
                 register = mastr.get_mastr_pp_filtered_by_year(
                     energy_source=category, year=year)
+                register.dropna(subset=['name', 'hub_height',
+                                        'rotor_diameter'], inplace=True)  # todo remove after mastr is complete or fix
             else:
                 raise ValueError("Option 'MaStR' as `register_name` until "
                                  "now only available for `category` 'Wind'.")
