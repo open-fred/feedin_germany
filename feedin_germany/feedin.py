@@ -7,6 +7,8 @@ downloads data needed for the calculations.
 
 """
 
+#todo feedinlib: wetterdaten UTC? falls nicht aufpassen bei Validierung
+
 __copyright__ = "Copyright oemof developer group"
 __license__ = "GPLv3"
 
@@ -252,13 +254,14 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
     for category in categories:
         # get power plant register for all power plants in Germany
         if register_name == 'opsd':
-            keep_cols = ['lat', 'lon', 'commissioning_date', 'capacity']
+            keep_cols = ['lat', 'lon', 'commissioning_date', 'capacity',
+                         'technology']  # technology needed for offshore wind
             register = opsd.filter_pp_by_source_and_year(year, category,
                                                          keep_cols=keep_cols)
         elif register_name == 'MaStR':
             if category == 'Wind':
                 register = mastr.get_mastr_pp_filtered_by_year(
-                    category=category, year=year)
+                    energy_source=category, year=year)
             else:
                 raise ValueError("Option 'MaStR' as `register_name` up to "
                                  "now only available for `category` 'Wind'.")

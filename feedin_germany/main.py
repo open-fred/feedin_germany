@@ -1,10 +1,9 @@
 # imports
 import os
 import pandas as pd
-from matplotlib import pyplot as plt
 
 # internal imports
-from feedin_germany import feedin
+from feedin_germany import feedin as f
 from feedin_germany import config as cfg
 from feedin_germany import validation_data as val_data
 from feedin_germany import validation_tools as val_tools
@@ -29,22 +28,18 @@ register_names = [
 weather_data_name = 'open_FRED'
 
 # Upload of feed-in time series for "Landkreise" Germany
-# for register_name in register_names:
-#     for year in years:
-#        feedin = feedin.calculate_feedin_germany(
-#            year=year, categories=categories, regions='landkreise',
-#            register_name='opsd', weather_data_name='open_FRED',
-#            oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
-#        print(feedin)
-
-        # feedin.plot()
-        # plt.show()
+for register_name in register_names:
+    for year in years:
+       feedin = f.calculate_feedin_germany(
+           year=year, categories=categories, regions='landkreise',
+           register_name=register_name, weather_data_name='open_FRED',
+           oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
 
 # Validation of PVlib and windpowerlib feed-in time series via
 # "Übertragungsnetzzonen"
 for register_name in register_names:
     for year in years:
-        feedin = feedin.calculate_feedin_germany(
+        feedin = f.calculate_feedin_germany(
             year=year, categories=categories, regions='landkreise', # todo: uebertragungsnetzzonen
             register_name=register_name, weather_data_name=weather_data_name,
             oep_upload=False, return_feedin=True, debug_mode=debug_mode,

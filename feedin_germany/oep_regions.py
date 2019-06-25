@@ -60,7 +60,7 @@ def load_regions_file():
     ----------------
     todo: login and token need to be adapted/automatized
     todo: possibility of selecting different region files - Landkreise, Übertragunsnetzbetreiberzonen, ...
-    todo: possible --> engine creation as separate function. can be used f.e. in mastr_power_plants as well
+    todo: engine creation as separate function  ---> see database_tools (already used in opsd_power_plants for windzones)
     todo: Speicherung, damit offline verwendbar, wenn OEP nicht funktioniert.
     returns
     --------------
