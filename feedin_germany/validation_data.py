@@ -51,7 +51,7 @@ def load_feedin_data(categories, year, latest=False):
     df = pd.read_csv(io.StringIO(req.decode('utf-8')))
 
 
-    df['utc_timestamp'] = pd.to_datetime(df['utc_timestamp'])
+    df['utc_timestamp'] = pd.to_datetime(df['utc_timestamp'], utc=True)
     df_year = df[df['utc_timestamp'].dt.year == year]
     df_agg = df_year.set_index('utc_timestamp').resample('30Min').sum().reset_index()
 

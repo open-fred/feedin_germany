@@ -81,12 +81,12 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     if category == 'Solar':
         # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
         filename = os.path.abspath(
-            "/home/local/RL-INSTITUT/inia.steinbach/mount_ordner/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_test_2016.csv")
+            "/home/local/RL-INSTITUT/inia.steinbach/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_test_2016.csv")
         weather_df = pd.read_csv(filename, skiprows=range(1, 50), nrows=(5000),
                                  index_col=0,
                                  date_parser=lambda idx: pd.to_datetime(idx,
                                                                         utc=True))
-        weather_df.index = pd.to_datetime(weather_df.index)
+        weather_df.index = pd.to_datetime(weather_df.index, utc=True)
         # calculate ghi
         weather_df['ghi'] = weather_df.dirhi + weather_df.dhi
         weather_pv = weather_df.dropna()
@@ -98,10 +98,11 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
     if category == 'Wind':
         filename = os.path.abspath(
-        '/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
+        '/home/local/RL-INSTITUT/inia.steinbach/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
         weather_df = tools.example_weather_wind(filename)
     if return_feedin:
         feedin_df = pd.DataFrame()
+
     for nut in regions['nuts']:
         register_region = register.loc[register['nuts'] == nut]
         if register_region.empty:
@@ -178,7 +179,7 @@ def form_feedin_for_deflex(feedin):
     return deflex_feedin
 
 
-def calculate_feedin_germany(year, categories, regions='landkreise',
+def calculate_feedin_germany(year, categories, regions='tso',
                              register_name='opsd',
                              weather_data_name='open_FRED', oep_upload=False,
                              return_feedin=False, debug_mode=False, **kwargs):
@@ -237,12 +238,11 @@ def calculate_feedin_germany(year, categories, regions='landkreise',
 
     """
     # get regions from OEP if regions is not a geopandas.GeoDataFrame
-    if regions == 'landkreise':
-        region_gdf = oep.load_regions_file()
+    if (regions == 'landkreise' or regions =='tso'):
+        region_gdf = oep.load_regions_file(regions)
         if debug_mode:
             region_gdf = region_gdf[0:5]
-    elif regions == 'uebertragunsnetzzonen':
-        pass  # todo add
+
     elif isinstance(regions, gpd.GeoDataFrame):
         region_gdf = regions
     else:
@@ -336,9 +336,9 @@ if __name__ == "__main__":
     ]
     for year in years:
         feedin = calculate_feedin_germany(
-            year=year, categories=categories, regions='landkreise',
+            year=year, categories=categories, regions='tso',
             register_name='opsd', weather_data_name='open_FRED',
-            return_feedin=True, oep_upload=True, debug_mode=True)
+            return_feedin=True, oep_upload=True, debug_mode=False)
         print(feedin)
         deflex_feedin = form_feedin_for_deflex(feedin=feedin)
         print(deflex_feedin.head())
