@@ -31,10 +31,10 @@ weather_data_name = 'open_FRED'
 # Upload of feed-in time series for "Landkreise" Germany
 for register_name in register_names:
     for year in years:
-       feedin = f.calculate_feedin_germany(
-           year=year, categories=categories, regions='landkreise',
-           register_name=register_name, weather_data_name='open_FRED',
-           oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
+        feedin = f.calculate_feedin_germany(
+            year=year, categories=categories, regions='landkreise',
+            register_name=register_name, weather_data_name='open_FRED',
+            oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
 
 # Validation of PVlib and windpowerlib feed-in time series via
 # "Übertragungsnetzzonen"

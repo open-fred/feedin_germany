@@ -53,10 +53,14 @@ def as_pandas(query, geometry="geom", params=None, crs=None, hex=True):
 
 
 def load_regions_file(type='tso'):
-
-
     """
-    loads the region file from the oep-database
+    Loads a region file from the oedb.
+
+    Parameters
+    ----------
+    type : str
+        Defines the region type:  Transmission System Operator ('tso'), or
+        administrative districts ('landkreise'). Default: 'tso'.
 
     Notes
     ----------------
