@@ -76,7 +76,7 @@ def helper_load_mastr_from_file(category):
     if category == 'Wind':
         filename = os.path.join(
             '~/Daten_flexibel_01/bnetza_mastr/bnetza_mastr_power-units_v1.2/',
-            'bnetza_mastr_1.2_wind.csv'.format(category.lower()))
+            'bnetza_mastr_1.2_wind.csv')
         usecols = [
             'Nabenhoehe', 'Rotordurchmesser',
             # 'HerstellerName', 'Einheitart', 'Einheittyp', 'Technologie',
@@ -129,7 +129,7 @@ def prepare_mastr_data(mastr_data, category):
         mastr_data.rename(columns={
             'Nabenhoehe': 'hub_height', 'Rotordurchmesser': 'rotor_diameter',
             # 'HerstellerName', 'Einheitart', 'Einheittyp', 'Technologie',
-            'Typenbezeichnung': 'turbine_type', 'Laengengrad': 'lon',
+            'Typenbezeichnung': 'name', 'Laengengrad': 'lon',
             'Breitengrad': 'lat', 'Inbetriebnahmedatum': 'commissioning_date',
             'DatumEndgueltigeStilllegung': 'decommissioning_date',
             'DatumBeginnVoruebergehendeStilllegung': 'temporary_decom_date',

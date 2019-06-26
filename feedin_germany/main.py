@@ -1,6 +1,7 @@
 # imports
 import os
 import pandas as pd
+from matplotlib import pyplot as plt
 
 # internal imports
 from feedin_germany import feedin as f
@@ -30,17 +31,17 @@ weather_data_name = 'open_FRED'
 # Upload of feed-in time series for "Landkreise" Germany
 for register_name in register_names:
     for year in years:
-       feedin = f.calculate_feedin_germany(
-           year=year, categories=categories, regions='landkreise',
-           register_name=register_name, weather_data_name='open_FRED',
-           oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
+        feedin = f.calculate_feedin_germany(
+            year=year, categories=categories, regions='landkreise',
+            register_name=register_name, weather_data_name='open_FRED',
+            oep_upload=False, debug_mode=debug_mode, wake_losses_model=None)
 
 # Validation of PVlib and windpowerlib feed-in time series via
 # "Übertragungsnetzzonen"
 for register_name in register_names:
     for year in years:
         feedin = f.calculate_feedin_germany(
-            year=year, categories=categories, regions='landkreise', # todo: uebertragungsnetzzonen
+            year=year, categories=categories, regions='tso',
             register_name=register_name, weather_data_name=weather_data_name,
             oep_upload=False, return_feedin=True, debug_mode=debug_mode,
             wake_losses_model=None)
@@ -50,10 +51,10 @@ for register_name in register_names:
         # pickle.dump(feedin, open('debug_dump.p', 'wb'))
         # feedin = pickle.load(open('debug_dump.p', 'rb'))
         # todo delete: just for trying..
-        feedin.loc[feedin['nuts'] == 'DE804', 'nuts'] = '50hertz'
-        feedin.loc[feedin['nuts'] == 'DE917', 'nuts'] = 'amprion'
-        feedin.loc[feedin['nuts'] == 'DE40F', 'nuts'] = 'tennet'
-        feedin.loc[feedin['nuts'] == 'DEB34', 'nuts'] = 'transnetbw'
+#        feedin.loc[feedin['nuts'] == 'DE804', 'nuts'] = '50hertz'
+#        feedin.loc[feedin['nuts'] == 'DE917', 'nuts'] = 'amprion'
+#        feedin.loc[feedin['nuts'] == 'DE40F', 'nuts'] = 'tennet'
+#        feedin.loc[feedin['nuts'] == 'DEB34', 'nuts'] = 'transnetbw'
 
         # get validation feed-in time series
         val_feedin = val_data.load_feedin_data(categories, year, latest=False)
