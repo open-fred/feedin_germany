@@ -64,10 +64,10 @@ def load_feedin_data(categories, year, latest=False):
                          'DE_tennet_solar_generation_actual',
                          'DE_transnetbw_solar_generation_actual']]
             dpv_new=dpv.rename(index=str, columns={"utc_timestamp": "time",
-                                                   "DE_50hertz_solar_generation_actual": "50hertz",
-                                                   "DE_amprion_solar_generation_actual": "amprion",
-                                                   "DE_tennet_solar_generation_actual": "tennet",
-                                                   "DE_transnetbw_solar_generation_actual": "transnetbw"})
+                                                   "DE_50hertz_solar_generation_actual": "50 Hertz",
+                                                   "DE_amprion_solar_generation_actual": "Amprion",
+                                                   "DE_tennet_solar_generation_actual": "TenneT",
+                                                   "DE_transnetbw_solar_generation_actual": "Transnet BW"})
 
             dpv_melt=dpv_new.melt(id_vars=['time'], var_name='nuts',
                                   value_name='feedin_val')
@@ -90,10 +90,10 @@ def load_feedin_data(categories, year, latest=False):
                             'DE_transnetbw_wind_generation_actual'
                             ]]
             dwind_new = dwind.rename(index=str, columns={"utc_timestamp": "time",
-                                                     "DE_50hertz_wind_generation_actual": "50hertz",
-                                                     "DE_amprion_wind_generation_actual": "amprion",
-                                                     "DE_tennet_wind_generation_actual": "tennet",
-                                                     "DE_transnetbw_wind_generation_actual": "transnetbw"})
+                                                     "DE_50hertz_wind_generation_actual": "50 Hertz",
+                                                     "DE_amprion_wind_generation_actual": "Amprion",
+                                                     "DE_tennet_wind_generation_actual": "TenneT",
+                                                     "DE_transnetbw_wind_generation_actual": "Transnet BW"})
 
             dwind_melt = dwind_new.melt(id_vars=['time'], var_name='nuts',
                                     value_name='feedin_val')
