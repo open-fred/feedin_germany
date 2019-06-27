@@ -90,8 +90,12 @@ def helper_load_mastr_from_file(category):
     else:
         raise ValueError("Category {} not existent. ".format(category) +
                          "Choose from: 'Wind', ...") # todo add
-    mastr_data = pd.read_csv(filename, sep=';', encoding='utf-8',
-                             header=0, usecols=usecols)
+    try:
+        mastr_data = pd.read_csv(filename, sep=';', encoding='utf-8',
+                                 header=0, usecols=usecols)
+    except FileNotFoundError:
+        raise FileNotFoundError("Check file location. You might have to mount"
+                                "the Daten_flexibel_01 sever.")
     return mastr_data
 
 
