@@ -273,8 +273,6 @@ def calculate_feedin_germany(year, categories, regions='tso',
         # add region column 'nuts' to register
         register = oep.add_region_to_register(register, region_gdf)
 
-        # todo remove the following when wrong name in turbine_library is fixed:
-        register['name'].loc[register['name'] == 'E-126/7500'] = 'E/126/7500'
         feedin = calculate_feedin(
             year=year, register=register, regions=region_gdf,
             category=category, return_feedin=return_feedin,
