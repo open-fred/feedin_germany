@@ -62,6 +62,10 @@ for register_name in register_names:
         # join data frame in the form needed by calculate_validation_metrics()
         validation_df = pd.merge(left=feedin, right=val_feedin, how='left',
                                  on=['time', 'technology', 'nuts'])
+        # drop entries from other year (this comes from UTC/local time stamps)
+        # todo solve in feedinlib?
+        validation_df = validation_df[
+            validation_df['time'] >= '01-01-{}'.format(year)]
         # calculate metrics and save to file
         validation_path = cfg.get('paths', 'validation')
         if not os.path.exists(validation_path):
