@@ -7,6 +7,9 @@ import pandas as pd
 #         - mittelung: ausgleich übers Jahr, Monat, Woche möglich
 #         - slice time series: saisonale schwankungen. (einfacher: Jahresabschnitte einzeln berechnen, eingeben)
 
+# todo:
+#   add other metrics
+
 
 def calculate_validation_metrics(df, val_cols, metrics='standard',
                                  filter_cols=None, filename='test.csv'):
@@ -45,9 +48,12 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         val_df = df.loc[df['temp'] == True][val_cols]
         df.drop(columns=['temp'], inplace=True)
 
-        metrics_temp_df = pd.DataFrame(data=filters[0],
-                                       columns=[filter_cols[0]], index=[index])
-        metrics_temp_df[filter_cols[1]] = filters[1] # todo schöner!- hatte keine Zeit
+        metrics_temp_df = pd.DataFrame()
+        for filter, col in zip(filters, filter_cols):
+            metrics_temp_df = pd.concat([metrics_temp_df,
+                                         pd.DataFrame(data=filter,
+                                                      columns=[col],
+                                                      index=[index])], axis=1)
         for metric in metrics:
             metrics_temp_df[metric] = get_metric(
                 metric=metric, validation_data=val_df, val_cols=val_cols)
