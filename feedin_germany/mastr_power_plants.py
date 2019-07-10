@@ -17,7 +17,7 @@ import os
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from geoalchemy2.types import Geometry
+# from geoalchemy2.types import Geometry
 from sqlalchemy import func
 import oedialect
 from shapely.geometry import Point

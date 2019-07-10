@@ -13,14 +13,8 @@ import geopandas as gpd
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from geoalchemy2.types import Geometry
-from sqlalchemy import func
-import oedialect
 from shapely.geometry import Point
 import shapely
-
-from feedin_germany import config as cfg
-from feedin_germany import opsd_power_plants as opsd
 
 
 def as_pandas(query, geometry="geom", params=None, crs=None, hex=True):

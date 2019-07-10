@@ -37,7 +37,7 @@ from shapely.geometry import Point
 import io
 
 # oemof libraries
-from oemof.tools import logger
+# from oemof.tools import logger
 
 # Internal modules
 from feedin_germany import config as cfg

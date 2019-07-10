@@ -17,9 +17,6 @@ import pandas as pd
 import geopandas as gpd
 import os
 import logging
-import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 
 from feedinlib import region
 from feedinlib import tools
