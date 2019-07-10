@@ -80,8 +80,9 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     """
     if category == 'Solar':
         # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
-        filename = os.path.abspath(
-            "/home/local/RL-INSTITUT/inia.steinbach/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_test_2016.csv")
+        filename = os.path.join(
+            '~/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/',
+            'fred_data_test_2016.csv')
         weather_df = pd.read_csv(filename, skiprows=range(1, 50), nrows=(5000),
                                  index_col=0,
                                  date_parser=lambda idx: pd.to_datetime(
@@ -97,8 +98,9 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
 
     # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
     if category == 'Wind':
-        filename = os.path.abspath(
-        '/home/local/RL-INSTITUT/inia.steinbach/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/fred_data_2016_sh.csv')
+        filename = os.path.join(
+            '~/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/',
+            'fred_data_2016_sh.csv')
         weather_df = tools.example_weather_wind(filename)
     if return_feedin:
         feedin_df = pd.DataFrame()
