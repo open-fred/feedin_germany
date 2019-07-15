@@ -46,9 +46,10 @@ def load_mastr_data_from_oedb():
 
 
     """
-    table_name = 'bnetza_mastr_stromerzeuger'
-    register = db_tools.load_data_from_oedb_with_api(schema='model_draft',
-                                           table=table_name)
+
+    table_name = 'bnetza_mastr_wind_v1_4_clean'
+    register = db_tools.load_data_from_oedb_with_oedialect(
+        schema='sandbox', table_name=table_name)
     return register
 
 
@@ -95,7 +96,7 @@ def helper_load_mastr_from_file(category):
                                  header=0, usecols=usecols)
     except FileNotFoundError:
         raise FileNotFoundError("Check file location. You might have to mount"
-                                "the Daten_flexibel_01 sever.")
+                                " Daten_flexibel_01 sever.")
     return mastr_data
 
 
@@ -171,7 +172,8 @@ def get_mastr_pp_filtered_by_year(energy_source, year):
 
 
 if __name__ == "__main__":
+    load_mastr_data_from_oedb()
     year = 2012
     cat = 'Wind'
-    mastr_pp = get_mastr_pp_filtered_by_year(category=cat, year=year)
+    mastr_pp = get_mastr_pp_filtered_by_year(energy_source='Wind', year=year)
     print(mastr_pp.head())
