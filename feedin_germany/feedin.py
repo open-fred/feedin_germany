@@ -202,7 +202,7 @@ def calculate_feedin_germany(year, categories, regions='tso',
         from OEP. Options for string: 'landkreise', 'uebertragunsnetzzonen'.
         Default: 'landkreise'.
         todo: add exact required form of GeoDataFrame
-    register_name : string
+    register_name : pd.DataFrame or string
         todo
     weather_data_name : string
         Specifies the weather data source. Options: 'open_FRED', 'MERRA'.
@@ -237,13 +237,12 @@ def calculate_feedin_germany(year, categories, regions='tso',
 
     """
     # get regions from OEP if regions is not a geopandas.GeoDataFrame
-    if regions == 'landkreise' or regions =='tso':
+    if isinstance(regions, gpd.GeoDataFrame):
+        region_gdf = regions
+    elif regions == 'landkreise' or regions =='tso':
         region_gdf = oep.load_regions_file(regions)
         if debug_mode:
             region_gdf = region_gdf[0:5]
-
-    elif isinstance(regions, gpd.GeoDataFrame):
-        region_gdf = regions
     else:
         raise ValueError("`regions` should be 'landkreise',"
                          "'tso' or gpd.GeoDataFrame.")
@@ -251,8 +250,10 @@ def calculate_feedin_germany(year, categories, regions='tso',
     if return_feedin:
         feedin_df = pd.DataFrame()
     for category in categories:
-        # get power plant register for all power plants in Germany
-        if register_name == 'opsd':
+        # get power plant register if register is not pd.DataFrame
+        if isinstance(register_name, pd.DataFrame):
+            register = register_name  # possible todo: check if right format
+        elif register_name == 'opsd':
             keep_cols = ['lat', 'lon', 'commissioning_date', 'capacity',
                          'technology']  # technology needed for offshore wind
             register = opsd.filter_pp_by_source_and_year(year, category,
@@ -268,7 +269,8 @@ def calculate_feedin_germany(year, categories, regions='tso',
                                  "now only available for `category` 'Wind'.")
         else:
             raise ValueError("Invalid register name {}.".format(
-                    register_name) + " Must be 'opsd' or 'MaStR.")
+                    register_name) + " Must be 'opsd' or 'MaStR or "
+                                     "pd.DataFrame.")
         # add region column 'nuts' to register
         register = oep.add_region_to_register(register, region_gdf)
 
