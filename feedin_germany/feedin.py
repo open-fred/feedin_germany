@@ -17,6 +17,8 @@ import pandas as pd
 import geopandas as gpd
 import os
 import logging
+import time
+import pickle
 
 from feedinlib import region
 from feedinlib import tools
@@ -26,6 +28,8 @@ from feedin_germany import opsd_power_plants as opsd
 from feedin_germany import oep_regions as oep
 from feedin_germany import pv_modules
 from feedin_germany import mastr_power_plants as mastr
+from feedin_germany import weather
+
 
 
 # Planung Funktionalitäten:
@@ -34,13 +38,14 @@ from feedin_germany import mastr_power_plants as mastr
 # - Umformungsfunktion für deflex - Muster siehe Jann
 
 
-def calculate_feedin(year, register, regions, category, return_feedin=False,
-                     oep_upload=False, **kwargs):
+def calculate_feedin(year, register, regions, category, weather_data_folder, return_feedin=False,
+                     weather_data_name='open_FRED',  # todo rename to weather_data and possibility of entering own weather data
+                     **kwargs):
     r"""
     Calculates feed-in of power plants in `register` for different `regions`.
 
     This function can be used for any region/country as long as you have the
-    input data. # todo MERRA in feedinlib? oder Erklärung, dass eigenes Wetter in feedinlib eingegeben werden kann.
+    input data.
     For calculating feed-in time series for Germany it is recommended to use
     :py:func:`~.calculate_feedin_germany`.
 
@@ -60,8 +65,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
         If True calculated feed-in is returned as pd.DataFrame. Columns see
         `feedin_df`. Should only be set to True if number of regions is
          small. Default: False. todo what does small mean?
-    oep_upload : boolean
-        If True time series are uploaded to OEP. Default: False.
+    weather_data_name : string
 
     Other parameters
     ----------------
@@ -77,17 +81,9 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
     """
     if category == 'Solar':
         # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
-        filename = os.path.join(
-            '~/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/',
-            'fred_data_test_2016.csv')
-        weather_df = pd.read_csv(filename, skiprows=range(1, 50), nrows=(5000),
-                                 index_col=0,
-                                 date_parser=lambda idx: pd.to_datetime(
-                                     idx, utc=True))
-        weather_df.index = pd.to_datetime(weather_df.index, utc=True)
-        # calculate ghi
-        weather_df['ghi'] = weather_df.dirhi + weather_df.dhi
-        weather_pv = weather_df.dropna()
+        weather_df = weather.get_weather_data_germany(
+            year=year, weather_data_name=weather_data_name, format_='pvlib',
+            path=weather_data_folder)
 
         # prepare technical parameters and pv modules
         pv_modules_set = pv_modules.create_pvmodule_dict()
@@ -95,10 +91,10 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
 
     # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
     if category == 'Wind':
-        filename = os.path.join(
-            '~/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP2 Wetterdaten/open_FRED_TestWetterdaten_csv/',
-            'fred_data_2016_sh.csv')
-        weather_df = tools.example_weather_wind(filename)
+        weather_df = weather.get_weather_data_germany(
+            year=year, weather_data_name=weather_data_name,
+            format_='windpowerlib', path=weather_data_folder)
+
     if return_feedin:
         feedin_df = pd.DataFrame()
 
@@ -117,7 +113,7 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
                 # open feedinlib to calculate feed in time series for region
                 feedin = region.Region(
                     geom='no_geom',
-                    weather=weather_pv).pv_feedin_distribution_register(
+                    weather=weather_df).pv_feedin_distribution_register(
                     distribution_dict=distribution_dict,
                     technical_parameters=pv_modules_set,
                     register=register_pv)
@@ -130,9 +126,6 @@ def calculate_feedin(year, register, regions, category, return_feedin=False,
             else:
                 raise ValueError("Invalid category {}".format(category) +
                                  "Choose from: 'Wind', 'Solar', 'Hydro'.")
-            if oep_upload:  # todo zusammenfassen if oep_upload or ...
-                upload_time_series_to_oep(feedin=feedin, technology=category,
-                                          nuts=nut)
             if return_feedin:
                 feedin = feedin_to_db_format(feedin=feedin, technology=category,
                                           nuts=nut)
@@ -178,9 +171,9 @@ def form_feedin_for_deflex(feedin):
     return deflex_feedin
 
 
-def calculate_feedin_germany(year, categories, regions='tso',
-                             register_name='opsd',
-                             weather_data_name='open_FRED', oep_upload=False,
+def calculate_feedin_germany(year, categories, weather_data_folder,
+                             regions='tso', register_name='opsd',
+                             weather_data_name='open_FRED',
                              return_feedin=False, debug_mode=False, **kwargs):
     r"""
 
@@ -196,6 +189,8 @@ def calculate_feedin_germany(year, categories, regions='tso',
     categories : list of strings
         Energy source categories for which feed-in time series are calculated.
         Can include 'Wind', 'Solar', 'Hydro'.
+    weather_data_folder : string
+
     regions : geopandas.GeoDataFrame or string
         Regions for which feed-in time series are calculated
         (geopandas.GeoDataFrame) or specification of regions that are loaded
@@ -205,10 +200,8 @@ def calculate_feedin_germany(year, categories, regions='tso',
     register_name : pd.DataFrame or string
         todo
     weather_data_name : string
-        Specifies the weather data source. Options: 'open_FRED', 'MERRA'.
+        Specifies the weather data source. Options: 'open_FRED', 'ERA5'.
          Default: 'open_FRED'. todo check
-    oep_upload : boolean
-        If True time series are uploaded to OEP. Default: False.
     return_feedin : boolean
         If True calculated feed-in is returned as pd.DataFrame. Columns see
         `feedin_df`. Should only be set to True if number of regions is
@@ -240,7 +233,18 @@ def calculate_feedin_germany(year, categories, regions='tso',
     if isinstance(regions, gpd.GeoDataFrame):
         region_gdf = regions
     elif regions == 'landkreise' or regions =='tso':
-        region_gdf = oep.load_regions_file(regions)
+        start = time.time()
+        # todo delete or with parameter in function
+        regions_file = os.path.join(os.path.dirname(__file__), 'data/dumps',
+                                    'regions_ger_{}.p'.format(regions))
+        if os.path.exists(regions_file):
+            region_gdf = pickle.load(open(regions_file, 'rb'))
+        else:
+            region_gdf = oep.load_regions_file(regions)
+            pickle.dump(region_gdf, open(regions_file, 'wb'))
+        end = time.time()
+        print(
+            'Time load_regions_file year {}: {}'.format(year, (end - start)))
         if debug_mode:
             region_gdf = region_gdf[0:5]
     else:
@@ -277,7 +281,9 @@ def calculate_feedin_germany(year, categories, regions='tso',
         feedin = calculate_feedin(
             year=year, register=register, regions=region_gdf,
             category=category, return_feedin=return_feedin,
-            oep_upload=oep_upload, **kwargs)
+            weather_data_name=weather_data_name,
+            weather_data_folder=weather_data_folder,
+            **kwargs)
         if return_feedin:
             feedin_df = pd.concat([feedin_df, feedin])  # todo check axis when solar + wind
     if return_feedin:
@@ -341,7 +347,7 @@ if __name__ == "__main__":
         feedin = calculate_feedin_germany(
             year=year, categories=categories, regions='tso',
             register_name='opsd', weather_data_name='open_FRED',
-            return_feedin=True, oep_upload=True, debug_mode=False)
+            return_feedin=True, debug_mode=False)
         print(feedin)
         deflex_feedin = form_feedin_for_deflex(feedin=feedin)
         print(deflex_feedin.head())

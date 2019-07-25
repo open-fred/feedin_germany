@@ -10,6 +10,7 @@ import os
 # internal imports
 import geometries
 
+# todo wind speed to wind_speed!!!
 # todo: functions might have been updated in open_FRED paper Gogs by Pierre
 
 
