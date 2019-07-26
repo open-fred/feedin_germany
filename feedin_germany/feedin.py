@@ -46,7 +46,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
     Calculates feed-in of power plants in `register` for different `regions`.
 
     This function can be used for any region/country as long as you have the
-    input data.
+    input data. Returns the feed-in of one power plant type.
     For calculating feed-in time series for Germany it is recommended to use
     :py:func:`~.calculate_feedin_germany`.
 
@@ -56,6 +56,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
         Year for which feed-in time series are calculated.
     register : pd.DataFrame
         todo format --> Anforderung aus feedinlib!
+        Contains power plants of only one category (solar, wind, ...).
     regions : pandas.geoDataFrame
         Regions for which feed-in time series are calculated.
         todo: add required form of GeoDataFrame
@@ -214,8 +215,6 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
 
     Es sollen eigene Regionen eingegeben werden können,
     aber auch diejenigen aus der oedb geladen werden können.
-    # todo note: auch register_name und weather_data_name könnte wie regions funktionieren.
-        --> verschiedene Kombis möglich: eigenes Register, aber Landkreise etc..
 
     Parameters
     ----------
