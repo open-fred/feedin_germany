@@ -26,7 +26,8 @@ weather_data_folder = os.path.join(
         'virtualenvs/lib_validation/lib_validation/dumps/weather/')
 
 years = [
-    2013, 2014, 2015,
+    # 2013, 2014,
+    2015,
     2016,
     2017
 ]
@@ -62,6 +63,9 @@ weather_data_names = [
 # Validation of PVlib and windpowerlib feed-in time series via "tso" zones
 # for open_FRED and ERA5 weather data
 ###############################################################################
+scale_to = 'entsoe'  # scale time series to entsoe capacities if exist
+                     # note: they do exist for the years 2015 - 2019
+                     # for not scaling choose None
 for register_name in register_names:
     for weather_data_name in weather_data_names:
         for year in years:
@@ -71,7 +75,7 @@ for register_name in register_names:
                 register_name=register_name,
                 weather_data_name=weather_data_name,
                 return_feedin=True, debug_mode=debug_mode,
-                weather_data_folder=weather_data_folder,
+                weather_data_folder=weather_data_folder, scale_to=scale_to,
                 wake_losses_model=None)  # todo parameter windpowerlib wählen.
             end = time.time()
             print('Time calculate_feedin_germany year {}: {}'.format(year,
