@@ -282,14 +282,14 @@ def prepare_pvlib_from_era5(year, data_path=join('data', 'era5_netcdf'),
 if __name__ == "__main__":
     # choose parameters
 
-    brandenburg_wpl = True  # for whole Brandenburg windpowerlib data
     uckermark_wpl = True  # Uckermark windpowerlib data
+    brandenburg_wpl = True  # for whole Brandenburg windpowerlib data
     germany_wpl = True  # for whole Germany windpowerlib data
     germany_pvl = True  # for whole Germany pvlib data
 
     years = [
         2013,
-        # 2014, 2015, 2016, 2017
+        2014, 2015, 2016, 2017
     ]
 
     data_server = 'Daten_flexibel_01'  # mount data server and set name here
