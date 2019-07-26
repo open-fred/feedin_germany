@@ -12,7 +12,8 @@ import pandas as pd
 
 
 def calculate_validation_metrics(df, val_cols, metrics='standard',
-                                 filter_cols=None, filename='test.csv'):
+                                 filter_cols=None, filename='test.csv',
+                                 exclude_nans=True):
     r"""
     Calculates metrics for validating simulated data and saves results to file.
 
@@ -35,18 +36,29 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         see example todo example
     filename : string
         File name including path for saving validation metrics.
+    exclude_nans : bool
+        If True, time steps with nan values in either simulation or validation
+         time series are excluded from the validation. Default: True.
 
     """
+    if exclude_nans:
+        # Set value of measured series to nan if respective calculated
+        # value is nan and the other way round
+        df[val_cols[0]].loc[df[val_cols[1]].isnull() == True] = np.nan
+        df[val_cols[1]].loc[df[val_cols[0]].isnull() == True] = np.nan
     if metrics == 'standard':
-        metrics = ['rmse_norm', 'mean_bias', 'pearson']
+        metrics = ['rmse_norm', 'mean_bias', 'pearson', 'time_step_amount']
     # get all pairs of `filter_cols`
     filter_df = df.groupby(filter_cols).size().reset_index().drop(columns=[0],
                                                                    axis=1)
     metrics_df = pd.DataFrame()
     for filters, index in zip(filter_df.values, filter_df.index):
+        # select time series by filters
         df['temp'] = df[filter_cols].isin(filters).all(axis=1)
         val_df = df.loc[df['temp'] == True][val_cols]
         df.drop(columns=['temp'], inplace=True)
+        # drop nans
+        val_df.dropna(inplace=True)
 
         metrics_temp_df = pd.DataFrame()
         for filter, col in zip(filters, filter_cols):
@@ -95,6 +107,8 @@ def get_metric(metric, validation_data, val_cols):
             validation_series=validation_data[val_cols[1]])
     elif metric == 'pearson':
         metric_value = get_pearson_s_r(df=validation_data, min_periods=None)  # todo min periods
+    elif metric == 'time_step_amount':
+        metric_value = len(validation_data)
     else:
         raise ValueError("Metric {} not added, yet.".format(metric))
 
