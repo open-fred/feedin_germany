@@ -9,8 +9,6 @@ __license__ = "GPLv3"
 
 # imports
 import pandas as pd
-import datetime as dt
-import geopandas as gpd
 import os
 import logging
 import requests
@@ -22,7 +20,10 @@ from feedin_germany import config as cfg
 def load_feedin_data(categories, year, latest=False):
 
     r"""
-    loads register from server
+    Get feed-in time series of tso for specified categories and year.
+
+    Loads time series from opsd url or from file if it exists. Frequency is
+    1 hour and time zone 'UTC'.
 
     parameters
     ----------
@@ -35,26 +36,37 @@ def load_feedin_data(categories, year, latest=False):
         For description of further columns see
         https://data.open-power-system-data.org/renewable_power_plants/.
     """
+    filename = os.path.join(os.path.dirname(__file__), 'data/validation',
+                            'tso_feedin_{}.csv'.format(year))
 
-    if latest:
-        url_section = 'opsd_time_series_latest'
+    if os.path.exists(filename):
+        df_agg = pd.read_csv(filename)
+        # to datetime
+        df_agg['utc_timestamp'] = pd.to_datetime(df_agg['utc_timestamp'],
+                                                 utc=True)
     else:
-        url_section = 'opsd_time_series_2018'
+        if latest:
+            url_section = 'opsd_time_series_latest'
+        else:
+            url_section = 'opsd_time_series_2018'
 
-    # Download non existing files. If you think that there are newer files you
-    # have to set overwrite=True to overwrite existing with downloaded files.
+        logging.warning("Start downloading the register file from server.")
+        logging.warning("Check URL if download does not work.")
+        req = requests.get(cfg.get(url_section, 'time_series')).content
 
-    logging.warning("Start downloading the register file from server.")
-    logging.warning("Check URL if download does not work.")
-    req = requests.get(cfg.get(url_section, 'time_series')).content
+        df = pd.read_csv(io.StringIO(req.decode('utf-8')))
 
-    df = pd.read_csv(io.StringIO(req.decode('utf-8')))
-
-
-    df['utc_timestamp'] = pd.to_datetime(df['utc_timestamp'], utc=True)
-    df_year = df[df['utc_timestamp'].dt.year == year]
-    df_agg = df_year.set_index('utc_timestamp').resample('30Min').sum().reset_index()
-
+        df['utc_timestamp'] = pd.to_datetime(df['utc_timestamp'], utc=True)
+        df_year = df[df['utc_timestamp'].dt.year == year]
+        df_agg = df_year.set_index('utc_timestamp').resample('H').sum().reset_index()
+        df_agg[['utc_timestamp', 'DE_50hertz_solar_generation_actual',
+                'DE_amprion_solar_generation_actual',
+                'DE_tennet_solar_generation_actual',
+                'DE_transnetbw_solar_generation_actual',
+                'DE_50hertz_wind_generation_actual',
+                'DE_amprion_wind_generation_actual',
+                'DE_tennet_wind_generation_actual',
+                'DE_transnetbw_wind_generation_actual']].to_csv(filename)
 
     for category in categories:
         if category == 'Solar':
