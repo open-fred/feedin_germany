@@ -25,6 +25,7 @@ __license__ = "GPLv3"
 import os
 import logging
 import datetime
+import pickle
 
 # External libraries
 import numpy as np
@@ -387,7 +388,6 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):  # todo e
 def assign_turbine_data_by_wind_zone(register):
     r"""
     Assigns turbine data to a power plant register depending on wind zones.
-    todo: source?! DIBt.
     todo: load from oedb when they are there
     todo: move to feedinlib when oedb load works
     The wind zones are read from a shape file in the directory
@@ -417,8 +417,15 @@ def assign_turbine_data_by_wind_zone(register):
         unambiguous turbine id ('id').
 
     """
-    wind_zones = db_tools.load_data_from_oedb_with_oedialect(
-        schema='model_draft', table_name='rli_dibt_windzone')
+    # pickle load and dump in case db connection fails  # todo remove or nicer
+    filename = os.path.join(os.path.dirname(__file__), 'data/dumps',
+                            'wind_zones_dibt.p')
+    try:
+        wind_zones = pickle.load(open(filename, 'rb'))
+    except:
+        wind_zones = db_tools.load_data_from_oedb_with_oedialect(
+            schema='model_draft', table_name='rli_dibt_windzone')
+        pickle.dump(wind_zones, open(filename, 'wb'))
     wind_zones = wind_zones[['dibt_wind_zone', 'geom']]
     wind_zones.set_index('dibt_wind_zone', inplace=True)
 
