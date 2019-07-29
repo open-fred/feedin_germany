@@ -41,7 +41,7 @@ from feedin_germany import weather
 
 def calculate_feedin(year, register, regions, category, weather_data_folder,
                      return_feedin=False, weather_data_name='open_FRED',  # todo rename to weather_data and possibility of entering own weather data
-                     scale_to=None, **kwargs):
+                     scale_to=None, resolution='H', **kwargs):
     r"""
     Calculates feed-in of power plants in `register` for different `regions`.
 
@@ -72,6 +72,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
     scale_to : str or ...
         Specifies if and which capacities feed-in time series are scaled to.
         Default: None. # todo note: Now it can only be chosen 'entsoe' - would be nice to enter own capacities
+    resolution : str
 
     Other parameters
     ----------------
@@ -142,6 +143,11 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
                 else:
                     capacity_register = register_region['capacity'].sum()
                     feedin = feedin / capacity_register * installed_capacity
+            # adapt resolution of time series
+            freq = pd.infer_freq(feedin.index)
+            feedin.index.freq = pd.tseries.frequencies.to_offset(freq)
+            if feedin.index.freq != resolution:
+                feedin = feedin.resample(resolution).sum()
             if return_feedin:
                 feedin = feedin_to_db_format(feedin=feedin, technology=category,
                                           nuts=nut)
