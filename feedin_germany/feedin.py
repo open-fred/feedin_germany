@@ -14,6 +14,7 @@ __license__ = "GPLv3"
 
 # imports
 import pandas as pd
+import numpy as np
 import geopandas as gpd
 import os
 import logging
@@ -38,14 +39,14 @@ from feedin_germany import weather
 # - Umformungsfunktion für deflex - Muster siehe Jann
 
 
-def calculate_feedin(year, register, regions, category, weather_data_folder, return_feedin=False,
-                     weather_data_name='open_FRED',  # todo rename to weather_data and possibility of entering own weather data
-                     **kwargs):
+def calculate_feedin(year, register, regions, category, weather_data_folder,
+                     return_feedin=False, weather_data_name='open_FRED',  # todo rename to weather_data and possibility of entering own weather data
+                     scale_to=None, resolution='H', **kwargs):
     r"""
     Calculates feed-in of power plants in `register` for different `regions`.
 
     This function can be used for any region/country as long as you have the
-    input data.
+    input data. Returns the feed-in of one power plant type.
     For calculating feed-in time series for Germany it is recommended to use
     :py:func:`~.calculate_feedin_germany`.
 
@@ -55,6 +56,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder, ret
         Year for which feed-in time series are calculated.
     register : pd.DataFrame
         todo format --> Anforderung aus feedinlib!
+        Contains power plants of only one category (solar, wind, ...).
     regions : pandas.geoDataFrame
         Regions for which feed-in time series are calculated.
         todo: add required form of GeoDataFrame
@@ -66,6 +68,11 @@ def calculate_feedin(year, register, regions, category, weather_data_folder, ret
         `feedin_df`. Should only be set to True if number of regions is
          small. Default: False. todo what does small mean?
     weather_data_name : string
+
+    scale_to : str or ...
+        Specifies if and which capacities feed-in time series are scaled to.
+        Default: None. # todo note: Now it can only be chosen 'entsoe' - would be nice to enter own capacities
+    resolution : str
 
     Other parameters
     ----------------
@@ -126,6 +133,21 @@ def calculate_feedin(year, register, regions, category, weather_data_folder, ret
             else:
                 raise ValueError("Invalid category {}".format(category) +
                                  "Choose from: 'Wind', 'Solar', 'Hydro'.")
+            # scale time series to installed capacity in the respective year
+            if scale_to == 'entsoe':
+                installed_capacity = get_entsoe_capacity(year=year, region=nut,
+                                                         category=category)
+                if np.isnan(installed_capacity):
+                    logging.warning('Time series of {} {} was not '.format(
+                        nut, year) + 'scaled. Installed capacity is missing')
+                else:
+                    capacity_register = register_region['capacity'].sum()
+                    feedin = feedin / capacity_register * installed_capacity
+            # adapt resolution of time series
+            freq = pd.infer_freq(feedin.index)
+            feedin.index.freq = pd.tseries.frequencies.to_offset(freq)
+            if feedin.index.freq != resolution:
+                feedin = feedin.resample(resolution).sum()
             if return_feedin:
                 feedin = feedin_to_db_format(feedin=feedin, technology=category,
                                           nuts=nut)
@@ -171,16 +193,34 @@ def form_feedin_for_deflex(feedin):
     return deflex_feedin
 
 
+def get_entsoe_capacity(year, region, category):
+    """
+
+    year : int
+    region : str
+        Options: '50 Hertz', 'Amprion', 'TenneT', 'Transnet BW'.
+    """
+    # todo nur test file..
+    filename = os.path.join(os.path.dirname(__file__), 'data/entsoe',
+                            'installed_capacities_unb_{}.csv'.format(category))
+    df = pd.read_csv(filename, header=0, index_col=0)
+    capacity = df[region][year]
+    if np.isnan(capacity):
+        return capacity
+    else:
+        # capacity in W
+        return capacity * 10 ** 6
+
+
 def calculate_feedin_germany(year, categories, weather_data_folder,
                              regions='tso', register_name='opsd',
                              weather_data_name='open_FRED',
-                             return_feedin=False, debug_mode=False, **kwargs):
+                             return_feedin=False, debug_mode=False,
+                             scale_to=None, **kwargs):
     r"""
 
     Es sollen eigene Regionen eingegeben werden können,
     aber auch diejenigen aus der oedb geladen werden können.
-    # todo note: auch register_name und weather_data_name könnte wie regions funktionieren.
-        --> verschiedene Kombis möglich: eigenes Register, aber Landkreise etc..
 
     Parameters
     ----------
@@ -208,6 +248,7 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
          small. Default: False. todo what does small mean?
     debug_mode : boolean
         might be deleted
+    scale_to
 
     Other parameters
     ----------------
@@ -282,7 +323,7 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
             year=year, register=register, regions=region_gdf,
             category=category, return_feedin=return_feedin,
             weather_data_name=weather_data_name,
-            weather_data_folder=weather_data_folder,
+            weather_data_folder=weather_data_folder, scale_to=scale_to,
             **kwargs)
         if return_feedin:
             feedin_df = pd.concat([feedin_df, feedin])  # todo check axis when solar + wind
