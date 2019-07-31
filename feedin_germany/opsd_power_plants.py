@@ -397,7 +397,7 @@ def assign_turbine_data_by_wind_zone(register):
     adjusting the data in feedin_germany.ini.
 
     The following data is added as columns to `register`:
-    - turbine type in column 'name',
+    - turbine type in column 'turbine_type',
     - hub height in m in column 'hub_height' and
     - rotor diameter in m in column 'rotor_diameter',
     - unambiguous turbine id in column 'id' with the pattern
@@ -412,7 +412,7 @@ def assign_turbine_data_by_wind_zone(register):
     Returns
     -------
     adapted_register : pd.DataFrame
-        `register` which additionally contains turbine type ('name'), hub
+        `register` which additionally contains turbine type ('turbine_type'), hub
         height in m ('hub_height'), rotor diameter in m ('rotor_diameter') and
         unambiguous turbine id ('id').
 
@@ -442,7 +442,8 @@ def assign_turbine_data_by_wind_zone(register):
                                                 'geometry'], axis=1)
 
     # add data of typical turbine types to wind zones
-    wind_zones['name'] = [cfg.get('wind_set{}'.format(wind_zone), 'name')
+    wind_zones['turbine_type'] = [cfg.get('wind_set{}'.format(wind_zone),
+                                          'turbine_type')
                           for wind_zone in wind_zones.index]
     wind_zones['hub_height'] = [
         int(cfg.get('wind_set{}'.format(wind_zone), 'hub_height'))
@@ -456,7 +457,7 @@ def assign_turbine_data_by_wind_zone(register):
 
     # add data of typical turbine types by wind zone to power plant register
     adapted_register = pd.merge(adapted_register, wind_zones[
-        ['name', 'hub_height', 'rotor_diameter', 'id']], how='inner',
+        ['turbine_type', 'hub_height', 'rotor_diameter', 'id']], how='inner',
                                 left_on='wind_zone', right_index=True)
     return adapted_register
 
