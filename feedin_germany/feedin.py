@@ -137,12 +137,21 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
             if scale_to == 'entsoe':
                 installed_capacity = get_entsoe_capacity(year=year, region=nut,
                                                          category=category)
-                if np.isnan(installed_capacity):
-                    logging.warning('Time series of {} {} was not '.format(
-                        nut, year) + 'scaled. Installed capacity is missing')
-                else:
-                    capacity_register = register_region['capacity'].sum()
-                    feedin = feedin / capacity_register * installed_capacity
+            elif scale_to == '50 Hertz':
+                installed_capacity = get_50hz_capacity(year=year,
+                                                       category=category)
+                if not np.isnan(installed_capacity):
+                    logging.info("Only 50 Hertz time series is scaled. Choose "
+                                 "scale_to='entsoe' for other tso zones.")
+            else:
+                raise ValueError("scale_to should be 'entsoe' or '50 Hertz'.")
+            if np.isnan(installed_capacity):
+                logging.warning('Time series of {} {} was not '.format(
+                    nut, year) + 'scaled. Installed capacity is missing.')
+            else:
+                capacity_register = register_region['capacity'].sum()
+                feedin = feedin / capacity_register * installed_capacity
+
             # adapt resolution of time series
             freq = pd.infer_freq(feedin.index)
             feedin.index.freq = pd.tseries.frequencies.to_offset(freq)
@@ -200,9 +209,10 @@ def get_entsoe_capacity(year, region, category):
     region : str
         Options: '50 Hertz', 'Amprion', 'TenneT', 'Transnet BW'.
     """
-    # todo nur test file..
-    filename = os.path.join(os.path.dirname(__file__), 'data/entsoe',
-                            'installed_capacities_unb_{}.csv'.format(category))
+    filename = os.path.join(os.path.dirname(__file__),
+                            'data/installed_capacities',
+                            'installed_capacities_unb_entsoe_{}.csv'.format(
+                                category))
     df = pd.read_csv(filename, header=0, index_col=0)
     capacity = df[region][year]
     if np.isnan(capacity):
@@ -210,6 +220,24 @@ def get_entsoe_capacity(year, region, category):
     else:
         # capacity in W
         return capacity * 10 ** 6
+
+
+def get_50hz_capacity(year, category):
+    filename = os.path.join(os.path.dirname(__file__),
+                            'data/installed_capacities',
+                            'installed_capacities_bl_{}.csv'.format(
+                                category))
+    df = pd.read_csv(filename, header=0, index_col=0)
+    cols = ['Offshore 50 Hz [O50Hz]', 'Hamburg [HH]', 'Berlin [B]',
+            'Thüringen [TH]', 'Sachsen-Anhalt [ST]', 'Brandenburg [BB]',
+            'Sachsen [SN]', 'Mecklenburg-Vorpommern [MV]']
+    try:
+        capacity = df[str(year)][cols].sum()
+        # capacity in W
+        return capacity * 10 ** 6
+    except KeyError:
+        return np.nan
+
 
 
 def calculate_feedin_germany(year, categories, weather_data_folder,
@@ -273,7 +301,10 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
     # get regions from OEP if regions is not a geopandas.GeoDataFrame
     if isinstance(regions, gpd.GeoDataFrame):
         region_gdf = regions
-    elif regions == 'landkreise' or regions =='tso':
+    elif regions == 'landkreise' or regions =='tso' or regions == '50 Hertz':
+        if regions == '50 Hertz':  #todo could be if regions in [...]
+            sub_region = regions
+            regions = 'tso'
         start = time.time()
         # todo delete or with parameter in function
         regions_file = os.path.join(os.path.dirname(__file__), 'data/dumps',
@@ -286,6 +317,8 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
         end = time.time()
         print(
             'Time load_regions_file year {}: {}'.format(year, (end - start)))
+        if sub_region:
+            region_gdf = region_gdf[region_gdf['nuts'] == sub_region]
         if debug_mode:
             region_gdf = region_gdf[0:5]
     else:

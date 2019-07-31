@@ -26,7 +26,7 @@ weather_data_folder = os.path.join(
         'virtualenvs/lib_validation/lib_validation/dumps/weather/')
 
 years = [
-    # 2013, 2014,
+    2013, 2014,
     2015,
     2016,
     2017
@@ -63,15 +63,15 @@ weather_data_names = [
 # Validation of PVlib and windpowerlib feed-in time series via "tso" zones
 # for open_FRED and ERA5 weather data
 ###############################################################################
-scale_to = 'entsoe'  # scale time series to entsoe capacities if exist
-                     # note: they do exist for the years 2015 - 2019
-                     # for not scaling choose None
+scale_to = '50 Hertz'  # scale time series to 'entsoe' or '50 Hertz' capacities
+                     # or choose None for not scaling at all
+regions = '50 Hertz'  # 'tso' for all 4 UNB regions or '50 Hertz' for only 50hz  # todo this is for paper because installed capacites for 2013/14 only for 50 Hertz. delete later?
 for register_name in register_names:
     for weather_data_name in weather_data_names:
         for year in years:
             start = time.time()
             feedin = f.calculate_feedin_germany(
-                year=year, categories=categories, regions='tso',
+                year=year, categories=categories, regions=regions,
                 register_name=register_name,
                 weather_data_name=weather_data_name,
                 return_feedin=True, debug_mode=debug_mode,
@@ -80,11 +80,6 @@ for register_name in register_names:
             end = time.time()
             print('Time calculate_feedin_germany year {}: {}'.format(year,
                                                                 (end - start)))
-
-            # # todo delete: is for debugging
-            # import pickle
-            # pickle.dump(feedin, open('debug_dump.p', 'wb'))
-            # feedin = pickle.load(open('debug_dump.p', 'rb'))
 
             # get validation feed-in time series
             start = time.time()
