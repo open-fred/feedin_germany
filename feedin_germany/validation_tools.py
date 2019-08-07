@@ -46,30 +46,36 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         # value is nan and the other way round
         df[val_cols[0]].loc[df[val_cols[1]].isnull() == True] = np.nan
         df[val_cols[1]].loc[df[val_cols[0]].isnull() == True] = np.nan
+        # drop nans
+        df.dropna(inplace=True)
     if metrics == 'standard':
         metrics = ['rmse_norm', 'mean_bias', 'pearson', 'time_step_amount']
-    # get all pairs of `filter_cols`
-    filter_df = df.groupby(filter_cols).size().reset_index().drop(columns=[0],
+    if filter_cols:
+        metrics_df = pd.DataFrame()
+        # get all pairs of `filter_cols`
+        filter_df = df.groupby(filter_cols).size().reset_index().drop(columns=[0],
                                                                    axis=1)
-    metrics_df = pd.DataFrame()
-    for filters, index in zip(filter_df.values, filter_df.index):
-        # select time series by filters
-        df['temp'] = df[filter_cols].isin(filters).all(axis=1)
-        val_df = df.loc[df['temp'] == True][val_cols]
-        df.drop(columns=['temp'], inplace=True)
-        # drop nans
-        val_df.dropna(inplace=True)
+        for filters, index in zip(filter_df.values, filter_df.index):
+            # select time series by filters
+            df['temp'] = df[filter_cols].isin(filters).all(axis=1)
+            val_df = df.loc[df['temp'] == True][val_cols]
+            df.drop(columns=['temp'], inplace=True)
 
-        metrics_temp_df = pd.DataFrame()
-        for filter, col in zip(filters, filter_cols):
-            metrics_temp_df = pd.concat([metrics_temp_df,
-                                         pd.DataFrame(data=filter,
-                                                      columns=[col],
-                                                      index=[index])], axis=1)
+            metrics_temp_df = pd.DataFrame()
+            for filter, col in zip(filters, filter_cols):
+                metrics_temp_df = pd.concat([metrics_temp_df,
+                                             pd.DataFrame(data=filter,
+                                                          columns=[col],
+                                                          index=[index])], axis=1)
+            for metric in metrics:
+                metrics_temp_df[metric] = get_metric(
+                    metric=metric, validation_data=val_df, val_cols=val_cols)
+            metrics_df = pd.concat([metrics_df, metrics_temp_df])
+    else:
+        metrics_df = pd.DataFrame(columns=metrics)
         for metric in metrics:
-            metrics_temp_df[metric] = get_metric(
-                metric=metric, validation_data=val_df, val_cols=val_cols)
-        metrics_df = pd.concat([metrics_df, metrics_temp_df])
+            metrics_df[metric] = [get_metric(metric=metric, validation_data=df,
+                                            val_cols=val_cols)]
     # save results
     metrics_df.to_csv(filename)
 
