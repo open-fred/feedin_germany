@@ -11,29 +11,19 @@ __license__ = "GPLv3"
 
 # imports
 import pandas as pd
-import geopandas as gpd
 import os
 
-import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
-# from geoalchemy2.types import Geometry
-from sqlalchemy import func
-import oedialect
-from shapely.geometry import Point
-import shapely
-import requests
-
+from windpowerlib import get_turbine_types
 
 # internal imports
-from feedin_germany import oep_regions
 from feedin_germany import power_plant_register_tools as ppr_tools
 from feedin_germany import database_tools as db_tools
+from feedin_germany import opsd_power_plants as opsd
 
 
 def load_mastr_data_from_oedb():
     """
-    Loads the MaStR power plant units ...todo
+    Loads the MaStR power plant units ...
 
     Notes
     -----
@@ -57,8 +47,7 @@ def helper_load_mastr_from_file(category):
     r"""
     todo remove when loaded from oedb
 
-    andere interessante Spalten könnten sein (gerade keine Einträge):
-    - Erzeugungsleistung
+    only for 50 Hertz
 
     Notes
     -----
@@ -76,15 +65,18 @@ def helper_load_mastr_from_file(category):
     """
     if category == 'Wind':
         filename = os.path.join(
-            '~/Daten_flexibel_01/bnetza_mastr/bnetza_mastr_power-units_v1.2/',
-            'bnetza_mastr_1.2_wind.csv')
+            os.path.expanduser('~'),
+            'rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP3 4 Kraftwerks und Grunddaten/AP3 Kraftwerke/MaStR/Cleansing/',
+            'bnetza_mastr_wind_v1_4_clean_50hertz.csv')
         usecols = [
             'Nabenhoehe', 'Rotordurchmesser',
             # 'HerstellerName', 'Einheitart', 'Einheittyp', 'Technologie',
+            # 'Energietraeger',
             'Typenbezeichnung', 'Laengengrad', 'Breitengrad',
             'Inbetriebnahmedatum', 'DatumEndgueltigeStilllegung',
             'DatumBeginnVoruebergehendeStilllegung',
-            'DatumWiederaufnahmeBetrieb', 'Bruttoleistung'
+            'DatumWiederaufnahmeBetrieb', 'Lage', 'InstallierteLeistung',
+            'Seelage', 'lat', 'lon'
                 ]
     elif category == 'Solar':
         raise ValueError("Solar MaStR data not added, yet.")
@@ -92,11 +84,10 @@ def helper_load_mastr_from_file(category):
         raise ValueError("Category {} not existent. ".format(category) +
                          "Choose from: 'Wind', ...") # todo add
     try:
-        mastr_data = pd.read_csv(filename, sep=';', encoding='utf-8',
+        mastr_data = pd.read_csv(filename, sep=',', encoding='utf-8',
                                  header=0, usecols=usecols)
     except FileNotFoundError:
-        raise FileNotFoundError("Check file location. You might have to mount"
-                                " Daten_flexibel_01 sever.")
+        raise FileNotFoundError("Check MaStR file location.")
     return mastr_data
 
 
@@ -134,12 +125,13 @@ def prepare_mastr_data(mastr_data, category):
         mastr_data.rename(columns={
             'Nabenhoehe': 'hub_height', 'Rotordurchmesser': 'rotor_diameter',
             # 'HerstellerName', 'Einheitart', 'Einheittyp', 'Technologie',
-            'Typenbezeichnung': 'name', 'Laengengrad': 'lon',
-            'Breitengrad': 'lat', 'Inbetriebnahmedatum': 'commissioning_date',
+            'Typenbezeichnung': 'turbine_type',
+            # 'Laengengrad': 'lon', 'Breitengrad': 'lat',
+            'Inbetriebnahmedatum': 'commissioning_date',
             'DatumEndgueltigeStilllegung': 'decommissioning_date',
             'DatumBeginnVoruebergehendeStilllegung': 'temporary_decom_date',
             'DatumWiederaufnahmeBetrieb': 'resumption_date',
-            'Bruttoleistung': 'capacity'
+            'InstallierteLeistung': 'capacity'
         }, inplace=True)
     #
     date_cols = ('commissioning_date', 'decommissioning_date')
@@ -168,11 +160,25 @@ def get_mastr_pp_filtered_by_year(energy_source, year):
     filtered_register = ppr_tools.remove_pp_with_missing_coordinates(
         register=filtered_register, category=energy_source,
         register_name='MaStR')
-    return filtered_register
+    # prepare turbine types
+    # find turbine_types without power curve in oedb turbine_library
+    df = get_turbine_types(turbine_library='oedb',
+                           print_out=False, filter_=True)
+    types_with_power_curve = df[df['has_power_curve'] == True]['turbine_type']
+    filtered_register['has_power_curve'] = filtered_register[
+        'turbine_type'].apply(lambda x: True if x in list(types_with_power_curve) else False)
+    # add turbine types by wind zone in new column
+    filtered_register = opsd.assign_turbine_data_by_wind_zone(
+        filtered_register, turbine_type_col='new_turbine_type')
+    # exchange nan in 'turbine_type' column with new turbine type (by windzone)
+    indices = filtered_register['turbine_type'].loc[
+        filtered_register['has_power_curve'] == False].index
+    filtered_register['turbine_type'].loc[indices] = filtered_register[
+        'new_turbine_type'].loc[indices]
+    return filtered_register.drop('new_turbine_type', axis=1)
 
 
 if __name__ == "__main__":
-    load_mastr_data_from_oedb()
     year = 2012
     cat = 'Wind'
     mastr_pp = get_mastr_pp_filtered_by_year(energy_source='Wind', year=year)
