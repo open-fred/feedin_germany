@@ -305,6 +305,8 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
         if regions == '50 Hertz':  #todo could be if regions in [...]
             sub_region = regions
             regions = 'tso'
+        else:
+            sub_region = None
         start = time.time()
         # todo delete or with parameter in function
         regions_file = os.path.join(os.path.dirname(__file__), 'data/dumps',
