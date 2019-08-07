@@ -59,7 +59,7 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
     year : int
     overwrite_capacity : bool
         By default (False) a new column "capacity_<year>" is created. If set to
-        True the old capacity column will be overwritten. todo changed, right? @ Inia
+        True the old capacity column will be overwritten.
 
     Returns
     -------
@@ -71,10 +71,19 @@ def get_pp_by_year(year, register, overwrite_capacity=True):
 
     # Get all power plants for the given year.
     # If com_month exist the power plants will be considered month-wise.
-    # Otherwise the commission/decommission within the given year is not
-    # considered.
+    # Otherwise the decommissioning is considered to take place in the end of a
+    # year (month 12) and commissioning in the beginning of a year (month 1).
+    # If no decommissioning year is given it is set to 2050.
+
+    indices = pp.loc[pp['decom_year'].isnull() == True].index
+    pp['decom_year'].loc[indices] = int(2050)
+    indices = pp.loc[pp['decom_month'].isnull() == True].index
+    pp['decom_month'].loc[indices] = int(12)
+    indices = pp.loc[pp['com_month'].isnull() == True].index
+    pp['com_month'].loc[indices] = int(1)
 
     for fcol in filter_columns:
+
         filter_column = fcol.format(year)
         orig_column = fcol[:-4]
         c1 = (pp['com_year'] < year) & (pp['decom_year'] > year)
