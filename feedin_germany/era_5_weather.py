@@ -9,6 +9,7 @@ import os
 
 # internal imports
 import geometries
+import settings
 
 # todo wind speed to wind_speed!!!
 # todo: functions might have been updated in open_FRED paper Gogs by Pierre
@@ -265,6 +266,9 @@ if __name__ == "__main__":
 
     uckermark_wpl = True  # Uckermark windpowerlib data
     brandenburg_wpl = True  # for whole Brandenburg windpowerlib data
+    # get global variables
+    settings.init()
+
     germany_wpl = True  # for whole Germany windpowerlib data
     germany_pvl = True  # for whole Germany pvlib data
 
@@ -273,16 +277,13 @@ if __name__ == "__main__":
         2014, 2015, 2016, 2017
     ]
 
-    data_server = 'Daten_flexibel_01'  # mount data server and set name here
-    dump_folder = os.path.join(
-        os.path.expanduser('~'),
-        'virtualenvs/lib_validation/lib_validation/dumps/weather/')
+    # dump_folder = os.path.join(
+    #     os.path.expanduser('~'),
+    #     'virtualenvs/lib_validation/lib_validation/dumps/weather/')
+    dump_folder = settings.data_path
 
     for year in years:
-        era5_path = os.path.join(os.path.expanduser('~'),
-                                 '{}/Wetterdaten/ERA5/'.format(
-                                     data_server))
-        ds_era5 = load_era5_data(year, era5_path)
+        ds_era5 = load_era5_data(year, settings.path_era5_netcdf)
 
         if uckermark_wpl:
             # select region
