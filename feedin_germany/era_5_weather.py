@@ -304,17 +304,15 @@ if __name__ == "__main__":
                                         'era5_wind_bb_{}.csv'.format(year)))
 
         if (germany_wpl or germany_pvl):
-            region = geometries.load_polygon('germany')
-            ws_select = apply_mask(ds_era5, region.loc[0, 'geometry'])
             if germany_wpl:
                 # format to windpowerlib
-                weather = format_windpowerlib(ws_select)
+                weather = format_windpowerlib(ds_era5)
                 weather.to_csv(os.path.join(dump_folder,
                                             'era5_wind_ger_{}.csv'.format(
                                                 year)))
 
             if germany_pvl:
-                weather = format_pvlib(ws_select)
+                weather = format_pvlib(ds_era5)
                 weather.to_csv(os.path.join(dump_folder,
                                             'era5_pv_ger_{}.csv'.format(
                                                 year)))
