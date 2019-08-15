@@ -208,3 +208,20 @@ def get_pearson_s_r(df, min_periods=None):
 
     """
     return df.corr(method='pearson', min_periods=min_periods).iloc[1, 0]
+
+
+def resample_with_nan_theshold(df, frequency, threshold):
+    if threshold is None:
+        resampled_df = df.resample(frequency).mean()
+    else:
+        resampled_df = pd.DataFrame()
+        df2 = df.resample(frequency, how=['mean', 'count'])
+        column_list = list(set([item[0] for item in list(df2)]))
+        for column in column_list:
+            df_part = pd.DataFrame(df2[column])
+            df_part[column] = np.nan
+            df_part.loc[df_part['count'] >= threshold, column] = df_part[
+                'mean']
+            df_part.drop(columns=['count', 'mean'], axis=1, inplace=True)
+            resampled_df = pd.concat([resampled_df, df_part], axis=1)
+    return resampled_df
