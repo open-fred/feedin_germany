@@ -113,16 +113,12 @@ def format_pvlib(xarr):
     """
 
     # compute the norm of the wind speed
-    xarr['wnd100m'] = (np.sqrt(xarr['u100'] ** 2 + xarr['v100'] ** 2)
-                       .assign_attrs(units=xarr['u100'].attrs['units'],
-                                     long_name="100 metre wind speed"))
-
-    xarr['wnd10m'] = (np.sqrt(xarr['u10'] ** 2 + xarr['v10'] ** 2)
-                      .assign_attrs(units=xarr['u10'].attrs['units'],
-                                    long_name="10 metre wind speed"))
+    xarr['wind_speed'] = (np.sqrt(xarr['u10'] ** 2 + xarr['v10'] ** 2)
+                          .assign_attrs(units=xarr['u10'].attrs['units'],
+                                        long_name="10 metre wind speed"))
 
     # convert temperature to Celsius (from Kelvin)
-    xarr['temperature'] = xarr.temperature - 273.15
+    xarr['temp_air'] = xarr.temperature - 273.15
 
     xarr['dirhi'] = (
                 xarr.surface_total_sky_direct_solar_radiation / 3600.).assign_attrs(
@@ -148,6 +144,7 @@ def format_pvlib(xarr):
             'surface_solar_radiation_downwards',
             'surface_total_sky_direct_solar_radiation',
             'dirhi',
+            'temperature'
         ]
     )
 
@@ -155,23 +152,7 @@ def format_pvlib(xarr):
     df = xarr.to_dataframe().reorder_levels(['time', 'lat', 'lon'])
 
     # reorder the multiindexing on the rows
-    df = df[['wnd10m', 'wnd10m', 'temperature', 'ghi', 'dhi']]
-
-    # define a multiindexing on the columns
-    midx = pd.MultiIndex(
-        levels=[
-            ['wind speed', 'temperature', 'ghi', 'dhi'],  # variable
-            ['0', '2', '10', '100']  # height
-        ],
-
-        codes=[
-            [0, 0, 1, 2, 3],  # indexes from variable list above
-            [2, 3, 1, 0, 0]  # indexes from the height list above
-        ],
-        names=['variable', 'height']  # name of the levels
-    )
-
-    df.columns = midx
+    df = df[['wind_speed', 'temp_air', 'ghi', 'dhi']]
 
     return df.dropna()
 
