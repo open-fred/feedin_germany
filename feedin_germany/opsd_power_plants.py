@@ -386,7 +386,9 @@ def filter_pp_by_source_and_year(year, energy_source, keep_cols=None):  # todo e
 
 
 def assign_turbine_data_by_wind_zone(register,
-                                     turbine_type_col='turbine_type'):
+                                     turbine_type_col='turbine_type',
+                                     hub_height_col='hub_height',
+                                     rotor_diameter_col='rotor_diameter'):
     r"""
     Assigns turbine data to a power plant register depending on wind zones.
     todo: load from oedb when they are there
@@ -448,10 +450,10 @@ def assign_turbine_data_by_wind_zone(register,
     wind_zones[turbine_type_col] = [cfg.get('wind_set{}'.format(wind_zone),
                                           'turbine_type')
                           for wind_zone in wind_zones.index]
-    wind_zones['hub_height'] = [
+    wind_zones[hub_height_col] = [
         int(cfg.get('wind_set{}'.format(wind_zone), 'hub_height'))
         for wind_zone in wind_zones.index]
-    wind_zones['rotor_diameter'] = [
+    wind_zones[rotor_diameter_col] = [
         int(cfg.get('wind_set{}'.format(wind_zone), 'rotor_diameter'))
         for wind_zone in wind_zones.index]
     wind_zones['id'] = [
@@ -460,8 +462,9 @@ def assign_turbine_data_by_wind_zone(register,
 
     # add data of typical turbine types by wind zone to power plant register
     adapted_register = pd.merge(adapted_register, wind_zones[
-        [turbine_type_col, 'hub_height', 'rotor_diameter', 'id']], how='inner',
-                                left_on='wind_zone', right_index=True)
+        [turbine_type_col, hub_height_col, rotor_diameter_col, 'id']],
+                                how='inner', left_on='wind_zone',
+                                right_index=True)
     return adapted_register
 
 

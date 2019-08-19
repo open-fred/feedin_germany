@@ -169,13 +169,21 @@ def get_mastr_pp_filtered_by_year(energy_source, year):
         'turbine_type'].apply(lambda x: True if x in list(types_with_power_curve) else False)
     # add turbine types by wind zone in new column
     filtered_register = opsd.assign_turbine_data_by_wind_zone(
-        filtered_register, turbine_type_col='new_turbine_type')
+        filtered_register, turbine_type_col='new_turbine_type',
+        hub_height_col='new_hub_height',
+        rotor_diameter_col='new_rotor_diameter')
     # exchange nan in 'turbine_type' column with new turbine type (by windzone)
+    # and adapt rotor diameter and hub height
     indices = filtered_register['turbine_type'].loc[
         filtered_register['has_power_curve'] == False].index
     filtered_register['turbine_type'].loc[indices] = filtered_register[
         'new_turbine_type'].loc[indices]
-    return filtered_register.drop('new_turbine_type', axis=1)
+    filtered_register['hub_height'].loc[indices] = filtered_register[
+        'new_hub_height'].loc[indices]
+    filtered_register['rotor_diameter'].loc[indices] = filtered_register[
+        'new_rotor_diameter'].loc[indices]
+    return filtered_register.drop(['new_turbine_type', 'new_hub_height',
+                                   'new_rotor_diameter'], axis=1)
 
 
 if __name__ == "__main__":
