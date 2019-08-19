@@ -148,7 +148,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
             if np.isnan(installed_capacity):
                 logging.warning('Time series of {} {} was not '.format(
                     nut, year) + 'scaled. Installed capacity is missing.')
-            else:
+            else:  # todo evtl scaling of feedinblib
                 capacity_register = register_region['capacity'].sum()
                 feedin = feedin / capacity_register * installed_capacity
 
@@ -342,8 +342,6 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
             if category == 'Wind':
                 register = mastr.get_mastr_pp_filtered_by_year(
                     energy_source=category, year=year)
-                register.dropna(subset=['name', 'hub_height',
-                                        'rotor_diameter'], inplace=True)  # todo remove after mastr is complete or fix
             else:
                 raise ValueError("Option 'MaStR' as `register_name` until "
                                  "now only available for `category` 'Wind'.")
