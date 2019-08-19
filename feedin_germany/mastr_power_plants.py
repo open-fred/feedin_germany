@@ -19,6 +19,7 @@ from windpowerlib import get_turbine_types
 from feedin_germany import power_plant_register_tools as ppr_tools
 from feedin_germany import database_tools as db_tools
 from feedin_germany import opsd_power_plants as opsd
+import settings
 
 
 def load_mastr_data_from_oedb():
@@ -63,10 +64,10 @@ def helper_load_mastr_from_file(category):
     -------
 
     """
+    settings.init()
     if category == 'Wind':
         filename = os.path.join(
-            os.path.expanduser('~'),
-            'rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP3 4 Kraftwerks und Grunddaten/AP3 Kraftwerke/MaStR/Cleansing/',
+            settings.path_mastr_wind,
             'bnetza_mastr_wind_v1_4_clean_50hertz.csv')
         usecols = [
             'Nabenhoehe', 'Rotordurchmesser',
