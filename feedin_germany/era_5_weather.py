@@ -262,13 +262,12 @@ def prepare_pvlib_from_era5(year, data_path=join('data', 'era5_netcdf'),
 
 
 if __name__ == "__main__":
-    # choose parameters
+    # get global variables
+    settings.init()  # note: set your paths in settings.py
 
+    # choose parameters
     uckermark_wpl = True  # Uckermark windpowerlib data
     brandenburg_wpl = True  # for whole Brandenburg windpowerlib data
-    # get global variables
-    settings.init()
-
     germany_wpl = True  # for whole Germany windpowerlib data
     germany_pvl = True  # for whole Germany pvlib data
 
@@ -276,11 +275,6 @@ if __name__ == "__main__":
         2013,
         2014, 2015, 2016, 2017
     ]
-
-    # dump_folder = os.path.join(
-    #     os.path.expanduser('~'),
-    #     'virtualenvs/lib_validation/lib_validation/dumps/weather/')
-    dump_folder = settings.data_path
 
     for year in years:
         ds_era5 = load_era5_data(year, settings.path_era5_netcdf)
@@ -291,9 +285,8 @@ if __name__ == "__main__":
             ws_select = apply_mask(ds_era5, region.loc[0, 'geometry'])
             # format to windpowerlib
             weather = format_windpowerlib(ws_select)
-            weather.to_csv(os.path.join(dump_folder,
+            weather.to_csv(os.path.join(settings.weather_data_path,
                              'era5_wind_um_{}.csv'.format(year)))
-            # weather = prepare_windpowerlib_from_era5(year=2014, data_path=era5_path, mask_area=region)
 
         if brandenburg_wpl:
             # select region
@@ -301,19 +294,18 @@ if __name__ == "__main__":
             ws_select = apply_mask(ds_era5, region.loc[0, 'geometry'])
             # format to windpowerlib
             weather = format_windpowerlib(ws_select)
-            weather.to_csv(os.path.join(dump_folder,
+            weather.to_csv(os.path.join(settings.weather_data_path,
                                         'era5_wind_bb_{}.csv'.format(year)))
 
         if (germany_wpl or germany_pvl):
             if germany_wpl:
-                # format to windpowerlib
                 weather = format_windpowerlib(ds_era5)
-                weather.to_csv(os.path.join(dump_folder,
+                weather.to_csv(os.path.join(settings.weather_data_path,
                                             'era5_wind_ger_{}.csv'.format(
                                                 year)))
 
             if germany_pvl:
                 weather = format_pvlib(ds_era5)
-                weather.to_csv(os.path.join(dump_folder,
+                weather.to_csv(os.path.join(settings.weather_data_path,
                                             'era5_pv_ger_{}.csv'.format(
                                                 year)))
