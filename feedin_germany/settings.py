@@ -7,9 +7,10 @@ def init():
     # path to ERA5 original netcdf files
     path_era5_netcdf = '/home/sabine/Daten_flexibel_01/Wetterdaten/ERA5/'
 
-    ## power plant register
-    global path_mastr_wind
+    ## power plants and geometries
+    global path_mastr_wind, path_geometries
     path_mastr_wind = '/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP7 Community/paper_data/power_plant_register/'
+    path_geometries = '/home/sabine/rl-institut/04_Projekte/163_Open_FRED/03-Projektinhalte/AP7 Community/paper_data/geometries/'
 
     ## time series
     global path_time_series_50_Hz, path_wam_ezr
