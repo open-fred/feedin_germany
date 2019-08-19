@@ -34,7 +34,7 @@ from feedin_germany import weather
 
 
 # Planung Funktionalitäten:
-# - hochladen in OEP nach ausgemachtem Muster (machen nur wir)
+# - hochladen in OEP nach ausgemachtem Muster (machen nur wir) (moved to main - kein direkter OEP upload!)
 # - Rückgabe für die Validierung:  db format.(nur bei geringer Anzahl an Regionen)
 # - Umformungsfunktion für deflex - Muster siehe Jann
 
@@ -112,7 +112,6 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
                 "No {} power plants in region {} in register.".format(category,
                                                                       nut))
         else:
-            # todo: wenn feedinlib weiterentwickelt: feedinlib Aufruf für alle gleich möglich?
             if category == 'Solar':
                 register_pv = register_region[
                     ['lat', 'lon', 'commissioning_date', 'capacity',
@@ -133,24 +132,26 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
             else:
                 raise ValueError("Invalid category {}".format(category) +
                                  "Choose from: 'Wind', 'Solar', 'Hydro'.")
-            # scale time series to installed capacity in the respective year
-            if scale_to == 'entsoe':
-                installed_capacity = get_entsoe_capacity(year=year, region=nut,
-                                                         category=category)
-            elif scale_to == '50 Hertz':
-                installed_capacity = get_50hz_capacity(year=year,
-                                                       category=category)
-                if not np.isnan(installed_capacity):
-                    logging.info("Only 50 Hertz time series is scaled. Choose "
-                                 "scale_to='entsoe' for other tso zones.")
-            else:
-                raise ValueError("scale_to should be 'entsoe' or '50 Hertz'.")
-            if np.isnan(installed_capacity):
-                logging.warning('Time series of {} {} was not '.format(
-                    nut, year) + 'scaled. Installed capacity is missing.')
-            else:  # todo evtl scaling of feedinblib
-                capacity_register = register_region['capacity'].sum()
-                feedin = feedin / capacity_register * installed_capacity
+            if scale_to:
+                # scale time series to installed capacity in the respective year
+                if scale_to == 'entsoe':
+                    installed_capacity = get_entsoe_capacity(
+                        year=year, region=nut, category=category)
+                elif scale_to == '50 Hertz':
+                    installed_capacity = get_50hz_capacity(year=year,
+                                                           category=category)
+                    if not np.isnan(installed_capacity):
+                        logging.info("Only 50 Hertz time series is scaled. Choose "
+                                     "scale_to='entsoe' for other tso zones.")
+                else:
+                    raise ValueError("scale_to should be 'entsoe' or "
+                                     "'50 Hertz'.")
+                if np.isnan(installed_capacity):
+                    logging.warning('Time series of {} {} was not '.format(
+                        nut, year) + 'scaled. Installed capacity is missing.')
+                else:  # todo evtl scaling of feedinblib
+                    capacity_register = register_region['capacity'].sum()
+                    feedin = feedin / capacity_register * installed_capacity
 
             # adapt resolution of time series
             freq = pd.infer_freq(feedin.index)
