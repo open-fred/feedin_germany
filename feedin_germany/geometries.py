@@ -27,6 +27,9 @@ from shapely.wkt import loads as wkt_loads
 from shapely.geometry import Point
 from shapely.geometry.base import BaseGeometry
 
+# internal imports
+import settings
+
 
 def load(path=None, filename=None, fullname=None, hdf_key=None,
          index_col=None, crs=None):
@@ -132,7 +135,8 @@ def create_geo_df(df, wkt_column=None, lon_column=None, lat_column=None,
 
 
 def load_polygon(region='uckermark'):
-    path = '/home/sabine/Daten_flexibel_01/Wetterdaten/ERA5/'
+    settings.init()
+    path = settings.path_geometries
     if region == 'uckermark':
         filename = os.path.join(path, 'uckermark.geojson')
     elif (region == 'germany' or region == 'brandenburg'):

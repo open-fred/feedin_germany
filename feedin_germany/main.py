@@ -9,6 +9,7 @@ from feedin_germany import feedin as f
 from feedin_germany import config as cfg
 from feedin_germany import validation_data as val_data
 from feedin_germany import validation_tools as val_tools
+import settings
 
 # Ziele
 # 1. Feedin f. Landkreise berechnen und auf OEP laden
@@ -17,13 +18,18 @@ from feedin_germany import validation_tools as val_tools
 
 debug_mode = False  # Only 4 regions are calculated.
 
-feedin_folder = os.path.join(
-    os.path.expanduser('~'),
-    'Daten_flexibel_01/Einspeisezeitreihen_open_FRED_WAM')
+# define folders
+settings.init()  # note: set your paths in settings.py
+feedin_folder = settings.path_wam_ezr
+
+time_series_df_folder = settings.path_time_series_50_Hz
 
 weather_data_folder = os.path.join(
         os.path.expanduser('~'),
-        'virtualenvs/lib_validation/lib_validation/dumps/weather/')
+        'virtualenvs/lib_validation/lib_validation/dumps/weather/')  # todo exchange after weather data is saved there
+# weather_data_folder = settings.weather_data_path
+
+validation_path = settings.path_validation_metrics
 
 years = [
     2013, 2014,
@@ -57,7 +63,7 @@ weather_data_names = [
 #             debug_mode=debug_mode, wake_losses_model=None,
 #             weather_data_folder=weather_data_folder,
 #             return_feedin=True)
-#         feedin.to_csv('example_feedin_wam.csv')  # todo: automatisch in WAM ordner speichern siehe oben feedin_folder
+#        # feedin.to_csv(os.path.join(feedin_folder, 'example_feedin_wam.csv'))  # todo: automatic saving in wam folder
 
 ###############################################################################
 # Validation of PVlib and windpowerlib feed-in time series via "tso" zones
@@ -95,13 +101,19 @@ for register_name in register_names:
             # todo solve in feedinlib?
             validation_df = validation_df[
                 validation_df['time'] >= '01-01-{}'.format(year)]
+
+            # save time series data frame to csv
+            validation_df.set_index('time').to_csv(os.path.join(
+                time_series_df_folder,
+                'time_series_df_50hz_{}_{}_{}.csv'.format(
+                    register_name, weather_data_name, year)))
+
             # calculate metrics and save to file
-            validation_path = cfg.get('paths', 'validation')
             if not os.path.exists(validation_path):
                 os.makedirs(validation_path, exist_ok=True)
             filename = os.path.join(
                 os.path.dirname(__file__), validation_path,
-                cfg.get('validation', 'filename').format(
+                'validation_50Hz_{reg}_{weather}_{year}.csv'.format(
                     reg=register_name, weather=weather_data_name, year=year))
             val_tools.calculate_validation_metrics(
                 df=validation_df.set_index('time'),
