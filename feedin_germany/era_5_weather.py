@@ -9,6 +9,7 @@ import os
 
 # internal imports
 import geometries
+import settings
 
 # todo wind speed to wind_speed!!!
 # todo: functions might have been updated in open_FRED paper Gogs by Pierre
@@ -113,16 +114,12 @@ def format_pvlib(xarr):
     """
 
     # compute the norm of the wind speed
-    xarr['wnd100m'] = (np.sqrt(xarr['u100'] ** 2 + xarr['v100'] ** 2)
-                       .assign_attrs(units=xarr['u100'].attrs['units'],
-                                     long_name="100 metre wind speed"))
-
-    xarr['wnd10m'] = (np.sqrt(xarr['u10'] ** 2 + xarr['v10'] ** 2)
-                      .assign_attrs(units=xarr['u10'].attrs['units'],
-                                    long_name="10 metre wind speed"))
+    xarr['wind_speed'] = (np.sqrt(xarr['u10'] ** 2 + xarr['v10'] ** 2)
+                          .assign_attrs(units=xarr['u10'].attrs['units'],
+                                        long_name="10 metre wind speed"))
 
     # convert temperature to Celsius (from Kelvin)
-    xarr['temperature'] = xarr.temperature - 273.15
+    xarr['temp_air'] = xarr.temperature - 273.15
 
     xarr['dirhi'] = (
                 xarr.surface_total_sky_direct_solar_radiation / 3600.).assign_attrs(
@@ -148,6 +145,7 @@ def format_pvlib(xarr):
             'surface_solar_radiation_downwards',
             'surface_total_sky_direct_solar_radiation',
             'dirhi',
+            'temperature'
         ]
     )
 
@@ -155,23 +153,7 @@ def format_pvlib(xarr):
     df = xarr.to_dataframe().reorder_levels(['time', 'lat', 'lon'])
 
     # reorder the multiindexing on the rows
-    df = df[['wnd10m', 'wnd10m', 'temperature', 'ghi', 'dhi']]
-
-    # define a multiindexing on the columns
-    midx = pd.MultiIndex(
-        levels=[
-            ['wind speed', 'temperature', 'ghi', 'dhi'],  # variable
-            ['0', '2', '10', '100']  # height
-        ],
-
-        codes=[
-            [0, 0, 1, 2, 3],  # indexes from variable list above
-            [2, 3, 1, 0, 0]  # indexes from the height list above
-        ],
-        names=['variable', 'height']  # name of the levels
-    )
-
-    df.columns = midx
+    df = df[['wind_speed', 'temp_air', 'ghi', 'dhi']]
 
     return df.dropna()
 
@@ -284,6 +266,9 @@ if __name__ == "__main__":
 
     uckermark_wpl = True  # Uckermark windpowerlib data
     brandenburg_wpl = True  # for whole Brandenburg windpowerlib data
+    # get global variables
+    settings.init()
+
     germany_wpl = True  # for whole Germany windpowerlib data
     germany_pvl = True  # for whole Germany pvlib data
 
@@ -292,16 +277,13 @@ if __name__ == "__main__":
         2014, 2015, 2016, 2017
     ]
 
-    data_server = 'Daten_flexibel_01'  # mount data server and set name here
-    dump_folder = os.path.join(
-        os.path.expanduser('~'),
-        'virtualenvs/lib_validation/lib_validation/dumps/weather/')
+    # dump_folder = os.path.join(
+    #     os.path.expanduser('~'),
+    #     'virtualenvs/lib_validation/lib_validation/dumps/weather/')
+    dump_folder = settings.data_path
 
     for year in years:
-        era5_path = os.path.join(os.path.expanduser('~'),
-                                 '{}/Wetterdaten/ERA5/'.format(
-                                     data_server))
-        ds_era5 = load_era5_data(year, era5_path)
+        ds_era5 = load_era5_data(year, settings.path_era5_netcdf)
 
         if uckermark_wpl:
             # select region
@@ -323,17 +305,15 @@ if __name__ == "__main__":
                                         'era5_wind_bb_{}.csv'.format(year)))
 
         if (germany_wpl or germany_pvl):
-            region = geometries.load_polygon('germany')
-            ws_select = apply_mask(ds_era5, region.loc[0, 'geometry'])
             if germany_wpl:
                 # format to windpowerlib
-                weather = format_windpowerlib(ws_select)
+                weather = format_windpowerlib(ds_era5)
                 weather.to_csv(os.path.join(dump_folder,
                                             'era5_wind_ger_{}.csv'.format(
                                                 year)))
 
             if germany_pvl:
-                weather = format_pvlib(ws_select)
+                weather = format_pvlib(ds_era5)
                 weather.to_csv(os.path.join(dump_folder,
                                             'era5_pv_ger_{}.csv'.format(
                                                 year)))
