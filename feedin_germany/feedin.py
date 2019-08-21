@@ -41,7 +41,7 @@ from feedin_germany import weather
 
 def calculate_feedin(year, register, regions, category, weather_data_folder,
                      return_feedin=False, weather_data_name='open_FRED',  # todo rename to weather_data and possibility of entering own weather data
-                     scale_to=None, resolution='H', **kwargs):
+                     scale_to=None, resolution='H', periods=False, **kwargs):
     r"""
     Calculates feed-in of power plants in `register` for different `regions`.
 
@@ -73,6 +73,9 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
         Specifies if and which capacities feed-in time series are scaled to.
         Default: None. # todo note: Now it can only be chosen 'entsoe' - would be nice to enter own capacities
     resolution : str
+
+    periods : bool
+        see feedinlib
 
     Other parameters
     ----------------
@@ -127,7 +130,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
             elif category == 'Wind':
                 feedin = region.Region(geom='no_geom',
                                        weather=weather_df).wind_feedin(
-                    register_region, **kwargs)
+                    register_region, capacity_periods=periods, **kwargs)
             elif category == 'Hydro':
                 raise ValueError("Hydro not working, yet.")
             else:
@@ -160,6 +163,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
             if feedin.index.freq != resolution:
                 feedin = feedin.resample(resolution).sum()
             if return_feedin:
+                feedin.index.name = 'time'
                 feedin = feedin_to_db_format(feedin=feedin,
                                              technology=category, nuts=nut)
                 feedin_df = pd.concat([feedin_df, feedin])
@@ -246,7 +250,8 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
                              regions='tso', register_name='opsd',
                              weather_data_name='open_FRED',
                              return_feedin=False, debug_mode=False,
-                             scale_to=None, **kwargs):
+                             scale_to=None, commission_decommission='periods',
+                             **kwargs):
     r"""
 
     Es sollen eigene Regionen eingegeben werden können,
@@ -281,6 +286,22 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
     scale_to : str or None
         Specifies if and which capacities feed-in time series are scaled to.
         Default: None. # todo note: Now it can only be chosen 'entsoe' - would be nice to enter own capacities
+    commission_decommission : str
+        Specifies how commission and decommission dates of power plants are
+        handled.
+
+        * 'month_wise_scaled_capacities' -
+           Capacities are scaled by percentage of time power plant was
+           installed during the respective year.
+           See :py:func:`~.mastr_power_plants.get_mastr_pp_filtered_by_year`
+           for more information.
+        * 'periods' -
+          Exact dates are used. Time series are split into periods by com and
+          decom dates.
+
+        Default: 'periods'
+
+
 
     Other parameters
     ----------------
@@ -333,6 +354,21 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
 
     if return_feedin:
         feedin_df = pd.DataFrame()
+    # set month_wise_capacities parameter to False if `commission_decommission`
+    # is 'period'. Periods will be formed in the feedinlib.
+    if commission_decommission == 'periods':
+        month_wise_capacities = False
+        periods = True
+    elif commission_decommission == 'month_wise_scaled_capacities':
+        month_wise_capacities = True
+        periods = False
+    else:
+        month_wise_capacities = False
+        periods = False
+        msg = "`commission_decommission` must be 'periods' or" \
+              "'month_wise_scaled_capacities' but is {}. \n commisson and " \
+              "decommission dates are therefore not considered."
+        logging.warning(msg.format(commission_decommission))
     for category in categories:
         # get power plant register if register is not pd.DataFrame
         if isinstance(register_name, pd.DataFrame):
@@ -345,7 +381,8 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
         elif register_name == 'MaStR':
             if category == 'Wind':
                 register = mastr.get_mastr_pp_filtered_by_year(
-                    energy_source=category, year=year)
+                    energy_source=category, year=year,
+                    month_wise_capacities=month_wise_capacities)
             else:
                 raise ValueError("Option 'MaStR' as `register_name` until "
                                  "now only available for `category` 'Wind'.")
@@ -361,6 +398,7 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
             category=category, return_feedin=return_feedin,
             weather_data_name=weather_data_name,
             weather_data_folder=weather_data_folder, scale_to=scale_to,
+            periods=periods,
             **kwargs)
         if return_feedin:
             feedin_df = pd.concat([feedin_df, feedin])  # todo check axis when solar + wind
