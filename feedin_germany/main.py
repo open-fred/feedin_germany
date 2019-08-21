@@ -21,14 +21,8 @@ debug_mode = False  # Only 4 regions are calculated.
 # define folders
 settings.init()  # note: set your paths in settings.py
 feedin_folder = settings.path_wam_ezr
-
 time_series_df_folder = settings.path_time_series_50_Hz
-
-weather_data_folder = os.path.join(
-        os.path.expanduser('~'),
-        'virtualenvs/lib_validation/lib_validation/dumps/weather/')  # todo exchange after weather data is saved there
-# weather_data_folder = settings.weather_data_path
-
+weather_data_folder = settings.weather_data_path
 validation_path = settings.path_validation_metrics
 
 years = [
