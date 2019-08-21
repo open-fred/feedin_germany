@@ -53,7 +53,7 @@ weather_data_names = [
 
 ###############################################################################
 # Upload of feed-in time series for "Landkreise" Germany
-# only for open_FRED weather data
+# only for open_FRED weather data  # todo: haven't used this part for a while. Check if everything works. Dump time series for CH.
 ###############################################################################
 # for register_name in register_names:
 #     for year in years:
@@ -92,12 +92,15 @@ for register_name in register_names:
             val_feedin = val_data.load_feedin_data(categories, year,
                                                    latest=False)
             end = time.time()
-            print('Time get_validation_data year {}: {}'.format(year, (end-start)))
+            print('Time get_validation_data year {}: {}'.format(year,
+                                                                (end-start)))
 
-            # join data frame in the form needed by calculate_validation_metrics()
+            # join data frame in the form needed by
+            # calculate_validation_metrics()
             validation_df = pd.merge(left=feedin, right=val_feedin, how='left',
                                      on=['time', 'technology', 'nuts'])
-            # drop entries from other years (this comes from UTC/local time stamps)
+            # drop entries from other years (this comes from UTC/local time
+            # stamps)
             # todo solve in feedinlib?
             validation_df = validation_df[
                 validation_df['time'] >= '01-01-{}'.format(year)]

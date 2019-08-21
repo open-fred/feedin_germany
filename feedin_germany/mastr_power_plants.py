@@ -4,6 +4,10 @@ The `mastr_power_plant` module contains functions for downloading and
 processing renewable power plant data for Germany from the
 Markstammdatenregister (MaStR). todo source orginial + OEP
 
+# todo: opsd_power_plants.py and this module are from different origins. However,
+# there are similar or even the same functionalities used. It could be possible
+# to first load the respective register and then carry out the functions.
+
 """
 
 __copyright__ = "Copyright oemof developer group"

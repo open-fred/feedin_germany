@@ -69,7 +69,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
          small. Default: False. todo what does small mean?
     weather_data_name : string
 
-    scale_to : str or ...
+    scale_to : str or None
         Specifies if and which capacities feed-in time series are scaled to.
         Default: None. # todo note: Now it can only be chosen 'entsoe' - would be nice to enter own capacities
     resolution : str
@@ -112,6 +112,7 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
                 "No {} power plants in region {} in register.".format(category,
                                                                       nut))
         else:
+            # calculate feedin
             if category == 'Solar':
                 register_pv = register_region[
                     ['lat', 'lon', 'commissioning_date', 'capacity',
@@ -159,8 +160,8 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
             if feedin.index.freq != resolution:
                 feedin = feedin.resample(resolution).sum()
             if return_feedin:
-                feedin = feedin_to_db_format(feedin=feedin, technology=category,
-                                          nuts=nut)
+                feedin = feedin_to_db_format(feedin=feedin,
+                                             technology=category, nuts=nut)
                 feedin_df = pd.concat([feedin_df, feedin])
     if return_feedin:
         return feedin_df
@@ -277,7 +278,9 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
          small. Default: False. todo what does small mean?
     debug_mode : boolean
         might be deleted
-    scale_to
+    scale_to : str or None
+        Specifies if and which capacities feed-in time series are scaled to.
+        Default: None. # todo note: Now it can only be chosen 'entsoe' - would be nice to enter own capacities
 
     Other parameters
     ----------------
@@ -371,43 +374,25 @@ def feedin_to_db_format(feedin, technology, nuts):
     r"""
     ..... todo
 
-    Column 'time' contains the datetime index of `feedin`, 'feedin' the
-    feed-in time series itself as in `feedin`, 'technology' the technology
-    the feed-in origins from as in `technology` and 'nut' the region nut of the
-    calculated feed-in as given in `nut`
-
     feedin : pd.Series
         Feed-in time series with datetime index.
     technology : string
         todo
     nuts : ... todo
+
+    Returns
+    -------
+    df : pd.DataFrame
+        Column 'time' contains the datetime of `feedin`, 'feedin' the
+        feed-in time series itself as in `feedin`, 'technology' the technology
+        the feed-in origins from as in `technology` and 'nut' the region nut of
+        the calculated feed-in as given in `nut`.
 
     """
     df = pd.DataFrame(feedin).reset_index('time')
     df['nuts'] = nuts
     df['technology'] = technology
     return df
-
-
-def upload_time_series_to_oep(feedin, technology, nuts):
-    r"""
-    Uploads feed-in time series to OEP 'model_draft' schema.
-
-    Column 'time' contains the datetime index of `feedin`, 'feedin' the
-    feed-in time series itself as in `feedin`, 'technology' the technology
-    the feed-in origins from as in `technology` and 'nut' the region nut of the
-    calculated feed-in as given in `nut`
-
-    feedin : pd.Series
-        Feed-in time series with datetime index.
-    technology : string
-        todo
-    nuts : ... todo
-
-    """
-    # prepare data frame for upload
-    df = feedin_to_db_format(feedin=feedin, technology=technology, nuts=nuts)
-    # todo upload  --> maybe form of Günni.... er weiß Bescheid, dass er uns Input geben soll.
 
 
 if __name__ == "__main__":
