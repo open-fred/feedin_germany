@@ -105,9 +105,9 @@ def prepare_mastr_data(mastr_data, category):
     - decom, com month etc. as in opsd
     - remove rows with nans
 
-    possible
+    - capacity in W
     - remove pp with missing coordinates
-    -
+
 
 
     Parameters
@@ -138,6 +138,7 @@ def prepare_mastr_data(mastr_data, category):
             'InstallierteLeistung': 'capacity'
         }, inplace=True)
         mastr_data.drop(['Laengengrad', 'Breitengrad'], axis=1, inplace=True)
+    mastr_data['capacity'] = mastr_data['capacity'] * 1000
     # prepare dates
     date_cols = ('commissioning_date', 'decommissioning_date')
     prepared_df = ppr_tools.prepare_dates(df=mastr_data, date_cols=date_cols)
