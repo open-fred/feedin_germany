@@ -4,6 +4,10 @@ The `mastr_power_plant` module contains functions for downloading and
 processing renewable power plant data for Germany from the
 Markstammdatenregister (MaStR). todo source orginial + OEP
 
+# todo: opsd_power_plants.py and this module are from different origins. However,
+# there are similar or even the same functionalities used. It could be possible
+# to first load the respective register and then carry out the functions.
+
 """
 
 __copyright__ = "Copyright oemof developer group"
@@ -37,7 +41,6 @@ def load_mastr_data_from_oedb():
 
 
     """
-
     table_name = 'bnetza_mastr_wind_v1_4_clean'
     register = db_tools.load_data_from_oedb_with_oedialect(
         schema='sandbox', table_name=table_name)
@@ -134,14 +137,19 @@ def prepare_mastr_data(mastr_data, category):
             'DatumWiederaufnahmeBetrieb': 'resumption_date',
             'InstallierteLeistung': 'capacity'
         }, inplace=True)
-    #
+        mastr_data.drop(['Laengengrad', 'Breitengrad'], axis=1, inplace=True)
+    # prepare dates
     date_cols = ('commissioning_date', 'decommissioning_date')
-    prepared_df = ppr_tools.prepare_dates(df=mastr_data, date_cols=date_cols,
-                                          month=True)
+    prepared_df = ppr_tools.prepare_dates(df=mastr_data, date_cols=date_cols)
+    prepared_df['commissioning_date'] = pd.to_datetime(
+        prepared_df['commissioning_date'], utc=True)
+    prepared_df['decommissioning_date'] = pd.to_datetime(
+        prepared_df['decommissioning_date'], utc=True)
     return prepared_df
 
 
-def get_mastr_pp_filtered_by_year(energy_source, year):
+def get_mastr_pp_filtered_by_year(energy_source, year,
+                                  month_wise_capacities=False):
     r"""
     Loads MaStR power plant data by `energy_source` and `year`.
 
@@ -152,19 +160,29 @@ def get_mastr_pp_filtered_by_year(energy_source, year):
     year : int
         Year for which the register is filtered. See filter function
         :py:func:`~.power_plant_register_tools.get_pp_by_year`.
+    month_wise_capacities : bool
+        If True and com_month and decom_month exists the respective power
+        plant's capacity will be reduced by the percentage of months it was
+        installed during the year. Default: False.
 
     """
     mastr_pp = helper_load_mastr_from_file(category=energy_source)
     prepared_data = prepare_mastr_data(mastr_pp, energy_source)
-    filtered_register = ppr_tools.get_pp_by_year(year=year,
-                                                 register=prepared_data)
+    filtered_register = ppr_tools.get_pp_by_year(
+        year=year, register=prepared_data,
+        month_wise_capacities=month_wise_capacities)
     filtered_register = ppr_tools.remove_pp_with_missing_coordinates(
         register=filtered_register, category=energy_source,
         register_name='MaStR')
     # prepare turbine types
-    # find turbine_types without power curve in oedb turbine_library
-    df = get_turbine_types(turbine_library='oedb',
-                           print_out=False, filter_=True)
+    # find turbine_types without power curve in (local) windpowerlib oedb
+    # turbine_library
+    try:
+        df = get_turbine_types(turbine_library='local',
+                               print_out=False, filter_=True)
+    except FileNotFoundError:
+        df = get_turbine_types(turbine_library='oedb',
+                               print_out=False, filter_=True)
     types_with_power_curve = df[df['has_power_curve'] == True]['turbine_type']
     filtered_register['has_power_curve'] = filtered_register[
         'turbine_type'].apply(lambda x: True if x in list(types_with_power_curve) else False)

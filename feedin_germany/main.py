@@ -53,7 +53,7 @@ weather_data_names = [
 
 ###############################################################################
 # Upload of feed-in time series for "Landkreise" Germany
-# only for open_FRED weather data
+# only for open_FRED weather data  # todo: haven't used this part for a while. Check if everything works. Dump time series for CH.
 ###############################################################################
 # for register_name in register_names:
 #     for year in years:
@@ -71,7 +71,12 @@ weather_data_names = [
 ###############################################################################
 scale_to = '50 Hertz'  # scale time series to 'entsoe' or '50 Hertz' capacities
                      # or choose None for not scaling at all
-regions = '50 Hertz'  # 'tso' for all 4 UNB regions or '50 Hertz' for only 50hz  # todo this is for paper because installed capacites for 2013/14 only for 50 Hertz. delete later?
+commission_decommission = 'periods'  # Specifies how
+                        # commission and decommission dates of power plants are
+                        # handled.
+                        # See :py:func:`~.feedin.calculate_feedin_germany` for
+                        # more information
+regions = '50 Hertz'  # 'tso' for all 4 UNB regions or '50 Hertz' for only 50hz
 for register_name in register_names:
     for weather_data_name in weather_data_names:
         for year in years:
@@ -82,7 +87,8 @@ for register_name in register_names:
                 weather_data_name=weather_data_name,
                 return_feedin=True, debug_mode=debug_mode,
                 weather_data_folder=weather_data_folder, scale_to=scale_to,
-                wake_losses_model=None)  # todo parameter windpowerlib wählen.
+                commission_decommission=commission_decommission,
+                wake_losses_model='dena_mean', smoothing=True)
             end = time.time()
             print('Time calculate_feedin_germany year {}: {}'.format(year,
                                                                 (end - start)))
@@ -92,12 +98,15 @@ for register_name in register_names:
             val_feedin = val_data.load_feedin_data(categories, year,
                                                    latest=False)
             end = time.time()
-            print('Time get_validation_data year {}: {}'.format(year, (end-start)))
+            print('Time get_validation_data year {}: {}'.format(year,
+                                                                (end-start)))
 
-            # join data frame in the form needed by calculate_validation_metrics()
+            # join data frame in the form needed by
+            # calculate_validation_metrics()
             validation_df = pd.merge(left=feedin, right=val_feedin, how='left',
                                      on=['time', 'technology', 'nuts'])
-            # drop entries from other years (this comes from UTC/local time stamps)
+            # drop entries from other years (this comes from UTC/local time
+            # stamps)
             # todo solve in feedinlib?
             validation_df = validation_df[
                 validation_df['time'] >= '01-01-{}'.format(year)]

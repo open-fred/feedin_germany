@@ -312,7 +312,6 @@ def prepare_opsd_file(overwrite):
             'address_number', 'utm_zone', 'utm_east', 'utm_north',
             'data_source']
     date_cols = ('commissioning_date', 'decommissioning_date')
-    month = True
 
     df = df.rename(columns={'electrical_capacity': 'capacity',
                             'capacity_net_bnetza': 'capacity',
@@ -334,8 +333,7 @@ def prepare_opsd_file(overwrite):
     if remove_list is not None:
         df = remove_cols(df, remove_list)
 
-    ppr_tools.prepare_dates(df=df, date_cols=date_cols,
-                            month=month)
+    ppr_tools.prepare_dates(df=df, date_cols=date_cols)
 
     # capacity in W
     df['capacity'] = df['capacity'] * (10 ** 6)
