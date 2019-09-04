@@ -142,7 +142,8 @@ def get_standard_deviation(data_series):
     return np.sqrt(variance)
 
 
-def get_rmse(simulation_series, validation_series, normalized=True):
+def get_rmse(simulation_series, validation_series, normalized=True,
+             bias_corrected=False):
     r"""
     Calculates the RMSE of simulation from validation series.
 
@@ -154,6 +155,9 @@ def get_rmse(simulation_series, validation_series, normalized=True):
         Validation feed-in time series.
     normalized : boolean
         If True the RMSE is normalized with the average annual power output.
+    bias_corrected : boolean
+        If True the simulation_series is bias corrected before RMSE is
+        calculated.
 
     Returns
     -------
@@ -161,6 +165,9 @@ def get_rmse(simulation_series, validation_series, normalized=True):
         (Normalized) root mean squared error.
 
     """
+    if bias_corrected:
+        simulation_series = simulation_series - get_mean_bias(
+            simulation_series, validation_series)
     rmse = np.sqrt(((simulation_series - validation_series)**2).sum() /
                    len(simulation_series))
     if normalized:
