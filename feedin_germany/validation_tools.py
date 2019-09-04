@@ -53,8 +53,8 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
     if filter_cols:
         metrics_df = pd.DataFrame()
         # get all pairs of `filter_cols`
-        filter_df = df.groupby(filter_cols).size().reset_index().drop(columns=[0],
-                                                                   axis=1)
+        filter_df = df.groupby(filter_cols).size().reset_index().drop(
+            columns=[0], axis=1)
         for filters, index in zip(filter_df.values, filter_df.index):
             # select time series by filters
             df['temp'] = df[filter_cols].isin(filters).all(axis=1)
@@ -75,9 +75,10 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         metrics_df = pd.DataFrame(columns=metrics)
         for metric in metrics:
             metrics_df[metric] = [get_metric(metric=metric, validation_data=df,
-                                            val_cols=val_cols)]
+                                             val_cols=val_cols)]
     # save results
     metrics_df.to_csv(filename)
+    return metrics_df
 
 
 def get_metric(metric, validation_data, val_cols):
@@ -111,6 +112,15 @@ def get_metric(metric, validation_data, val_cols):
         metric_value = get_mean_bias(
             simulation_series=validation_data[val_cols[0]],
             validation_series=validation_data[val_cols[1]])
+    elif metric == 'rmse_norm_bias_corrected':
+        metric_value = get_rmse(
+            simulation_series=validation_data[val_cols[0]],
+            validation_series=validation_data[val_cols[1]], normalized=True,
+            bias_corrected=True)[0]
+    elif metric == 'standard_deviation_simulation_results':
+        metric_value = get_standard_deviation(validation_data[val_cols[0]])
+    elif metric == 'standard_deviation_validation_data':
+        metric_value = get_standard_deviation(validation_data[val_cols[1]])
     elif metric == 'pearson':
         metric_value = get_pearson_s_r(df=validation_data, min_periods=None)  # todo min periods
     elif metric == 'time_step_amount':
