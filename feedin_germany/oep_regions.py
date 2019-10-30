@@ -145,10 +145,10 @@ def add_region_to_register(register, region):
     register['Coordinates'] = list(zip(register.lon, register.lat))
     register['Coordinates'] = register['Coordinates'].apply(Point)
     register_gdf = gpd.GeoDataFrame(register, geometry='Coordinates')
-    region_gdf = gpd.GeoDataFrame(region, geometry='geom')
-    new_register = gpd.sjoin(register_gdf, region_gdf, op='within')
+    #region_gdf = gpd.GeoDataFrame(region, geometry='geom')
+    new_register = gpd.sjoin(register_gdf, region, op='within')
 
-    return(new_register)
+    return new_register
 
 
 if __name__ == "__main__":
