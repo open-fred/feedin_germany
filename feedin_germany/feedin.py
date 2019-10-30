@@ -39,7 +39,7 @@ from feedin_germany import weather
 # - Umformungsfunktion für deflex - Muster siehe Jann
 
 
-def calculate_feedin(year, register, regions, category, weather_data_folder,
+def calculate_feedin(year, register, regions, category,
                      return_feedin=False, weather_data_name='open_FRED',  # todo rename to weather_data and possibility of entering own weather data
                      scale_to=None, resolution='H', periods=False, **kwargs):
     r"""
@@ -92,18 +92,17 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
     if category == 'Solar':
         # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
         weather_df = weather.get_weather_data_germany(
-            year=year, weather_data_name=weather_data_name, format_='pvlib',
-            path=weather_data_folder)
+            year=year, weather_data_name=weather_data_name, format_='pvlib')
 
         # prepare technical parameters and pv modules
         pv_modules_set = pv_modules.create_pvmodule_dict()
         distribution_dict = pv_modules.create_distribution_dict()
 
     # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
-    if category == 'Wind':
+    elif category == 'Wind':
         weather_df = weather.get_weather_data_germany(
             year=year, weather_data_name=weather_data_name,
-            format_='windpowerlib', path=weather_data_folder)
+            format_='windpowerlib')
 
     if return_feedin:
         feedin_df = pd.DataFrame()
@@ -117,16 +116,13 @@ def calculate_feedin(year, register, regions, category, weather_data_folder,
         else:
             # calculate feedin
             if category == 'Solar':
-                register_pv = register_region[
-                    ['lat', 'lon', 'commissioning_date', 'capacity',
-                     'Coordinates']]
                 # open feedinlib to calculate feed in time series for region
                 feedin = region.Region(
                     geom='no_geom',
                     weather=weather_df).pv_feedin_distribution_register(
                     distribution_dict=distribution_dict,
                     technical_parameters=pv_modules_set,
-                    register=register_pv)
+                    register=register_region)
             elif category == 'Wind':
                 feedin = region.Region(geom='no_geom',
                                        weather=weather_df).wind_feedin(
@@ -246,7 +242,7 @@ def get_50hz_capacity(year, category):
 
 
 
-def calculate_feedin_germany(year, categories, weather_data_folder,
+def calculate_feedin_germany(year, categories,
                              regions='tso', register_name='opsd',
                              weather_data_name='open_FRED',
                              return_feedin=False, debug_mode=False,
@@ -264,8 +260,6 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
     categories : list of strings
         Energy source categories for which feed-in time series are calculated.
         Can include 'Wind', 'Solar', 'Hydro'.
-    weather_data_folder : string
-
     regions : geopandas.GeoDataFrame or string
         Regions for which feed-in time series are calculated
         (geopandas.GeoDataFrame) or specification of regions that are loaded
@@ -273,7 +267,8 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
         Default: 'landkreise'.
         todo: add exact required form of GeoDataFrame
     register_name : pd.DataFrame or string
-        todo
+        Power plant register can either be directly provided as a pd.DataFrame
+        or OPSD ('opsd') or MaStR ('MaStR') can be used.
     weather_data_name : string
         Specifies the weather data source. Options: 'open_FRED', 'ERA5'.
          Default: 'open_FRED'. todo check
@@ -379,16 +374,17 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
             register = opsd.filter_pp_by_source_and_year(year, category,
                                                          keep_cols=keep_cols)
         elif register_name == 'MaStR':
-            if category == 'Wind':
+            if category in ['Wind', 'Solar']:
                 register = mastr.get_mastr_pp_filtered_by_year(
                     energy_source=category, year=year,
                     month_wise_capacities=month_wise_capacities)
             else:
                 raise ValueError("Option 'MaStR' as `register_name` until "
-                                 "now only available for `category` 'Wind'.")
+                                 "now only available for `category` 'Wind'"
+                                 "or 'Solar'.")
         else:
             raise ValueError("Invalid register name {}.".format(
-                    register_name) + " Must be 'opsd' or 'MaStR or "
+                    register_name) + " Must be 'opsd' or 'MaStR' or "
                                      "pd.DataFrame.")
         # add region column 'nuts' to register
         register = oep.add_region_to_register(register, region_gdf)
@@ -397,9 +393,7 @@ def calculate_feedin_germany(year, categories, weather_data_folder,
             year=year, register=register, regions=region_gdf,
             category=category, return_feedin=return_feedin,
             weather_data_name=weather_data_name,
-            weather_data_folder=weather_data_folder, scale_to=scale_to,
-            periods=periods,
-            **kwargs)
+            scale_to=scale_to, periods=periods, **kwargs)
         if return_feedin:
             feedin_df = pd.concat([feedin_df, feedin])  # todo check axis when solar + wind
     if return_feedin:

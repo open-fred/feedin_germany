@@ -15,6 +15,15 @@ import settings
 # todo: functions might have been updated in open_FRED paper Gogs by Pierre
 
 
+import numpy as np
+import xarray as xr
+import matplotlib.pyplot as plt
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+from os.path import join
+
+
 def load_era5_data(year, data_path=join('data', 'era5_netcdf')):
     ds = xr.open_dataset(
         join(data_path, 'open_fred_compare_daten_set_{}.nc'.format(year)))
@@ -77,7 +86,7 @@ def format_windpowerlib(xarr):
 
     # reorder the columns of the dataframe
     df = df[
-        ['wnd10m', 'wnd10m', 'pressure', 'temperature', 'roughness_length']]
+        ['wnd10m', 'wnd100m', 'pressure', 'temperature', 'roughness_length']]
 
     # define a multiindexing on the columns
     midx = pd.MultiIndex(
@@ -96,7 +105,7 @@ def format_windpowerlib(xarr):
 
     df.columns = midx
 
-    return df.dropna()
+    return df
 
 
 def format_pvlib(xarr):
@@ -155,7 +164,7 @@ def format_pvlib(xarr):
     # reorder the multiindexing on the rows
     df = df[['wind_speed', 'temp_air', 'ghi', 'dhi']]
 
-    return df.dropna()
+    return df
 
 
 def select_area(xarr, lon, lat, g_step=0.25):
@@ -251,29 +260,48 @@ def prepare_windpowerlib_from_era5(year, data_path=join('data', 'era5_netcdf'),
 
 def prepare_pvlib_from_era5(year, data_path=join('data', 'era5_netcdf'),
                             mask_area=None):
+    """
+    :param mask_area: Can either be a shapely compatible geometry object (i.e. Polygon,
+                      Multipolygon, etc...) to specify a region or a list(lon, lat)
+                      specifying a single location.
+    """
     ds = load_era5_data(year, data_path)
 
     if mask_area is not None:
-        ds = apply_mask(ds, mask_area)
+        if isinstance(mask_area, list):
+            ds = select_area(ds, mask_area[0], mask_area[1])
+        else:
+            ds = apply_mask(ds, mask_area)
+    df = format_pvlib(ds)
 
-    return format_pvlib(ds)
+    return df.dropna()
 
 
 
 
 if __name__ == "__main__":
     # get global variables
-    settings.init()  # note: set your paths in settings.py
+    settings.init()  # note: set your paths in settings.py (path_era5_netcdf)
+
+    # filename = '~/Schreibtisch/era5_wind_ger_2013.csv'
+    # weather = pd.read_csv(filename, header=[0, 1], index_col=[0, 1, 2],
+    #                       parse_dates=True)
+    # test = weather.reset_index()
+    #
+    # lat_lon = test[['lat', 'lon']]
+    # uniques = lat_lon.groupby(['lat', 'lon']).size()
+    # print(len(uniques))
 
     # choose parameters
-    uckermark_wpl = True  # Uckermark windpowerlib data
-    brandenburg_wpl = True  # for whole Brandenburg windpowerlib data
-    germany_wpl = True  # for whole Germany windpowerlib data
+    uckermark_wpl = False  # Uckermark windpowerlib data
+    brandenburg_wpl = False  # for whole Brandenburg windpowerlib data
+    germany_wpl = False  # for whole Germany windpowerlib data
     germany_pvl = True  # for whole Germany pvlib data
 
     years = [
-        2013,
-        2014, 2015, 2016, 2017
+        # 2013,
+        # 2014, 2015,
+        2016, 2017
     ]
 
     for year in years:
@@ -306,6 +334,6 @@ if __name__ == "__main__":
 
             if germany_pvl:
                 weather = format_pvlib(ds_era5)
-                weather.to_csv(os.path.join(settings.weather_data_path,
+                weather.to_csv(os.path.joiRn(settings.weather_data_path,
                                             'era5_pv_ger_{}.csv'.format(
                                                 year)))

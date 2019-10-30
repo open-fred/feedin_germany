@@ -1,12 +1,14 @@
-
 from feedinlib import tools
 
 import pandas as pd
 import os
 import pickle
 
+from feedin_germany import settings as settings
+settings.init()
 
-def get_weather_data_germany(year, weather_data_name, format_, path):
+
+def get_weather_data_germany(year, weather_data_name, format_):
     """
 
     format : str
@@ -21,9 +23,9 @@ def get_weather_data_germany(year, weather_data_name, format_, path):
         weather_df = pickle.load(open(pickle_filename, 'rb'))
     except:
         if weather_data_name == 'ERA5':
+            filename = os.path.join(settings.weather_data_path,
+                                    'era5_wind_ger_{}.csv'.format(year))
             if format_ == 'windpowerlib':
-                filename = os.path.join(path, 'era5_wind_ger_{}.csv'.format(
-                    year))
                 weather_df = pd.read_csv(filename, header=[0, 1],
                                          index_col=[0, 1, 2], parse_dates=True)
                 weather_df.rename(columns={'wind speed': 'wind_speed'},
@@ -36,7 +38,6 @@ def get_weather_data_germany(year, weather_data_name, format_, path):
                 weather_df.index = weather_df.index.set_levels(
                     weather_df.index.levels[0].tz_localize('UTC'), level=0)
             elif format_ == 'pvlib':
-                filename = os.path.join(path, 'era5_pv_ger_{}.csv'.format(year))
                 weather_df = pd.read_csv(filename, header=[0, 1],
                                          index_col=0, parse_dates=True)
         elif weather_data_name == 'open_FRED':

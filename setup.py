@@ -18,4 +18,5 @@ setup(
     long_description=read('README.rst'),
     install_requires=[
         'pandas >= 0.13.1',
-        'feedinlib >= 0.0.12']) # todo: adapt
+        'feedinlib >= 0.0.12',
+        'rtree']) # todo: adapt
