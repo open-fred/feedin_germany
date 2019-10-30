@@ -19,4 +19,7 @@ setup(
     install_requires=[
         'pandas >= 0.13.1',
         'feedinlib >= 0.0.12',
+	'geopandas',
+        'sqlalchemy',
+	'oedialect',
         'rtree']) # todo: adapt
