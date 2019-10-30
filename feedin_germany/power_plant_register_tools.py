@@ -139,8 +139,10 @@ def remove_pp_with_missing_coordinates(register, category, register_name):
     """
     if register[['lat', 'lon']].isnull().values.any():
         amount = register[['lat', 'lon']].isnull().sum()[0]  # amount of lat
+        amount_total = len(register)
         register = register.dropna(subset=['lat', 'lon'])
         logging.warning(
-            "Removed {} {} power plants with missing coordinates ".format(
-                amount, category) + "from {} register". format(register_name))
+            "Removed {} out of {} {} power plants with missing coordinates "
+            "from {} register.".format(
+                amount, amount_total, category, register_name))
     return register

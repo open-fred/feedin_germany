@@ -53,8 +53,8 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
     if filter_cols:
         metrics_df = pd.DataFrame()
         # get all pairs of `filter_cols`
-        filter_df = df.groupby(filter_cols).size().reset_index().drop(columns=[0],
-                                                                   axis=1)
+        filter_df = df.groupby(filter_cols).size().reset_index().drop(
+            columns=[0], axis=1)
         for filters, index in zip(filter_df.values, filter_df.index):
             # select time series by filters
             df['temp'] = df[filter_cols].isin(filters).all(axis=1)
@@ -75,9 +75,10 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         metrics_df = pd.DataFrame(columns=metrics)
         for metric in metrics:
             metrics_df[metric] = [get_metric(metric=metric, validation_data=df,
-                                            val_cols=val_cols)]
+                                             val_cols=val_cols)]
     # save results
     metrics_df.to_csv(filename)
+    return metrics_df
 
 
 def get_metric(metric, validation_data, val_cols):
@@ -111,6 +112,15 @@ def get_metric(metric, validation_data, val_cols):
         metric_value = get_mean_bias(
             simulation_series=validation_data[val_cols[0]],
             validation_series=validation_data[val_cols[1]])
+    elif metric == 'rmse_norm_bias_corrected':
+        metric_value = get_rmse(
+            simulation_series=validation_data[val_cols[0]],
+            validation_series=validation_data[val_cols[1]], normalized=True,
+            bias_corrected=True)[0]
+    elif metric == 'standard_deviation_simulation_results':
+        metric_value = get_standard_deviation(validation_data[val_cols[0]])
+    elif metric == 'standard_deviation_validation_data':
+        metric_value = get_standard_deviation(validation_data[val_cols[1]])
     elif metric == 'pearson':
         metric_value = get_pearson_s_r(df=validation_data, min_periods=None)  # todo min periods
     elif metric == 'time_step_amount':
@@ -142,7 +152,8 @@ def get_standard_deviation(data_series):
     return np.sqrt(variance)
 
 
-def get_rmse(simulation_series, validation_series, normalized=True):
+def get_rmse(simulation_series, validation_series, normalized=True,
+             bias_corrected=False):
     r"""
     Calculates the RMSE of simulation from validation series.
 
@@ -154,6 +165,9 @@ def get_rmse(simulation_series, validation_series, normalized=True):
         Validation feed-in time series.
     normalized : boolean
         If True the RMSE is normalized with the average annual power output.
+    bias_corrected : boolean
+        If True the simulation_series is bias corrected before RMSE is
+        calculated.
 
     Returns
     -------
@@ -161,6 +175,9 @@ def get_rmse(simulation_series, validation_series, normalized=True):
         (Normalized) root mean squared error.
 
     """
+    if bias_corrected:
+        simulation_series = simulation_series - get_mean_bias(
+            simulation_series, validation_series)
     rmse = np.sqrt(((simulation_series - validation_series)**2).sum() /
                    len(simulation_series))
     if normalized:
@@ -211,17 +228,19 @@ def get_pearson_s_r(df, min_periods=None):
 
 
 def resample_with_nan_theshold(df, frequency, threshold):
+    """
+
+    :param df: dataframe with arbitrary columns to be resampled
+    :param frequency: resample frequency
+    :param threshold: if less data points than specified in threshold can be
+    used in the resampling then value is set to nan
+    :return:
+    """
     if threshold is None:
         resampled_df = df.resample(frequency).mean()
     else:
-        resampled_df = pd.DataFrame()
-        df2 = df.resample(frequency, how=['mean', 'count'])
-        column_list = list(set([item[0] for item in list(df2)]))
-        for column in column_list:
-            df_part = pd.DataFrame(df2[column])
-            df_part[column] = np.nan
-            df_part.loc[df_part['count'] >= threshold, column] = df_part[
-                'mean']
-            df_part.drop(columns=['count', 'mean'], axis=1, inplace=True)
-            resampled_df = pd.concat([resampled_df, df_part], axis=1)
+        resampled_df = df.resample(frequency).mean()
+        df_count = df.resample(frequency).count()
+        for col in df.columns:
+            resampled_df.loc[df_count[col] < threshold, col] = np.nan
     return resampled_df
