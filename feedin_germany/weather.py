@@ -91,8 +91,9 @@ def load_open_fred_pkl(lat, lon, **kwargs):
     pandas.DataFrame
 
     """
-    locations_dict = kwargs.get('locations_dict',
-                                get_downloaded_weather_points_open_fred_pkl())
+    locations_dict = kwargs.get('locations_dict', None)
+    if locations_dict is None:
+        locations_dict = get_downloaded_weather_points_open_fred_pkl()
     lib = kwargs.get('lib', None)
     if lib is None:
         raise AttributeError("lib must either be 'pvlib' or 'windpowerlib'.")
