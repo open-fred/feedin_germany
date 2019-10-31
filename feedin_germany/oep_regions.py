@@ -104,11 +104,11 @@ def load_regions_file(type='tso'):
         for nut_id in landkreise_shape.nuts.unique():
             tmp_df = landkreise_shape[landkreise_shape.nuts == nut_id]
             if len(tmp_df) > 1:
-                polyg = cascaded_union(tmp_df.geometry)
+                polyg = cascaded_union(tmp_df.geom)
                 counter = 0
                 for index, row in tmp_df.iterrows():
                     if counter == 0:
-                        landkreise_shape.loc[index, 'geometry'] = polyg
+                        landkreise_shape.loc[index, 'geom'] = polyg
                     else:
                         landkreise_shape.drop(index=[index], inplace=True)
                     counter += 1
