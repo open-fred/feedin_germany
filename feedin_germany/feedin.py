@@ -22,7 +22,6 @@ import time
 import pickle
 
 from feedinlib import region
-from feedinlib import tools
 
 # import internal modules
 from feedin_germany import opsd_power_plants as opsd
@@ -116,7 +115,9 @@ def calculate_feedin(year, register, regions, category,
         else:
             # calculate feedin
             if weather_data_name == 'open_FRED':
-                kwargs['open_FRED_pkl'] = True
+                kwargs['weather_locations'] = pd.DataFrame(
+                    weather.get_downloaded_weather_points_open_fred_pkl(
+                        )).transpose().rename(columns={0 : 'lon', 1 : 'lat'})
             if category == 'Solar':
                 # open feedinlib to calculate feed in time series for region
                 feedin = region.Region(
@@ -127,7 +128,7 @@ def calculate_feedin(year, register, regions, category,
                     register=register_region, **kwargs)
             elif category == 'Wind':
                 feedin = region.Region(geom='no_geom',
-                                       weather=weather_df).wind_feedin(
+                                       weather=weather_df, **kwargs).wind_feedin(
                     register_region, capacity_periods=periods, **kwargs)
             elif category == 'Hydro':
                 raise ValueError("Hydro not working, yet.")
