@@ -115,6 +115,8 @@ def calculate_feedin(year, register, regions, category,
                                                                       nut))
         else:
             # calculate feedin
+            if weather_data_name == 'open_FRED':
+                kwargs['open_FRED_pkl'] = True
             if category == 'Solar':
                 # open feedinlib to calculate feed in time series for region
                 feedin = region.Region(
@@ -122,7 +124,7 @@ def calculate_feedin(year, register, regions, category,
                     weather=weather_df).pv_feedin_distribution_register(
                     distribution_dict=distribution_dict,
                     technical_parameters=pv_modules_set,
-                    register=register_region)
+                    register=register_region, **kwargs)
             elif category == 'Wind':
                 feedin = region.Region(geom='no_geom',
                                        weather=weather_df).wind_feedin(
