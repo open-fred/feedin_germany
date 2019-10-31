@@ -49,10 +49,11 @@ weather_data_names = [
 # Upload of feed-in time series for "Landkreise" Germany
 # only for open_FRED weather data  # todo: haven't used this part for a while. Check if everything works. Dump time series for CH.
 ###############################################################################
-region_filter = ['DE8', 'DE9'] # filters 'regions' by nuts
+region_filter = ['DE8'] # filters 'regions' by nuts
                     # (f.e. ['DE8'] --> only feed-in of 'Landkreise' of
                     # Meck-Pom are calulated. Do not use
                     # if you enter your own data frame for `regions`.
+save_feedin = True  # saved to
 for register_name in register_names:
     for year in years:
         feedin = f.calculate_feedin_germany(
@@ -61,7 +62,8 @@ for register_name in register_names:
             debug_mode=debug_mode, wake_losses_model=None,
             weather_data_folder=weather_data_folder,
             return_feedin=True, region_filter=region_filter)
-       # feedin.to_csv(os.path.join(feedin_folder, 'example_feedin_wam.csv'))  # todo: automatic saving in wam folder
+        if save_feedin:
+            feedin.to_csv(os.path.join(feedin_folder, 'feedin_Landkreise_MeckPom.csv'))
 
 ###############################################################################
 # Validation of PVlib and windpowerlib feed-in time series via "tso" zones
