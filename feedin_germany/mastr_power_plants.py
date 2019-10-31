@@ -177,7 +177,7 @@ def prepare_mastr_data(mastr_data, category):
 
 
 def get_mastr_pp_filtered_by_year(energy_source, year,
-                                  month_wise_capacities=False):
+                                  month_wise_capacities=False):  # todo add solar mastr
     r"""
     Loads MaStR power plant data by `energy_source` and `year`.
 

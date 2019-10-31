@@ -30,6 +30,7 @@ from feedin_germany import pv_modules
 from feedin_germany import mastr_power_plants as mastr
 from feedin_germany import weather
 
+logging.getLogger().setLevel(logging.INFO)
 
 
 # Planung Funktionalitäten:
@@ -106,7 +107,16 @@ def calculate_feedin(year, register, regions, category,
     if return_feedin:
         feedin_df = pd.DataFrame()
 
+    if weather_data_name == 'open_FRED':
+        kwargs['locations_dict'] = weather.get_downloaded_weather_points_open_fred_pkl()
+        kwargs['weather_locations'] = pd.DataFrame(
+            kwargs['locations_dict']).transpose().rename(
+            columns={0: 'lon', 1: 'lat'})
+        kwargs['year'] = year
+
+
     for nut in regions['nuts']:
+        logging.info("Calculating feedin for {}".format(nut))
         register_region = register.loc[register['nuts'] == nut]
         if register_region.empty:
             logging.debug(
@@ -114,10 +124,6 @@ def calculate_feedin(year, register, regions, category,
                                                                       nut))
         else:
             # calculate feedin
-            if weather_data_name == 'open_FRED':
-                kwargs['weather_locations'] = pd.DataFrame(
-                    weather.get_downloaded_weather_points_open_fred_pkl(
-                        )).transpose().rename(columns={0 : 'lon', 1 : 'lat'})
             if category == 'Solar':
                 # open feedinlib to calculate feed in time series for region
                 feedin = region.Region(
@@ -363,7 +369,7 @@ def calculate_feedin_germany(year, categories,
     if commission_decommission == 'periods':
         month_wise_capacities = False
         periods = True
-    elif commission_decommission == 'month_wise_scaled_capacities':
+    elif commission_decommission == 'month_wise_scaled_capacities':  # todo check or delete
         month_wise_capacities = True
         periods = False
     else:
