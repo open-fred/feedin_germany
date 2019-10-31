@@ -72,7 +72,7 @@ def helper_load_mastr_from_file(category):
     if category == 'Wind':
         filename = os.path.join(
             settings.path_mastr_wind,
-            'bnetza_mastr_wind_v1_4_clean_50hertz.csv')
+            'bnetza_mastr_wind_v1_4_clean_50hertz_typev2.csv')  # ..._typev2 with matched names in 'turbine_type_v2'
         usecols = [
             'Nabenhoehe', 'Rotordurchmesser',
             # 'HerstellerName', 'Einheitart', 'Einheittyp', 'Technologie',
@@ -81,7 +81,7 @@ def helper_load_mastr_from_file(category):
             'Inbetriebnahmedatum', 'DatumEndgueltigeStilllegung',
             'DatumBeginnVoruebergehendeStilllegung',
             'DatumWiederaufnahmeBetrieb', 'Lage', 'InstallierteLeistung',
-            'Seelage', 'lat', 'lon'
+            'Seelage', 'lat', 'lon', 'turbine_type_v2'
         ]
     elif category == 'Solar':
         filename = os.path.join(
@@ -144,7 +144,8 @@ def prepare_mastr_data(mastr_data, category):
         mastr_data.rename(columns={
             'Nabenhoehe': 'hub_height', 'Rotordurchmesser': 'rotor_diameter',
             # 'HerstellerName', 'Einheitart', 'Einheittyp', 'Technologie',
-            'Typenbezeichnung': 'turbine_type',
+            'Typenbezeichnung': 'turbine_type_orig',
+            'turbine_type_v2': 'turbine_type',
             # 'Laengengrad': 'lon', 'Breitengrad': 'lat',
             'Inbetriebnahmedatum': 'commissioning_date',
             'DatumEndgueltigeStilllegung': 'decommissioning_date',
@@ -153,6 +154,8 @@ def prepare_mastr_data(mastr_data, category):
             'InstallierteLeistung': 'capacity'
         }, inplace=True)
         mastr_data.drop(['Laengengrad', 'Breitengrad'], axis=1, inplace=True)
+        # adjust turbine type format
+        mastr_data['turbine_type'] = mastr_data['turbine_type'].str.replace('_', '/')
     elif category == 'Solar':
         mastr_data.rename(columns={
             'Hauptausrichtung': 'azimuth',
