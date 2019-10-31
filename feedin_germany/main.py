@@ -26,9 +26,9 @@ weather_data_folder = settings.weather_data_path
 validation_path = settings.path_validation_metrics
 
 years = [
-    2013, 2014,
-    2015,
-    2016,
+    # 2013, 2014,
+    # 2015,
+    # 2016,
     2017
 ]
 categories = [
@@ -37,12 +37,12 @@ categories = [
     # 'Hydro'  # not implemented, yet
 ]
 register_names = [
-    'opsd',
-    # 'MaStR'  # only use for category 'Wind'
+    # 'opsd',  # fix decommissioning date...
+    'MaStR'  # only use for category 'Wind'
 ]
 weather_data_names = [
-    # 'open_FRED',
-    'ERA5'
+    'open_FRED',
+    # 'ERA5'
 ]
 
 ###############################################################################
