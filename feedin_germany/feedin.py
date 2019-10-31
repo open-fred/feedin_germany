@@ -128,7 +128,7 @@ def calculate_feedin(year, register, regions, category,
                 # open feedinlib to calculate feed in time series for region
                 feedin = region.Region(
                     geom='no_geom',
-                    weather=weather_df).pv_feedin_distribution_register(
+                    weather=weather_df, **kwargs).pv_feedin_distribution_register(
                     distribution_dict=distribution_dict,
                     technical_parameters=pv_modules_set,
                     register=register_region, **kwargs)
