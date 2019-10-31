@@ -89,15 +89,23 @@ def get_downloaded_weather_points_open_fred_pkl():
     return locations_dict
 
 
-def load_open_fred_pkl(lat, lon, locations_dict, year):
+def load_open_fred_pkl(lat, lon, **kwargs):
     """
-    Function to load open_FRED weather data pickle based on given lat and lon
-    values. Lon and lat values must be values of the dictionary.
+    Function returns open_FRED weather dataframe for given lat and lon
+    values and specified library.
+
+    Weather data is loaded from pkl file.
+    Lon and lat values must be values of the locations dictionary.
 
     Parameters
     ----------
     lat : float
     lon : float
+    lib : str
+        Defines for which library the dataframe is prepared. Must be 'pvlib'
+        or 'windpowerlib'.
+    year : int
+        Year to retrieve data for.
     locations_dict : dict
         Dictionary with location IDs as keys and corresponding (lon, lat)
         tuple of all open_FRED weather data points weather data was downloaded
@@ -105,11 +113,20 @@ def load_open_fred_pkl(lat, lon, locations_dict, year):
 
     Returns
     --------
-    feedinlib.Weather object
+    pandas.DataFrame
 
     """
+    locations_dict = kwargs.get('locations_dict',
+                                get_downloaded_weather_points_open_fred_pkl())
+    lib = kwargs.get('lib', None)
+    if lib is None:
+        raise AttributeError("lib must either be 'pvlib' or 'windpowerlib'.")
+    year = kwargs.get('year', None)
+    if year is None:
+        raise AttributeError("Year must be specified to retrieve open_FRED "
+                             "weather data from pkl file.")
+
     # find location ID corresponding to lat and lon values
-    #ToDo Fehler abfangen
     try:
         location_id = (list(locations_dict.keys())[
             list(locations_dict.values()).index((lon, lat))])
@@ -119,4 +136,8 @@ def load_open_fred_pkl(lat, lon, locations_dict, year):
 
     fname = os.path.join(settings.open_FRED_pkl,
                          '{}_{}.pkl'.format(location_id, year))
-    return pickle.load(open(fname, "rb"))
+    open_FRED_weather = pickle.load(open(fname, "rb"))
+
+    return open_FRED_weather.df(location=(lon, lat), lib=lib)
+
+
