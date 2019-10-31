@@ -302,22 +302,17 @@ def calculate_feedin_germany(year, categories,
 
     Other parameters
     ----------------
+    region_filter : str
+        Filters `region` by nut (f.e. 'DE8' --> only feed-in of 'Landkreise' of
+        Meck-Pom are calculated. Do not use if you enter your own data frame
+        for `regions`.
     todo parameters for windpowerlib modelchains, pvlib modelchain
-
-    Notes
-    -----
-    The returned feed-in is in the form as needed by the heat and power model
-    deflex (https://github.com/reegis/deflex).
-    However, `feedin_df` is only returned if `regions` contains less than 26 # todo adapt number?!
-    regions as it is assumed that a energy system optimization of Germany would
-    not be done for more nodes.
 
     Returns
     -------
-    If `regions` contains less than 26 regions:
+    # todo return depends on parameter!
     feedin_df : pd.DataFrame
-        Contains calculated feed-in for each region in `regions`. # todo form of return
-    else: None.
+        Contains calculated feed-in for each region in `regions`.
 
     """
     # get regions from OEP if regions is not a geopandas.GeoDataFrame
@@ -345,6 +340,17 @@ def calculate_feedin_germany(year, categories,
             region_gdf = region_gdf[region_gdf['nuts'] == sub_region]
         if debug_mode:
             region_gdf = region_gdf[0:5]
+        if kwargs['region_filter']:
+            df = pd.DataFrame()
+            for item in kwargs['region_filter']:
+                # Select nuts that contain item
+                region_gdf['temp'] = region_gdf['nuts'].apply(
+                    lambda x: True if item in x else False)
+                df = pd.concat([df,
+                                region_gdf.loc[region_gdf['temp'] == True]])
+            region_gdf = df.drop('temp', axis=1)
+        # drop duplicates
+        region_gdf = region_gdf.loc[region_gdf['nuts'].drop_duplicates().index]
     else:
         raise ValueError("`regions` should be 'landkreise',"
                          "'tso' or gpd.GeoDataFrame.")
