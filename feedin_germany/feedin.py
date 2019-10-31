@@ -356,8 +356,6 @@ def calculate_feedin_germany(year, categories,
                 df = pd.concat([df,
                                 region_gdf.loc[region_gdf['temp'] == True]])
             region_gdf = df.drop('temp', axis=1)
-        # drop duplicates
-        region_gdf = region_gdf.loc[region_gdf['nuts'].drop_duplicates().index]
     else:
         raise ValueError("`regions` should be 'landkreise',"
                          "'tso' or gpd.GeoDataFrame.")
