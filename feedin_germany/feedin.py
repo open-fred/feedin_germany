@@ -85,7 +85,8 @@ def calculate_feedin(year, register, regions, category,
     -------
     If return_feedin is True:
     feedin_df : pd.DataFrame
-        Contains calculated feed-in for each region in `regions`. # todo form of return
+        Contains calculated feed-in ('feedin) for each region in ('nuts') and
+        the category ('technology') + datetime ('time').
     else: None.
 
     """
@@ -347,9 +348,10 @@ def calculate_feedin_germany(year, categories,
             region_gdf = region_gdf[region_gdf['nuts'] == sub_region]
         if debug_mode:
             region_gdf = region_gdf[0:5]
-        if kwargs['region_filter']:
+        region_filter = kwargs.get('region_filter', None)
+        if region_filter:
             df = pd.DataFrame()
-            for item in kwargs['region_filter']:
+            for item in region_filter:
                 # Select nuts that contain item
                 region_gdf['temp'] = region_gdf['nuts'].apply(
                     lambda x: True if item in x else False)
