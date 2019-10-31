@@ -15,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from shapely.geometry import Point
 import shapely
+import oedialect
 
 
 def as_pandas(query, geometry="geom", params=None, crs=None, hex=True):

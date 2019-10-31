@@ -62,3 +62,61 @@ def get_weather_data_germany(year, weather_data_name, format_):
                 weather_df = weather_df.dropna()
         pickle.dump(weather_df, open(pickle_filename, 'wb'))
     return weather_df
+
+
+def get_downloaded_weather_points_open_fred_pkl():
+    """
+    Function to get a list of all open_FRED weather data points weather
+    data was downloaded for.
+
+    Returns
+    --------
+    dict
+        Dictionary with location IDs as keys and corresponding (lon, lat)
+        tuple.
+
+    """
+    state_list = ['Mecklenburg-Vorpommern', 'Sachsen', 'Brandenburg',
+                  'Sachsen-Anhalt', 'Thüringen', 'Berlin']
+    locations_dict = {}
+    for state in state_list:
+        fname_loc = os.path.join(settings.open_FRED_pkl,
+                                 "locations_dict_{}.pkl".format(state))
+        if os.path.isfile(fname_loc):
+            locations_dict.update(pickle.load(open(fname_loc, "rb")))
+        else:
+            print('No downloaded open_FRED weather data for {}.'.format(state))
+    return locations_dict
+
+
+def load_open_fred_pkl(lat, lon, locations_dict, year):
+    """
+    Function to load open_FRED weather data pickle based on given lat and lon
+    values. Lon and lat values must be values of the dictionary.
+
+    Parameters
+    ----------
+    lat : float
+    lon : float
+    locations_dict : dict
+        Dictionary with location IDs as keys and corresponding (lon, lat)
+        tuple of all open_FRED weather data points weather data was downloaded
+        for.
+
+    Returns
+    --------
+    feedinlib.Weather object
+
+    """
+    # find location ID corresponding to lat and lon values
+    #ToDo Fehler abfangen
+    try:
+        location_id = (list(locations_dict.keys())[
+            list(locations_dict.values()).index((lon, lat))])
+    except:
+        raise ValueError("No weather data downloaded for ({}, {}).".format(
+            lat, lon))
+
+    fname = os.path.join(settings.open_FRED_pkl,
+                         '{}_{}.pkl'.format(location_id, year))
+    return pickle.load(open(fname, "rb"))
