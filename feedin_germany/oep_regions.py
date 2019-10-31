@@ -16,6 +16,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from shapely.geometry import Point
 import shapely
 import oedialect
+from shapely.ops import cascaded_union
 
 
 def as_pandas(query, geometry="geom", params=None, crs=None, hex=True):
@@ -98,7 +99,23 @@ def load_regions_file(type='tso'):
         finally:
             session.close()
 
-        return (gdf_new[['nuts', 'geom']])
+        landkreise_shape = gdf_new[['nuts', 'geom']]
+
+        for nut_id in landkreise_shape.nuts.unique():
+            tmp_df = landkreise_shape[landkreise_shape.nuts == nut_id]
+            if len(tmp_df) > 1:
+                polyg = cascaded_union(tmp_df.geometry)
+                counter = 0
+                for index, row in tmp_df.iterrows():
+                    if counter == 0:
+                        landkreise_shape.loc[index, 'geometry'] = polyg
+                    else:
+                        landkreise_shape.drop(index=[index], inplace=True)
+                    counter += 1
+
+        # landkreise_shape.to_file('landkreise_dump_dropped_duplicates.shp') # todo autmatic save
+
+        return landkreise_shape
 
     if type == 'tso':
         class Ffe_tso_controlarea(Base):
