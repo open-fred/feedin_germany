@@ -52,7 +52,7 @@ def get_downloaded_weather_points_open_fred_pkl():
 
     """
     state_list = ['Mecklenburg-Vorpommern', 'Sachsen', 'Brandenburg',
-                  'Sachsen-Anhalt', 'Thüringen', 'Berlin']
+                  'Sachsen-Anhalt', 'Thüringen', 'Berlin']  # + Hamburg
     locations_dict = {}
     for state in state_list:
         fname_loc = os.path.join(settings.open_FRED_pkl,
