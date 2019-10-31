@@ -28,6 +28,7 @@ def create_pvmodule_dict():
         modules[pvlib_set]= config.as_dict(pvlib_set)
     return modules
 
+
 def create_distribution_dict():
     r"""
     creates dictionary of the pv-module's distribution
