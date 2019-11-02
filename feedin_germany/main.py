@@ -21,7 +21,6 @@ debug_mode = False  # Only 4 regions are calculated.
 settings.init()  # note: set your paths in settings.py
 feedin_folder = settings.path_wam_ezr
 time_series_df_folder = settings.path_time_series_50_Hz
-weather_data_folder = settings.weather_data_path
 validation_path = settings.path_validation_metrics
 
 years = [
@@ -55,7 +54,6 @@ for register_name in register_names:
                 year=year, categories=categories, regions='landkreise',
                 register_name=register_name, weather_data_name='open_FRED',
                 debug_mode=debug_mode, wake_losses_model=None,
-                weather_data_folder=weather_data_folder,
                 return_feedin=True)
 ###############################################################################
 # Validation of PVlib and windpowerlib feed-in time series via "tso" zones
@@ -77,8 +75,7 @@ for register_name in register_names:
                 year=year, categories=categories, regions=regions,
                 register_name=register_name,
                 weather_data_name=weather_data_name,
-                return_feedin=True, debug_mode=debug_mode,
-                weather_data_folder=weather_data_folder, scale_to=scale_to,
+                return_feedin=True, debug_mode=debug_mode, scale_to=scale_to,
                 commission_decommission=commission_decommission,
                 wake_losses_model='dena_mean', smoothing=True)
             end = time.time()

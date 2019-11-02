@@ -21,7 +21,6 @@ debug_mode = False  # Only 4 regions are calculated.
 settings.init()  # note: set your paths in settings.py
 feedin_folder = settings.path_wam_ezr
 time_series_df_folder = settings.path_time_series_50_Hz
-weather_data_folder = settings.weather_data_path
 validation_path = settings.path_validation_metrics
 
 years = [
@@ -50,7 +49,7 @@ weather_data_names = [
 # database format)
 ###############################################################################
 region_filter = [
-    'MeckPom', # todo delete
+    'DE8', # todo delete
                  # 'DE8',  # Meck-Pom
                  # 'DE3',  # Berlin
                  # 'DE4',  # Brandenburg
@@ -71,7 +70,6 @@ for register_name in register_names:
                 year=year, categories=categories, regions='landkreise',
                 register_name=register_name, weather_data_name='open_FRED',
                 debug_mode=debug_mode, wake_losses_model=None,
-                weather_data_folder=weather_data_folder,
                 return_feedin=True, region_filter=region_filter)
             feedin_years = pd.concat([feedin_years, feedin])
         feedin_years.to_csv(os.path.join(
