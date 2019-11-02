@@ -90,7 +90,6 @@ def calculate_feedin(year, register, regions, category,
 
     """
     if category == 'Solar':
-        # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
         weather_df = weather.get_weather_data_germany(
             year=year, weather_data_name=weather_data_name, format_='pvlib')
 
@@ -98,7 +97,6 @@ def calculate_feedin(year, register, regions, category,
         pv_modules_set = pv_modules.create_pvmodule_dict()
         distribution_dict = pv_modules.create_distribution_dict()
 
-    # todo delete the following lines when weather is integrated in feedinlib, + year input in feedinlib
     elif category == 'Wind':
         weather_df = weather.get_weather_data_germany(
             year=year, weather_data_name=weather_data_name,
@@ -114,7 +112,6 @@ def calculate_feedin(year, register, regions, category,
             columns={0: 'lon', 1: 'lat'})
         kwargs['year'] = year
 
-
     for nut in regions['nuts']:
         logging.info("Calculating feedin for {}".format(nut))
         register_region = register.loc[register['nuts'] == nut]
@@ -127,11 +124,12 @@ def calculate_feedin(year, register, regions, category,
             if category == 'Solar':
                 # open feedinlib to calculate feed in time series for region
                 feedin = region.Region(
-                    geom='no_geom',
-                    weather=weather_df, **kwargs).pv_feedin_distribution_register(
+                    geom='no_geom', weather=weather_df, **kwargs
+                ).pv_feedin_distribution_register(
                     distribution_dict=distribution_dict,
                     technical_parameters=pv_modules_set,
-                    register=register_region, **kwargs)
+                    register=register_region,
+                    capacity_periods=periods, **kwargs)
             elif category == 'Wind':
                 feedin = region.Region(geom='no_geom',
                                        weather=weather_df, **kwargs).wind_feedin(
