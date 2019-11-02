@@ -17,7 +17,7 @@ import io
 from feedin_germany import config as cfg
 
 
-def load_feedin_data(categories, year, latest=False):
+def load_feedin_data(categories, year, latest=True, onshore=True):
 
     r"""
     Get feed-in time series of tso for specified categories and year.
@@ -28,6 +28,11 @@ def load_feedin_data(categories, year, latest=False):
     parameters
     ----------
     'latest': boolean
+
+    onshore : boolean
+        If True only onshore wind power is used.
+        ONLY for the years 2016 and 2017 (before the values of on- and offshore
+        are 0)
 
     Returns
     -------
@@ -58,14 +63,18 @@ def load_feedin_data(categories, year, latest=False):
 
         df['utc_timestamp'] = pd.to_datetime(df['utc_timestamp'], utc=True)
         df_year = df[df['utc_timestamp'].dt.year == year]
-        df_agg = df_year.set_index('utc_timestamp').resample('H').sum().reset_index()
+        df_agg = df_year.set_index('utc_timestamp').resample('H').mean().reset_index()
         df_agg[['utc_timestamp', 'DE_50hertz_solar_generation_actual',
                 'DE_amprion_solar_generation_actual',
                 'DE_tennet_solar_generation_actual',
                 'DE_transnetbw_solar_generation_actual',
                 'DE_50hertz_wind_generation_actual',
+                'DE_50hertz_wind_onshore_generation_actual',
                 'DE_amprion_wind_generation_actual',
                 'DE_tennet_wind_generation_actual',
+                'DE_tennet_wind_onshore_generation_actual',
+                'DE_tennet_wind_offshore_generation_actual',
+                'DE_50hertz_wind_offshore_generation_actual',
                 'DE_transnetbw_wind_generation_actual']].to_csv(filename)
 
     for category in categories:
@@ -95,17 +104,21 @@ def load_feedin_data(categories, year, latest=False):
 
     
         if category == 'Wind':
+            if onshore:
+                add_on = '_onshore'
+            else:
+                add_on = ''
             dwind= df_agg[['utc_timestamp',
-                            'DE_50hertz_wind_generation_actual',
                             'DE_amprion_wind_generation_actual',
-                            'DE_tennet_wind_generation_actual',
-                            'DE_transnetbw_wind_generation_actual'
-                            ]]
-            dwind_new = dwind.rename(index=str, columns={"utc_timestamp": "time",
-                                                     "DE_50hertz_wind_generation_actual": "50 Hertz",
-                                                     "DE_amprion_wind_generation_actual": "Amprion",
-                                                     "DE_tennet_wind_generation_actual": "TenneT",
-                                                     "DE_transnetbw_wind_generation_actual": "Transnet BW"})
+                            'DE_transnetbw_wind_generation_actual',
+                            'DE_50hertz_wind{}_generation_actual'.format(add_on),
+                            'DE_tennet_wind{}_generation_actual'.format(add_on)]]
+            dwind_new = dwind.rename(index=str, columns={
+                "utc_timestamp": "time",
+                'DE_50hertz_wind{}_generation_actual'.format(add_on): "50 Hertz",
+                "DE_amprion_wind_generation_actual": "Amprion",
+                'DE_tennet_wind{}_generation_actual'.format(add_on): "TenneT",
+                "DE_transnetbw_wind_generation_actual": "Transnet BW",})
 
             dwind_melt = dwind_new.melt(id_vars=['time'], var_name='nuts',
                                     value_name='feedin_val')
@@ -129,9 +142,10 @@ def load_feedin_data(categories, year, latest=False):
 if __name__ == "__main__":
 
     categories=['Wind', 'Solar']
-    year=2012
+    years = [2016, 2017]
 
-    df=  load_feedin_data(categories, year, latest=False)
-    print(df.columns)
+    for year in years:
+        df=  load_feedin_data(categories, year, latest=False)
+        print(df.columns)
 
 
