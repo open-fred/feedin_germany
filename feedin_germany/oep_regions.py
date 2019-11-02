@@ -48,13 +48,13 @@ def as_pandas(query, geometry="geom", params=None, crs=None, hex=True):
     return gpd.GeoDataFrame(df, crs=crs, geometry=geometry)
 
 
-def load_regions_file(type='tso'):
+def load_regions_file(region_type='tso'):
     """
     Loads a region file from the oedb.
 
     Parameters
     ----------
-    type : str
+    region_type : str
         Defines the region type:  Transmission System Operator ('tso'), or
         administrative districts ('landkreise'). Default: 'tso'.
 
@@ -81,7 +81,7 @@ def load_regions_file(type='tso'):
     Session = sessionmaker(bind=engine)
     session = Session()
 
-    if type == 'landkreise':
+    if region_type == 'landkreise':
         class BkgVg2502Lan(Base):
             __tablename__ = "bkg_vg250_4_krs"
             __table_args__ = {'schema': 'boundaries', 'autoload': True}
@@ -117,7 +117,7 @@ def load_regions_file(type='tso'):
 
         return landkreise_shape
 
-    if type == 'tso':
+    if region_type == 'tso':
         class Ffe_tso_controlarea(Base):
             __tablename__ = "ffe_tso_controlarea"
             __table_args__ = {'schema': 'model_draft', 'autoload': True}
