@@ -65,14 +65,13 @@ for register_name in register_names:
 ###############################################################################
 # Load feed-in of 'Landkreise' and sum up to 50 Hertz time series
 ###############################################################################
-# todo noch zu testen mit pv und mit mehreren Bundesländern
 feedin_df = pd.DataFrame()
-for nuts in region_filter:
-    # load time series of regionPom
-    feedin = pd.read_csv(os.path.join(
-        feedin_folder, 'feedin_Landkreise_{}.csv'.format(nuts)))
-    df = f.form_feedin_for_deflex(feedin)
-    feedin_df = pd.concat([feedin_df, df], axis=1)
+for register_name in register_names:
+    for year in years:
+        feedin = pd.read_csv(os.path.join(
+                feedin_folder, 'feedin_Landkreise_{}_{}.csv'.format(register_name, year)))
+        df = f.form_feedin_for_deflex(feedin)
+        feedin_df = pd.concat([feedin_df, df], axis=1)
 
 # sum up 50 hertz feed-in by category and save to file
 feedin_50hertz_df = pd.DataFrame()
