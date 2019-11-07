@@ -1,6 +1,6 @@
 installed_capacities_bl_Wind.csv
 
-- installed capacities of "Bundesländer" in MW from https://www.foederal-erneuerbar.de/uebersicht/bundeslaender/BW|BY|B|BB|HB|HH|HE|MV|NI|NRW|RLP|SL|SN|ST|SH|TH|D/kategorie/wind/auswahl/180-installierte_leistun/ordnung/2014/versatz/1/#goto_180
+- installed capacities of "Bundesländer" in MW (Onshore) from https://www.foederal-erneuerbar.de/uebersicht/bundeslaender/BW|BY|B|BB|HB|HH|HE|MV|NI|NRW|RLP|SL|SN|ST|SH|TH|D/kategorie/wind/auswahl/180-installierte_leistun/ordnung/2014/versatz/1/#goto_180
 - installed capacity Offhore in MW from https://www.smard.de/home/ueberblick/324#!?mapAttributes=%7B%22date%22:1564041600000,%22state%22:%22plant%22,%22plantState%22:%22list%22%7D&filterAttributes=%7B%22company%22:%22%22,%22region%22:%2250Hertz%22,%22plant%22:null,%22resource%22:%22KW-Energietr%C3%A4ger.Wind%20(Offshore)%22,%22searchText%22:%22%22,%22state%22:%22%22,%22network%22:%2250Hertz%20Transmission%20GmbH%22,%22commissioning%22:%5B0,2013%5D,%22power%22:%5B0,5000%5D,%22center%22:%5B51.83661124007101,9.59637451171875%5D,%22radius%22:100,%22zoom%22:7,%22placeId%22:null,%22powerPlant%22:%5B%2211DUMMY1122%22%5D%7D
 
 
