@@ -48,32 +48,18 @@ weather_data_names = [
 # and save to `feedin_folder` (contains time series for all years -
 # database format)
 ###############################################################################
-region_filter = [
-    'DE8', # todo delete
-                 # 'DE8',  # Meck-Pom
-                 # 'DE3',  # Berlin
-                 # 'DE4',  # Brandenburg
-                 # 'DED',  # Sachsen
-                 # 'DEE',  # Sachsen-Anhalt
-                 # 'DEG',  # Thühringen
-                 # 'DE6'  # Hamburg
-                 ] # filters 'regions' by nuts
-                    # (f.e. ['DE8'] --> only feed-in of 'Landkreise' of
-                    # Meck-Pom are calulated. Do not use
-                    # if you enter your own data frame for `regions`.
+
 
 for register_name in register_names:
-    for nuts in region_filter:
-        feedin_years = pd.DataFrame()
-        for year in years:
-            feedin = f.calculate_feedin_germany(
-                year=year, categories=categories, regions='landkreise',
-                register_name=register_name, weather_data_name='open_FRED',
-                debug_mode=debug_mode, wake_losses_model=None,
-                return_feedin=True, region_filter=region_filter)
-            feedin_years = pd.concat([feedin_years, feedin])
-        feedin_years.to_csv(os.path.join(
-            feedin_folder, 'feedin_Landkreise_{}.csv'.format(nuts)))  # todo: if we use more registers, weather, ... add to name
+    for year in years:
+        feedin = f.calculate_feedin_germany(
+            year=year, categories=categories, regions='50 Hertz',
+            register_name=register_name, weather_data_name='open_FRED',
+            debug_mode=debug_mode, wake_losses_model=None,
+            return_feedin=True)
+        feedin.to_csv(os.path.join(
+            feedin_folder, 'feedin_Landkreise_{}_{}.csv'.format(
+                register_name, year)))  # todo: if we use more registers, weather, ... add to name
 
 
 ###############################################################################
