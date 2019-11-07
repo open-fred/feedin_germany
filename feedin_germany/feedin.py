@@ -331,14 +331,14 @@ def calculate_feedin_germany(year, categories,
         else:
             sub_region = None
         start = time.time()
-        # todo delete or with parameter in function
-        regions_file = os.path.join(os.path.dirname(__file__), 'data/dumps',
-                                    'regions_ger_{}.p'.format(regions))
-        if os.path.exists(regions_file):
-            region_gdf = pickle.load(open(regions_file, 'rb'))
-        else:
-            region_gdf = oep.load_regions_file(regions)
-            pickle.dump(region_gdf, open(regions_file, 'wb'))
+        # # todo delete or with parameter in function
+        # regions_file = os.path.join(os.path.dirname(__file__), 'data/dumps',
+        #                             'regions_ger_{}.p'.format(regions))
+        # if os.path.exists(regions_file):
+        #     region_gdf = pickle.load(open(regions_file, 'rb'))
+        # else:
+        region_gdf = oep.load_regions_file(regions)
+            # pickle.dump(region_gdf, open(regions_file, 'wb'))
         end = time.time()
         print(
             'Time load_regions_file year {}: {}'.format(year, (end - start)))
