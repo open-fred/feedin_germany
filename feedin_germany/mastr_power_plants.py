@@ -16,6 +16,7 @@ __license__ = "GPLv3"
 # imports
 import pandas as pd
 import os
+import logging
 
 from windpowerlib import get_turbine_types
 
@@ -110,18 +111,14 @@ def helper_load_mastr_from_file(category):
     return mastr_data
 
 
-def prepare_mastr_data(mastr_data, category):
+def prepare_mastr_data(mastr_data, category, **kwargs):
     r"""
     Pre-processing of MaStR data.
 
     - translation to english
-    - short cuts
-
-    - decom, com month etc. as in opsd
-    - remove rows with nans
 
     - capacity in W
-    - remove pp with missing coordinates
+    - prepare dates see ppr_tools.prepare_dates()
 
 
 
@@ -133,6 +130,12 @@ def prepare_mastr_data(mastr_data, category):
     category : string
         Energy source category for which the register is loaded. Options:
         'Wind', ... todo to be added.
+    decom_20 : bool (optional)
+        If True, life time of power plant is 20 years (if com date is given,
+        else: 2050). Used in prepare_dates()
+    wind_technology : str (optional)
+        If exists: power plants get filtered by onshore ('WindAnLand') and
+        offshore ('WindAufSee') technology.
 
     Returns
     -------
@@ -153,7 +156,13 @@ def prepare_mastr_data(mastr_data, category):
             'DatumWiederaufnahmeBetrieb': 'resumption_date',
             'InstallierteLeistung': 'capacity'
         }, inplace=True)
-        mastr_data.drop(['Laengengrad', 'Breitengrad'], axis=1, inplace=True)
+        # select onshore/offshore if kwargs is given
+        wind_technology = kwargs.get("wind_technology", None)
+        if wind_technology:
+            logging.info("Only {} wind power plants are selected.".format(
+                wind_technology))
+            mastr_data = mastr_data.loc[mastr_data['Lage'] == wind_technology]
+        # mastr_data.drop(['Laengengrad', 'Breitengrad'], axis=1, inplace=True)
         # adjust turbine type format
         mastr_data['turbine_type'] = mastr_data['turbine_type'].str.replace('_', '/')
     elif category == 'Solar':
@@ -165,10 +174,11 @@ def prepare_mastr_data(mastr_data, category):
             'InstallierteLeistung': 'capacity',
             'Leistungsbegrenzung': 'power_limitation',
         }, inplace=True)
-    mastr_data['capacity'] = mastr_data['capacity'] * 1000
+    mastr_data['capacity'] = mastr_data['capacity']
     # prepare dates
     date_cols = ('commissioning_date', 'decommissioning_date')
-    prepared_df = ppr_tools.prepare_dates(df=mastr_data, date_cols=date_cols)
+    prepared_df = ppr_tools.prepare_dates(df=mastr_data, date_cols=date_cols,
+                                          **kwargs)
     prepared_df['commissioning_date'] = pd.to_datetime(
         prepared_df['commissioning_date'], utc=True)
     prepared_df['decommissioning_date'] = pd.to_datetime(
@@ -177,9 +187,15 @@ def prepare_mastr_data(mastr_data, category):
 
 
 def get_mastr_pp_filtered_by_year(energy_source, year,
-                                  month_wise_capacities=False):
+                                  month_wise_capacities=False, **kwargs):
     r"""
     Loads MaStR power plant data by `energy_source` and `year`.
+
+    - remove pp with missing coordinates
+
+    WIND
+    -exchange nan in 'turbine_type' column with new turbine type
+        # (by windzone) and adapt rotor diameter and hub height
 
     Parameters
     ----------
@@ -192,10 +208,16 @@ def get_mastr_pp_filtered_by_year(energy_source, year,
         If True and com_month and decom_month exists the respective power
         plant's capacity will be reduced by the percentage of months it was
         installed during the year. Default: False.
+    decom_20 : bool (optional)
+        If True, life time of power plant is 20 years (if com date is given,
+        else: 2050)
+    wind_technology : str (optional)
+        If exists: power plants get filtered by onshore ('WindAnLand') and
+        offshore ('WindAufSee') technology.
 
     """
     mastr_pp = helper_load_mastr_from_file(category=energy_source)
-    prepared_data = prepare_mastr_data(mastr_pp, energy_source)
+    prepared_data = prepare_mastr_data(mastr_pp, energy_source, **kwargs)
     filtered_register = ppr_tools.get_pp_by_year(
         year=year, register=prepared_data,
         month_wise_capacities=month_wise_capacities)

@@ -18,7 +18,7 @@ import numpy as np
 import logging
 
 
-def prepare_dates(df, date_cols):
+def prepare_dates(df, date_cols, **kwargs):
     r"""
     Prepare commissioning and decommissioning dates.
 
@@ -26,7 +26,7 @@ def prepare_dates(df, date_cols):
 
     Missing dates are filled as follows:
     com_year: 1800
-    decom_year: 2050
+    decom_year: if com_year: com_year + 20, else 2050
     com_month: 1
     decom_month: 12
 
@@ -34,20 +34,35 @@ def prepare_dates(df, date_cols):
     com: '1800-01-01'
     decom: '2050-12-31'
 
+    Parameters
+    ----------
+
+    decom_20 : bool (optional)
+        If True, life time of power plant is 20 years (if com date is given,
+        else: 2050)
+
     """
+    decom_20 = kwargs.get('decom_20', None)
     # Commission year from float or string
     if df[date_cols[0]].dtype == np.float64:
         df['com_year'] = df[date_cols[0]].fillna(1800).astype(np.int64)
     else:
         df['com_year'] = pd.to_datetime(df[date_cols[0]].fillna(
-            '1800-01-01')).dt.year
+            '1800-01-01')).dt.year.astype(np.int64)
 
     # Decommission year from float or string
     if df[date_cols[1]].dtype == np.float64:
-        df['decom_year'] = df[date_cols[1]].fillna(2050).astype(np.int64)
+        if decom_20:
+            df['decom_year'] = df[date_cols[1]].fillna(df['com_year'] + 20).astype(np.int64)
+        else:
+            df['decom_year'] = df[date_cols[1]].fillna(2050).astype(np.int64)
     else:
-        df['decom_year'] = pd.to_datetime(df[date_cols[1]].fillna(
-            '2050-12-31')).dt.year
+        if decom_20:
+            df['decom_year'] = pd.to_datetime(
+                df[date_cols[1]]).dt.year.fillna(df['com_year'] + 20).astype(np.int64)
+        else:
+            df['decom_year'] = pd.to_datetime(df[date_cols[1]].fillna(
+                '2050-12-31')).dt.year
 
     df['com_month'] = pd.to_datetime(df[date_cols[0]].fillna(
         '1800-01-01')).dt.month

@@ -312,6 +312,12 @@ def calculate_feedin_germany(year, categories,
         Filters `region` by nut (f.e. 'DE8' --> only feed-in of 'Landkreise' of
         Meck-Pom are calculated. Do not use if you enter your own data frame
         for `regions`.
+    decom_20 : bool (optional)
+        If True, life time of power plant is 20 years (if com date is given,
+        else: 2050)
+    wind_technology : str (optional)
+        If exists: power plants get filtered by onshore ('onshore') and
+        offshore ('offshore') technology.
     todo parameters for windpowerlib modelchains, pvlib modelchain
 
     Returns
@@ -347,7 +353,7 @@ def calculate_feedin_germany(year, categories,
         if debug_mode:
             region_gdf = region_gdf[0:5]
         region_filter = kwargs.get('region_filter', None)
-        if region_filter:
+        if region_filter:  # todo delete (?) was for Bundesland selection
             df = pd.DataFrame()
             for item in region_filter:
                 # Select nuts that contain item
@@ -388,9 +394,16 @@ def calculate_feedin_germany(year, categories,
                                                          keep_cols=keep_cols)
         elif register_name == 'MaStR':
             if category in ['Wind', 'Solar']:
+                decom_20 = kwargs.get('decom_20', None)
+                wind_tech = kwargs.get('wind_technology', None)
+                if wind_tech == 'onshore':
+                    wind_technology = 'WindAnLand'
+                elif wind_tech == 'offshore':
+                    wind_technology = 'WindAufSee'
                 register = mastr.get_mastr_pp_filtered_by_year(
                     energy_source=category, year=year,
-                    month_wise_capacities=month_wise_capacities)
+                    month_wise_capacities=month_wise_capacities,
+                    decom_20=decom_20, wind_technology=wind_technology)  # todo: if not valid for pv split here
             else:
                 raise ValueError("Option 'MaStR' as `register_name` until "
                                  "now only available for `category` 'Wind'"
