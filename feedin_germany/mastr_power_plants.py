@@ -49,7 +49,7 @@ def load_mastr_data_from_oedb():
     return register
 
 
-def helper_load_mastr_from_file(category):
+def helper_load_mastr_from_file(category, **kwargs):
     r"""
     todo remove when loaded from oedb
 
@@ -65,11 +65,15 @@ def helper_load_mastr_from_file(category):
         Energy source category for which the register is loaded. Options:
         'Wind', ... to be added.
 
+    additional_cols : list (optional)
+        additional use cols
+
     Returns
     -------
 
     """
     settings.init()
+    additional_cols = kwargs.get('additional_cols', None)
     if category == 'Wind':
         filename = os.path.join(
             settings.path_mastr_wind,
@@ -84,6 +88,8 @@ def helper_load_mastr_from_file(category):
             'DatumWiederaufnahmeBetrieb', 'Lage', 'InstallierteLeistung',
             'Seelage', 'lat', 'lon', 'turbine_type_v2'
         ]
+        if additional_cols:
+            usecols.extend(additional_cols)
     elif category == 'Solar':
         filename = os.path.join(
             settings.path_mastr_pv, 'mastr_1.3_solar_openfred.csv')
