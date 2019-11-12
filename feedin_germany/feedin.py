@@ -238,13 +238,13 @@ def get_50hz_capacity(year, category):
                             'installed_capacities_bl_{}.csv'.format(
                                 category))
     df = pd.read_csv(filename, header=0, index_col=0)
-    cols = ['Offshore 50 Hz [O50Hz]', 'Hamburg [HH]', 'Berlin [B]',
+    cols = ['Hamburg [HH]', 'Berlin [B]',
             'Thüringen [TH]', 'Sachsen-Anhalt [ST]', 'Brandenburg [BB]',
             'Sachsen [SN]', 'Mecklenburg-Vorpommern [MV]']
     try:
         capacity = df[str(year)][cols].sum()
         # capacity in W
-        return capacity * 10 ** 6
+        return capacity * 1000
     except KeyError:
         return np.nan
 
