@@ -94,7 +94,7 @@ def load_feedin_data(categories, year, latest=True, onshore=True):
                                   value_name='feedin_val')
 
             dpv_melt['technology'] = 'Solar'
-            dpv_melt['capacity'] = dpv_melt['feedin_val'] * (10 ** 6)
+            dpv_melt['feedin_val'] = dpv_melt['feedin_val'] * (10 ** 6)
 
             val_data_pv= dpv_melt[['time', 'feedin_val', 'nuts', 'technology']]
 
