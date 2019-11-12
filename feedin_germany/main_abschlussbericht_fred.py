@@ -42,21 +42,25 @@ weather_data_names = [
     'open_FRED',
     # 'ERA5'
 ]
+# windpowerlib parameters
+wake_losses_model = 'dena_mean'
+smoothing = True  # todo: compare time series with and without smoothing?!
 
 ###############################################################################
 # Calculate feed-in time series for "Landkreise" in 50 Hertz tso zone
 # and save to `feedin_folder` (contains time series for all years -
 # database format)
 ###############################################################################
-
+scale_to = '50 Hertz'  # scale time series to 'entsoe' or '50 Hertz' capacities
+                       # or choose None for not scaling at all
 
 for register_name in register_names:
     for year in years:
         feedin = f.calculate_feedin_germany(
             year=year, categories=categories, regions='50 Hertz',
             register_name=register_name, weather_data_name='open_FRED',
-            debug_mode=debug_mode, wake_losses_model=None,
-            return_feedin=True)
+            debug_mode=debug_mode, wake_losses_model=wake_losses_model,
+            scale_to=scale_to, return_feedin=True)
         feedin.to_csv(os.path.join(
             feedin_folder, 'feedin_Landkreise_{}_{}.csv'.format(
                 register_name, year)))  # todo: if we use more registers, weather, ... add to name
