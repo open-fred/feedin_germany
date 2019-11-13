@@ -165,7 +165,7 @@ def calculate_feedin(year, register, regions, category,
             freq = pd.infer_freq(feedin.index)
             feedin.index.freq = pd.tseries.frequencies.to_offset(freq)
             if feedin.index.freq != resolution:
-                feedin = feedin.resample(resolution).sum()
+                feedin = feedin.resample(resolution).mean()
             if return_feedin:
                 feedin.index.name = 'time'
                 feedin = feedin_to_db_format(feedin=feedin,
