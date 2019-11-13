@@ -461,11 +461,15 @@ if __name__ == "__main__":
         # 'Solar',
         # 'Hydro'
     ]
-    for year in years:
-        feedin = calculate_feedin_germany(
-            year=year, categories=categories, regions='tso',
-            register_name='opsd', weather_data_name='open_FRED',
-            return_feedin=True, debug_mode=False)
-        print(feedin)
-        deflex_feedin = form_feedin_for_deflex(feedin=feedin)
-        print(deflex_feedin.head())
+    cap_solar = get_50hz_capacity(2016, 'Solar')
+    print(cap_solar)
+    cap_wind = get_50hz_capacity(2016, 'Wind')
+    print(cap_wind)
+    # for year in years:
+    #     feedin = calculate_feedin_germany(
+    #         year=year, categories=categories, regions='tso',
+    #         register_name='opsd', weather_data_name='open_FRED',
+    #         return_feedin=True, debug_mode=False)
+    #     print(feedin)
+    #     deflex_feedin = form_feedin_for_deflex(feedin=feedin)
+    #     print(deflex_feedin.head())

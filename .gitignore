@@ -105,10 +105,6 @@ venv.bak/
 
 
 # folders
-feedin_germany/data/messages
-feedin_germany/data/opsd
-feedin_germany/data/geometries
-feedin_germany/data/validation
-feedin_germany/data/dumps
+feedin_germany/data/*
 feedin_germany/examples_and_testing/data/messages
 feedin_germany/validation

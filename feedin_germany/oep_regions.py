@@ -118,6 +118,16 @@ def load_regions_file(region_type='tso'):
         return landkreise_shape
 
     if region_type == 'tso':
+
+        import os
+        import pickle
+
+        regions_file = os.path.join(
+            os.path.dirname(__file__), 'data/dumps/tso.pkl')
+
+        if os.path.exists(regions_file):
+            return pickle.load(open(regions_file, 'rb'))
+
         class Ffe_tso_controlarea(Base):
             __tablename__ = "ffe_tso_controlarea"
             __table_args__ = {'schema': 'model_draft', 'autoload': True}
@@ -136,6 +146,7 @@ def load_regions_file(region_type='tso'):
             session.close()
 
         gdf_new.rename(columns={"uenb": "nuts"}, inplace=True)
+        pickle.dump(gdf_tso, open(regions_file, 'wb'))
 
         return (gdf_new[['nuts', 'geom']])
 
@@ -170,7 +181,19 @@ def add_region_to_register(register, region):
 
 
 if __name__ == "__main__":
-#    load_original_opsd_file(category='renewable', overwrite=True,
-#                            latest=False)
-    print(load_regions_file())
+
+    gdf = load_regions_file(region_type='landkreise')
+    gdf_tso = load_regions_file(region_type='tso')
+
+    # dump tso gdf
+    import os
+    import pickle
+    regions_file = os.path.join(
+        os.path.dirname(__file__), 'data/dumps/tso.pkl')
+    pickle.dump(gdf_tso, open(regions_file, 'wb'))
+    # filter Hamburg
+    Hamburg_gdf = gdf[gdf['nuts'].apply(
+        lambda x: True if 'DE6' in x else False)]
+    Hamburg_gdf.to_file('hamburg.shp')
+    print(gdf)
     
