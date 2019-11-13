@@ -1,7 +1,7 @@
 
 def init():
-    path_to_server = '/home/birgit/rli-server'
-    path_to_data_server = '/home/birgit/rli-daten/'
+    path_to_server = '/home/sabine/rl-institut'
+    path_to_data_server = '/home/sabine/Daten_flexibel_01'
 
     ## weather
     global path_era5_netcdf, open_FRED_pkl
@@ -11,8 +11,7 @@ def init():
     ## power plants and geometries
     global path_mastr_wind, path_mastr_pv, path_geometries
     path_mastr_wind = path_to_server + '/04_Projekte/163_Open_FRED/03-Projektinhalte/AP7 Community/paper_data/power_plant_register/'
-    path_mastr_pv = '/home/birgit/virtualenvs/open_fred_validation_paper/git_repos/open_fred_validation_paper/pv_calculations/'
-    #path_to_server + '/04_Projekte/163_Open_FRED/03-Projektinhalte/AP7 Community/paper_data/power_plant_register/'
+    path_mastr_pv = path_to_server + '/04_Projekte/163_Open_FRED/03-Projektinhalte/AP7 Community/paper_data/power_plant_register/'
     path_geometries = path_to_server + '/04_Projekte/163_Open_FRED/03-Projektinhalte/AP7 Community/paper_data/geometries/'
 
     ## time series

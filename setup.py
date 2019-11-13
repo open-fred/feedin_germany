@@ -17,11 +17,10 @@ setup(
     packages=['feedin_germany'],
     long_description=read('README.rst'),
     install_requires=[
-        'pandas == 0.24.2',
+        'pandas',
         #'feedinlib >= 0.0.12',
-	    'geopandas == 0.5.1',
+	    'geopandas',
         'sqlalchemy',
 	    'oedialect',
         'shapely',
-        'matplotlib',
         'rtree']) # todo: adapt

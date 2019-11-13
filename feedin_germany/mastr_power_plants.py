@@ -267,8 +267,7 @@ def get_mastr_pp_filtered_by_year(energy_source, year,
 
 
 if __name__ == "__main__":
-    year = 2019
+    year = 2012
     cat = 'Wind'
-    mastr_pp = get_mastr_pp_filtered_by_year(energy_source='Solar', year=year)
-    # spandau nw 52.541821, 13.198775, so 52.532490, 13.209704
+    mastr_pp = get_mastr_pp_filtered_by_year(energy_source='Wind', year=year)
     print(mastr_pp.head())
