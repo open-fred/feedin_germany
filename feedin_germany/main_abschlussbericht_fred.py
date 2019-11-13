@@ -73,49 +73,66 @@ for weather_data_name in weather_data_names:
 
 
 ###############################################################################
-# Load feed-in of 'Landkreise' and sum up to 50 Hertz time series
+# Load feed-in of 'Landkreise' and sum up to 50 Hertz time series todo delete
 ###############################################################################
-feedin_df = pd.DataFrame()
-for register_name in register_names:
-    for year in years:
-        feedin = pd.read_csv(os.path.join(
-                feedin_folder, 'feedin_Landkreise_{}_{}.csv'.format(register_name, year)))
-        df = f.form_feedin_for_deflex(feedin)
-        feedin_df = pd.concat([feedin_df, df], axis=1)
+# feedin_df = pd.DataFrame()
+#
+# for register_name in register_names:
+#     for year in years:
+#         feedin = pd.read_csv(os.path.join(
+#                 feedin_folder, 'feedin_Landkreise_{}_{}.csv'.format(register_name, year)))
+#         df = f.form_feedin_for_deflex(feedin)
+#         feedin_df = pd.concat([feedin_df, df], axis=1)
+#
+# # sum up 50 hertz feed-in by category and save to file
+# feedin_50hertz_df = pd.DataFrame()
+# for category in categories:
+#     # select category and sum up time series
+#     feedin_50hertz = feedin_df.xs(
+#         category.lower(), axis=1, level=1, drop_level=True).sum(axis=1)
+#     feedin_50hertz.name = 'feedin'
+#     # data base format
+#     feedin_50hertz = f.feedin_to_db_format(feedin_50hertz, technology=category,
+#                                            nuts='50 Hertz')
+#     feedin_50hertz_df = pd.concat([feedin_50hertz_df, feedin_50hertz])
+# # todo: save wind and solar separately if you want to...
+# feedin_50hertz_df.set_index('time').to_csv(os.path.join(
+#     feedin_folder, 'feedin_50Hertz.csv'))
 
-# sum up 50 hertz feed-in by category and save to file
-feedin_50hertz_df = pd.DataFrame()
-for category in categories:
-    # select category and sum up time series
-    feedin_50hertz = feedin_df.xs(
-        category.lower(), axis=1, level=1, drop_level=True).sum(axis=1)
-    feedin_50hertz.name = 'feedin'
-    # data base format
-    feedin_50hertz = f.feedin_to_db_format(feedin_50hertz, technology=category,
-                                           nuts='50 Hertz')
-    feedin_50hertz_df = pd.concat([feedin_50hertz_df, feedin_50hertz])
-# todo: save wind and solar separately if you want to...
-feedin_50hertz_df.set_index('time').to_csv(os.path.join(
-    feedin_folder, 'feedin_50Hertz.csv'))
+###############################################################################
+# Get validation time series 50 Hertz and save together with feed-in for all years
+#
+# If you have calculated your time series above, you can start the script from here
+###############################################################################
 
-###############################################################################
-# Get validation time series 50 Hertz and save together with feed-in
-###############################################################################
+# get validation time series for all years
 val_feedin_50hertz = pd.DataFrame()
 for year in years:
-    # get validation time series
     val_feedin_year = val_data.load_feedin_data(categories, year, latest=True)
-    val_feedin_50hertz_year = val_feedin_year.loc[val_feedin_year['nuts'] == '50 Hertz']
-    val_feedin_50hertz = pd.concat([val_feedin_50hertz, val_feedin_50hertz_year])
+    val_feedin_50hertz_year = val_feedin_year.loc[
+        val_feedin_year['nuts'] == '50 Hertz']
+    val_feedin_50hertz = pd.concat(
+        [val_feedin_50hertz, val_feedin_50hertz_year])
 
-feedin_50hertz_df = pd.read_csv(os.path.join(
-    feedin_folder, 'feedin_50Hertz.csv'),
-    index_col=0, parse_dates=True).reset_index()
+# load feed-in and validation time series into one data frame
+for weather_data_name in weather_data_names:
+    for register_name in register_names:
+        # get calculated feed-in time series for all years
+        feedin_50hertz = pd.DataFrame()
+        for year in years:
+            filename_feedin = os.path.join(
+                feedin_folder, 'feedin_50Hz_{}_{}_{}.csv'.format(
+                    weather_data_name, register_name, year))
+            feedin_50hertz_year = pd.read_csv(filename_feedin,index_col=0,
+                                                parse_dates=True).reset_index()
+            feedin_50hertz = pd.concat([feedin_50hertz, feedin_50hertz_year])
 
-# join data frame in the form needed by
-# calculate_validation_metrics()
-validation_df = pd.merge(left=feedin_50hertz_df, right=val_feedin_50hertz,
-                         how='left', on=['time', 'technology', 'nuts'])
+        # join data frame in the form needed by
+        # calculate_validation_metrics()
+        validation_df = pd.merge(left=feedin_50hertz, right=val_feedin_50hertz,
+                                 how='left', on=['time', 'technology', 'nuts'])
 
-validation_df.set_index('time').to_csv(os.path.join(
-    feedin_folder, 'validation_df.csv'))
+        validation_df.set_index('time').to_csv(os.path.join(
+            feedin_folder, 'validation_df_{}_{}.csv'.format(
+                weather_data_name, register_name)))
+
