@@ -79,6 +79,9 @@ def calculate_feedin(year, register, regions, category,
 
     Other parameters
     ----------------
+    wind_technology : str (optional)
+        If exists: power plants get filtered by onshore ('onshore') and
+        offshore ('offshore') technology.
     todo parameters for windpowerlib modelchains, pvlib modelchain
 
     Returns
@@ -145,8 +148,8 @@ def calculate_feedin(year, register, regions, category,
                     installed_capacity = get_entsoe_capacity(
                         year=year, region=nut, category=category)
                 elif scale_to == '50 Hertz':
-                    installed_capacity = get_50hz_capacity(year=year,
-                                                           category=category)
+                    installed_capacity = get_50hz_capacity(
+                        year=year, category=category, **kwargs)
                     if not np.isnan(installed_capacity):
                         logging.info("Only 50 Hertz time series is scaled. Choose "
                                      "scale_to='entsoe' for other tso zones.")
@@ -228,7 +231,12 @@ def get_entsoe_capacity(year, region, category):
         return capacity * 10 ** 6
 
 
-def get_50hz_capacity(year, category):
+def get_50hz_capacity(year, category, **kwargs):
+    """
+
+    wind_technology : str (optional)
+        If exists: only onshore ('onshore') or offshore ('offshore') capacity.
+    """
     filename = os.path.join(os.path.dirname(__file__),
                             'data/installed_capacities',
                             'installed_capacities_bl_{}.csv'.format(
@@ -239,6 +247,11 @@ def get_50hz_capacity(year, category):
             'Sachsen [SN]', 'Mecklenburg-Vorpommern [MV]']
     try:
         capacity = df[str(year)][cols].sum()
+        wind_technology = kwargs.get('wind_technology', None)
+        if wind_technology == 'onshore':
+            capacity -= df[str(year)]['Offshore 50 Hz [O50Hz]']
+        elif wind_technology == 'offshore':
+            capacity = df[str(year)]['Offshore 50 Hz [O50Hz]']
         # capacity in W
         return capacity * 1000
     except KeyError:
@@ -376,8 +389,8 @@ def calculate_feedin_germany(year, categories,
         month_wise_capacities = False
         periods = False
         msg = "`commission_decommission` must be 'periods' or" \
-              "'month_wise_scaled_capacities' but is {}. \n commisson and " \
-              "decommission dates are therefore not considered."
+              "'month_wise_scaled_capacities' but is {}. \n neither periods " \
+              "nor monthwise capacities are considered."
         logging.warning(msg.format(commission_decommission))
     for category in categories:
         # get power plant register if register is not pd.DataFrame
@@ -391,15 +404,15 @@ def calculate_feedin_germany(year, categories,
         elif register_name == 'MaStR':
             if category in ['Wind', 'Solar']:
                 decom_20 = kwargs.get('decom_20', None)
-                wind_tech = kwargs.get('wind_technology', None)
-                if wind_tech == 'onshore':
-                    wind_technology = 'WindAnLand'
-                elif wind_tech == 'offshore':
-                    wind_technology = 'WindAufSee'
+                wind_technology = kwargs.get('wind_technology', None)
+                if wind_technology == 'onshore':
+                    wind_tech = 'WindAnLand'
+                elif wind_technology == 'offshore':
+                    wind_tech = 'WindAufSee'
                 register = mastr.get_mastr_pp_filtered_by_year(
                     energy_source=category, year=year,
                     month_wise_capacities=month_wise_capacities,
-                    decom_20=decom_20, wind_technology=wind_technology)  # todo: if not valid for pv split here
+                    decom_20=decom_20, wind_technology=wind_tech)  # todo: if not valid for pv split here
             else:
                 raise ValueError("Option 'MaStR' as `register_name` until "
                                  "now only available for `category` 'Wind'"
