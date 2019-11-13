@@ -111,7 +111,6 @@ def calculate_feedin(year, register, regions, category,
         kwargs['weather_locations'] = pd.DataFrame(
             kwargs['locations_dict']).transpose().rename(
             columns={0: 'lon', 1: 'lat'})
-        kwargs['year'] = year
 
     for nut in regions['nuts']:
         logging.info("Calculating feedin for {}".format(nut))
@@ -130,11 +129,11 @@ def calculate_feedin(year, register, regions, category,
                     distribution_dict=distribution_dict,
                     technical_parameters=pv_modules_set,
                     register=register_region,
-                    capacity_periods=periods, **kwargs)
+                    capacity_periods=periods, year=year, **kwargs)
             elif category == 'Wind':
                 feedin = region.Region(geom='no_geom',
                                        weather=weather_df, **kwargs).wind_feedin(
-                    register_region, capacity_periods=periods, **kwargs)
+                    register_region, capacity_periods=periods, year=year, **kwargs)
             elif category == 'Hydro':
                 raise ValueError("Hydro not working, yet.")
             else:
