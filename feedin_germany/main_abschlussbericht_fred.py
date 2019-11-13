@@ -67,7 +67,7 @@ for weather_data_name in weather_data_names:
                 debug_mode=debug_mode, wake_losses_model=wake_losses_model,
                 scale_to=scale_to, return_feedin=True, decom_20=decom_20,
                 wind_technology=wind_technology)
-            feedin.to_csv(os.path.join(
+            feedin.set_index('time').to_csv(os.path.join(
                 feedin_folder, 'feedin_50Hz_{}_{}_{}.csv'.format(
                     weather_data_name, register_name, year)))
 
