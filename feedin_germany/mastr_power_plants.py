@@ -180,7 +180,8 @@ def prepare_mastr_data(mastr_data, category, **kwargs):
             'InstallierteLeistung': 'capacity',
             'Leistungsbegrenzung': 'power_limitation',
         }, inplace=True)
-    mastr_data['capacity'] = mastr_data['capacity']
+    # capacity in W
+    mastr_data['capacity'] = mastr_data['capacity'] * 1000
     # prepare dates
     date_cols = ('commissioning_date', 'decommissioning_date')
     prepared_df = ppr_tools.prepare_dates(df=mastr_data, date_cols=date_cols,
