@@ -58,17 +58,18 @@ decom_20 = False  # If True, life time of power plant is 20 years
                  # (if com date is given, else: 2050). todo delete if not needed, or split if not wanted for pv in feedin.py l. 396
 wind_technology = 'onshore'  # or 'offshore' or not given at all. only works for wind
 
-for register_name in register_names:
-    for year in years:
-        feedin = f.calculate_feedin_germany(
-            year=year, categories=categories, regions='50 Hertz',  # note: uses ÜNB shape and selects 50 Hertz shape
-            register_name=register_name, weather_data_name='open_FRED',
-            debug_mode=debug_mode, wake_losses_model=wake_losses_model,
-            scale_to=scale_to, return_feedin=True, decom_20=decom_20,
-            wind_technology=wind_technology)
-        feedin.to_csv(os.path.join(
-            feedin_folder, 'feedin_Landkreise_{}_{}.csv'.format(
-                register_name, year)))  # todo: if we use more registers, weather, ... add to name
+for weather_data_name in weather_data_names:
+    for register_name in register_names:
+        for year in years:
+            feedin = f.calculate_feedin_germany(
+                year=year, categories=categories, regions='50 Hertz',  # note: uses ÜNB shape and selects 50 Hertz shape
+                register_name=register_name, weather_data_name=weather_data_name,
+                debug_mode=debug_mode, wake_losses_model=wake_losses_model,
+                scale_to=scale_to, return_feedin=True, decom_20=decom_20,
+                wind_technology=wind_technology)
+            feedin.to_csv(os.path.join(
+                feedin_folder, 'feedin_50Hz_{}_{}_{}.csv'.format(
+                    weather_data_name, register_name, year)))
 
 
 ###############################################################################
