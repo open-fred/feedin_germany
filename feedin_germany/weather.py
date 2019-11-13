@@ -17,11 +17,13 @@ def get_weather_data_germany(year, weather_data_name, format_):
         Path to where weather data csv files are located.
     """
     if weather_data_name == 'ERA5':
-        filename = os.path.join(settings.weather_data_path,
+        filename = os.path.join(settings.era5_path,
                                 'era5_wind_ger_{}.csv'.format(year))
         if format_ == 'windpowerlib':
-            weather_df = pd.read_csv(filename, header=[0, 1],
-                                     index_col=[0, 1, 2], parse_dates=True)
+            chunks = pd.read_csv(filename, header=[0, 1],
+                                     index_col=[0, 1, 2], parse_dates=True,
+                                     chunksize=100000)
+            weather_df = pd.concat(chunks)
             weather_df.rename(columns={'wind speed': 'wind_speed'},
                               inplace=True)  # todo delete after fix in era5
             # change type of height from str to int by resetting columns

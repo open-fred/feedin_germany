@@ -251,7 +251,8 @@ def get_mastr_pp_filtered_by_year(energy_source, year,
             filtered_register, turbine_type_col='new_turbine_type',
             hub_height_col='new_hub_height',
             rotor_diameter_col='new_rotor_diameter')
-        # exchange nan in 'turbine_type' column with new turbine type
+        # exchange turbine types without power curve (has_power_curve = False)
+        # in 'turbine_type' column with new turbine type
         # (by windzone) and adapt rotor diameter and hub height
         indices = filtered_register['turbine_type'].loc[
             filtered_register['has_power_curve'] == False].index
