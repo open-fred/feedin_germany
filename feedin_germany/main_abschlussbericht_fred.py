@@ -136,3 +136,23 @@ for weather_data_name in weather_data_names:
             feedin_folder, 'validation_df_{}_{}.csv'.format(
                 weather_data_name, register_name)))
 
+###############################################################################
+# calculate metrics and save to file (for each register and each weather data)
+###############################################################################
+
+if not os.path.exists(feedin_folder):
+    os.makedirs(feedin_folder, exist_ok=True)
+for weather_data_name in weather_data_names:
+    for register_name in register_names:
+        # load validation data frame
+        val_filename = os.path.join(feedin_folder, 'validation_df_{}_{}.csv'.format(
+            weather_data_name, register_name))
+        validation_df = pd.read_csv(val_filename, parse_dates=True, index_col=0)
+        filename = os.path.join(
+            feedin_folder, 'validation_metrics_50Hz_{reg}_{weather}.csv'.format(
+                reg=register_name, weather=weather_data_name))
+        val_tools.calculate_validation_metrics(
+            df=validation_df,
+            val_cols=['feedin', 'feedin_val'], metrics='standard',
+            filter_cols=['nuts', 'technology'],
+            filename=filename)
