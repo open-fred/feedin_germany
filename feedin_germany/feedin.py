@@ -233,6 +233,7 @@ def get_entsoe_capacity(year, region, category):
 
 def get_50hz_capacity(year, category, **kwargs):
     """
+    50 Hz installed capacity in W 
 
     wind_technology : str (optional)
         If exists: only onshore ('onshore') or offshore ('offshore') capacity.
@@ -253,7 +254,7 @@ def get_50hz_capacity(year, category, **kwargs):
         elif wind_technology == 'offshore':
             capacity = df[str(year)]['Offshore 50 Hz [O50Hz]']
         # capacity in W
-        return capacity * 1000
+        return capacity * 10 ** 6
     except KeyError:
         return np.nan
 
