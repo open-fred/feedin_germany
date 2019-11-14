@@ -335,6 +335,11 @@ def prepare_opsd_file(overwrite):
 
     ppr_tools.prepare_dates(df=df, date_cols=date_cols)
 
+    df['commissioning_date'] = pd.to_datetime(
+        df['commissioning_date'], utc=True)
+    df['decommissioning_date'] = pd.to_datetime(
+        df['decommissioning_date'], utc=True)
+
     # capacity in W
     df['capacity'] = df['capacity'] * (10 ** 6)
 
