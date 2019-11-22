@@ -28,6 +28,7 @@ def get_weather_data_germany(year, weather_data_name, format_):
             l0 = [_[0] for _ in weather_df.columns]
             l1 = [int(_[1]) for _ in weather_df.columns]
             weather_df.columns = [l0, l1]
+            weather_df.index.set_names(['time', 'lat', 'lon'], inplace=True)
             # # set time zone to UTC
             # weather_df.index = weather_df.index.set_levels(
             #     weather_df.index.levels[0].tz_localize('UTC'), level=0)
@@ -35,9 +36,10 @@ def get_weather_data_germany(year, weather_data_name, format_):
             filename = os.path.join(settings.era5_path,
                                     'era5_pv_50Hz_{}.csv'.format(year))
             chunks = pd.read_csv(filename, header=[0],
-                                 index_col=[0], parse_dates=True,
+                                 index_col=[0, 1, 2], parse_dates=True,
                                  chunksize=100000)
             weather_df = pd.concat(chunks)
+            weather_df.index.set_names(['time', 'lat', 'lon'], inplace=True)
     elif weather_data_name == 'open_FRED':
         weather_df = load_open_fred_pkl
     return weather_df
