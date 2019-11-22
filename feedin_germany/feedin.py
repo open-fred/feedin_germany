@@ -233,6 +233,7 @@ def get_entsoe_capacity(year, region, category):
 
 def get_50hz_capacity(year, category, **kwargs):
     """
+    50 Hz installed capacity in W 
 
     wind_technology : str (optional)
         If exists: only onshore ('onshore') or offshore ('offshore') capacity.
@@ -253,7 +254,7 @@ def get_50hz_capacity(year, category, **kwargs):
         elif wind_technology == 'offshore':
             capacity = df[str(year)]['Offshore 50 Hz [O50Hz]']
         # capacity in W
-        return capacity * 1000
+        return capacity * 10 ** 6
     except KeyError:
         return np.nan
 
@@ -396,11 +397,15 @@ def calculate_feedin_germany(year, categories,
         # get power plant register if register is not pd.DataFrame
         if isinstance(register_name, pd.DataFrame):
             register = register_name  # possible todo: check if right format
-        elif register_name == 'opsd':
+        elif register_name == 'opsd': # todo onshore offshore?
             keep_cols = ['lat', 'lon', 'commissioning_date', 'capacity',
-                         'technology']  # technology needed for offshore wind
+                         'technology', 'decommissioning_date']  # technology needed for offshore wind
             register = opsd.filter_pp_by_source_and_year(year, category,
                                                          keep_cols=keep_cols)
+            wind_technology = kwargs.get('wind_technology', None)
+            if wind_technology:
+                register = register.loc[
+                    register['technology'] == 'O{}'.format(wind_technology[1:])]
         elif register_name == 'MaStR':
             if category in ['Wind', 'Solar']:
                 decom_20 = kwargs.get('decom_20', None)
