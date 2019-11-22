@@ -17,15 +17,13 @@ def get_weather_data_germany(year, weather_data_name, format_):
         Path to where weather data csv files are located.
     """
     if weather_data_name == 'ERA5':
-        filename = os.path.join(settings.era5_path,
-                                'era5_wind_ger_{}.csv'.format(year))
         if format_ == 'windpowerlib':
+            filename = os.path.join(settings.era5_path,
+                                    'era5_wind_50Hz_{}.csv'.format(year))
             chunks = pd.read_csv(filename, header=[0, 1],
                                      index_col=[0, 1, 2], parse_dates=True,
                                      chunksize=100000)
             weather_df = pd.concat(chunks)
-            weather_df.rename(columns={'wind speed': 'wind_speed'},
-                              inplace=True)  # todo delete after fix in era5
             # change type of height from str to int by resetting columns
             l0 = [_[0] for _ in weather_df.columns]
             l1 = [int(_[1]) for _ in weather_df.columns]
@@ -34,8 +32,12 @@ def get_weather_data_germany(year, weather_data_name, format_):
             weather_df.index = weather_df.index.set_levels(
                 weather_df.index.levels[0].tz_localize('UTC'), level=0)
         elif format_ == 'pvlib':
-            weather_df = pd.read_csv(filename, header=[0, 1],
-                                     index_col=0, parse_dates=True)
+            filename = os.path.join(settings.era5_path,
+                                    'era5_pv_50Hz_{}.csv'.format(year))
+            chunks = pd.read_csv(filename, header=[0],
+                                 index_col=[0], parse_dates=True,
+                                 chunksize=100000)
+            weather_df = pd.concat(chunks)
     elif weather_data_name == 'open_FRED':
         weather_df = load_open_fred_pkl
     return weather_df
