@@ -403,7 +403,7 @@ def calculate_feedin_germany(year, categories,
             register = opsd.filter_pp_by_source_and_year(year, category,
                                                          keep_cols=keep_cols)
             wind_technology = kwargs.get('wind_technology', None)
-            if wind_technology:
+            if wind_technology and category == 'Wind':
                 register = register.loc[
                     register['technology'] == 'O{}'.format(wind_technology[1:])]
         elif register_name == 'MaStR':
