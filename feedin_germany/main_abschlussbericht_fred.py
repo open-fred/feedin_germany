@@ -45,6 +45,7 @@ weather_data_names = [
 # windpowerlib parameters
 wake_losses_model = 'dena_mean'
 smoothing = True  # todo: compare time series with and without smoothing?!
+pv_losses_model = 'pvwatts'
 
 ###############################################################################
 # Calculate feed-in time series for "Landkreise" in 50 Hertz tso zone
@@ -66,7 +67,8 @@ for weather_data_name in weather_data_names:
                 register_name=register_name, weather_data_name=weather_data_name,
                 debug_mode=debug_mode, wake_losses_model=wake_losses_model,
                 scale_to=scale_to, return_feedin=True, decom_20=decom_20,
-                wind_technology=wind_technology, smoothing=smoothing)
+                wind_technology=wind_technology, smoothing=smoothing,
+                pv_losses_model=pv_losses_model)
             feedin.set_index('time').to_csv(os.path.join(
                 feedin_folder, 'feedin_50Hz_{}_{}_{}.csv'.format(
                     weather_data_name, register_name, year)))
