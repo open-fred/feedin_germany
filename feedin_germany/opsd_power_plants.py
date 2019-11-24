@@ -298,7 +298,11 @@ def prepare_opsd_file(overwrite):
     if os.path.isfile(prepared_filename):
         logging.warning("OPSD prepared-register already exists and is loaded "
                         "from csv")
-        df = pd.read_csv(prepared_filename)
+        df = pd.read_csv(prepared_filename, index_col=[0])
+        df['commissioning_date'] = pd.to_datetime(
+            df['commissioning_date'], utc=True)
+        df['decommissioning_date'] = pd.to_datetime(
+            df['decommissioning_date'], utc=True)
         return df
 
     if not os.path.exists(opsd_directory):
