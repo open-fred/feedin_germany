@@ -62,6 +62,9 @@ wind_technology = 'onshore'  # or 'offshore' or not given at all. only works for
 for weather_data_name in weather_data_names:
     for register_name in register_names:
         for year in years:
+            print('Calculating feed-in for weather dataset {}, year {} and'
+                  'power plant register {}.'.format(
+                weather_data_name, year, register_name))
             feedin = f.calculate_feedin_germany(
                 year=year, categories=categories, regions='50 Hertz',  # note: uses ÜNB shape and selects 50 Hertz shape
                 register_name=register_name, weather_data_name=weather_data_name,
