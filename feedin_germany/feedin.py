@@ -237,6 +237,7 @@ def get_50hz_capacity(year, category, **kwargs):
 
     wind_technology : str (optional)
         If exists: only onshore ('onshore') or offshore ('offshore') capacity.
+
     """
     filename = os.path.join(os.path.dirname(__file__),
                             'data/installed_capacities',
@@ -249,9 +250,9 @@ def get_50hz_capacity(year, category, **kwargs):
     try:
         capacity = df[str(year)][cols].sum()
         wind_technology = kwargs.get('wind_technology', None)
-        if wind_technology == 'onshore':
+        if category == 'Wind' and wind_technology == 'onshore':
             capacity -= df[str(year)]['Offshore 50 Hz [O50Hz]']
-        elif wind_technology == 'offshore':
+        elif category == 'Wind' and wind_technology == 'offshore':
             capacity = df[str(year)]['Offshore 50 Hz [O50Hz]']
         # capacity in W
         return capacity * 10 ** 6
