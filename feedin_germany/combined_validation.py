@@ -44,8 +44,8 @@ weather_data_names = [
 ]
 
 smoothing = [
-    'True',
-    'False'
+    True,
+    False
 ]
 
 # folder structure
@@ -76,7 +76,7 @@ for year in years:
 for category in categories:
     combined_df = pd.DataFrame()
     for smooth in smoothing:
-        if category == 'Solar' and smooth == 'True':
+        if category == 'Solar' and smooth:
             pass
         else:
             for weather_data_name in weather_data_names:
@@ -85,7 +85,7 @@ for category in categories:
                     feedin_50hertz = pd.DataFrame()
                     for year in years:
                         if category == 'Wind':
-                            if smooth == 'True':
+                            if smooth:
                                 add_on = '_smoothed'
                             else:
                                 add_on = ''
