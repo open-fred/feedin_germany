@@ -49,7 +49,7 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         # drop nans
         df.dropna(inplace=True)
     if metrics == 'standard':
-        metrics = ['rmse_norm', 'mean_bias', 'rmse_norm_bias_corrected',
+        metrics = ['rmse_norm', 'rmse_norm_bias_corrected', 'mean_bias',
                    'pearson', 'time_step_amount']
     if filter_cols:
         metrics_df = pd.DataFrame()
