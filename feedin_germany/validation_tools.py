@@ -1,6 +1,7 @@
 # imports
 import numpy as np
 import pandas as pd
+from pvlib.location import Location
 
 # possible todos
 #     Möglichkeit metrics für versch. Perioden zu berechnen: Jahr, Monat, Woche..
@@ -226,6 +227,21 @@ def get_pearson_s_r(df, min_periods=None):
     """
     return df.corr(method='pearson', min_periods=min_periods).iloc[1, 0]
 
+
+def pv_feedin_drop_night_times(feedin_df, lat, lon):
+    """
+    Drops night time values of PV feed-in.
+
+    :param feedin_df: index needs to be time zone aware
+    :param lat:
+    :param lon:
+    :return: feedin_df with dropped night time steps
+    """
+    tz = feedin_df.index.tz
+    location = Location(latitude=lat, longitude=lon, tz=tz)
+    solar_position = location.get_solarposition(feedin_df.index)
+    ind = solar_position[solar_position['zenith'] < 90].index
+    return feedin_df.loc[ind]
 
 def resample_with_nan_theshold(df, frequency, threshold):
     """
