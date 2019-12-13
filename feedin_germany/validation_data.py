@@ -100,9 +100,9 @@ def load_feedin_data(categories, year, latest=True, onshore=True):
 
             if len(categories) > 1:
                 pass
-            else: return val_data_pv
+            else:
+                return val_data_pv
 
-    
         if category == 'Wind':
             if onshore:
                 add_on = '_onshore'

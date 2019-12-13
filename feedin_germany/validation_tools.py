@@ -243,6 +243,7 @@ def pv_feedin_drop_night_times(feedin_df, lat, lon):
     ind = solar_position[solar_position['zenith'] < 90].index
     return feedin_df.loc[ind]
 
+
 def resample_with_nan_theshold(df, frequency, threshold):
     """
 

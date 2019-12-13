@@ -260,7 +260,6 @@ def get_50hz_capacity(year, category, **kwargs):
         return np.nan
 
 
-
 def calculate_feedin_germany(year, categories,
                              regions='tso', register_name='opsd',
                              weather_data_name='open_FRED',
