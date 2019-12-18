@@ -50,6 +50,7 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         df.dropna(inplace=True)
     if metrics == 'standard':
         metrics = ['rmse_norm', 'rmse_norm_bias_corrected', 'mean_bias',
+                   'rmse',
                    'pearson', 'time_step_amount']
     if filter_cols:
         metrics_df = pd.DataFrame()
@@ -118,6 +119,11 @@ def get_metric(metric, validation_data, val_cols):
             simulation_series=validation_data[val_cols[0]],
             validation_series=validation_data[val_cols[1]], normalized=True,
             bias_corrected=True)[0]
+    elif metric == 'rmse':
+        metric_value = get_rmse(
+            simulation_series=validation_data[val_cols[0]],
+            validation_series=validation_data[val_cols[1]], normalized=False,
+            bias_corrected=False)
     elif metric == 'standard_deviation_simulation_results':
         metric_value = get_standard_deviation(validation_data[val_cols[0]])
     elif metric == 'standard_deviation_validation_data':
