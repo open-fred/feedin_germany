@@ -156,3 +156,99 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None):
            label=label1, color='b')
 
 
+    # ERA5
+    ax.bar(bins.mid - freq / 4, -calc_data_2_density, width=freq/2,
+           label=label2, color='r')
+    ax.bar(bins.mid + freq / 4, -val_data_density, width=freq/2, color='c')
+
+    plt.grid(True, alpha=0.5)
+    plt.xlabel('Feed-in in GW')
+    plt.ylabel('Probability')
+    ax.legend()
+
+    ax.set_xlim(0, math.ceil(validation_df.max().max()))
+    max_density = max(calc_data_1_density.max(),
+                        calc_data_2_density.max(),
+                        val_data_density.max())
+    ylim = round(max_density*1.1, 2)
+    ax.set_ylim(-ylim, ylim)
+
+    yticks = np.arange(start=0, stop=ylim, step=np.round(ylim / 5, 2))
+    ax.set_yticks(np.round(np.append(yticks, -yticks[1:]), 2))
+    ax.set_yticklabels([str(abs(x)) for x in ax.get_yticks()])
+
+
+    if filename is not None:
+        plt.savefig(filename + '.png')
+        plt.savefig(filename + '.pdf')
+        plt.close()
+    else:
+        plt.show()
+
+
+if __name__ == "__main__":
+
+    years = [2016, 2017]
+    category = 'Wind'
+    freq = 0.5
+    setting = 'smoothing' # 'ramps', 'smoothing'
+    weather_data_names = ['open_FRED', 'open_FRED_smoothed']
+    register_name = 'MaStR'
+    filename = 'histogram_{}_{}_compare_smoothing'.format(category, register_name)
+
+    from feedin_germany import validation_data as val_data
+    from feedin_germany import settings
+    settings.init()  # note: set your paths in settings.py
+    feedin_folder = settings.path_wam_ezr
+
+    # get validation time series for all years
+    val_feedin_50hertz = pd.DataFrame()
+    for year in years:
+        val_feedin_year = val_data.load_feedin_data([category], year,
+                                                    latest=True)
+        val_feedin_50hertz_year = val_feedin_year.loc[
+            val_feedin_year['nuts'] == '50 Hertz']
+        val_feedin_50hertz = pd.concat(
+            [val_feedin_50hertz, val_feedin_50hertz_year])
+
+    validation_df = val_feedin_50hertz
+    for weather_data_name in weather_data_names:
+        feedin_50hertz = pd.DataFrame()
+        for year in years:
+            filename_feedin = os.path.join(
+                feedin_folder, category, 'feedin_50Hz_{}_{}_{}.csv'.format(
+                    weather_data_name, register_name, year))
+            feedin_50hertz_year = pd.read_csv(filename_feedin, index_col=0,
+                                              parse_dates=True).reset_index()
+            feedin_50hertz = pd.concat([feedin_50hertz, feedin_50hertz_year])
+        feedin_50hertz = feedin_50hertz.rename(
+            columns={'feedin': 'feedin_{}'.format(weather_data_name)})
+        validation_df = pd.merge(left=validation_df, right=feedin_50hertz,
+                                 how='left', on=['time', 'technology', 'nuts'])
+
+    if category is 'Solar':
+        # filter night time values
+        lat = 52.456032
+        lon = 13.525282
+        validation_df = pv_feedin_drop_night_times(
+            validation_df.set_index('time'), lat=lat, lon=lon)
+    else:
+        validation_df.set_index('time', inplace=True)
+
+    # plots for only one weather data set
+    #special_histogram(validation_df)
+    #histogram(validation_df)
+    #simple_histogram(validation_df)
+
+    # calculate ramp
+    ind_2 = validation_df.index - pd.Timedelta(hours=1)
+    cols = ['feedin_{}'.format(_) for _ in weather_data_names]
+    cols.append('feedin_val')
+    for col in cols:
+        validation_df['ramp_{}'.format(col)] = \
+            validation_df.loc[:, col].values - \
+            validation_df.loc[ind_2, col].values
+    # plot for both weather data sets
+    histogram(validation_df, filename=None, freq=freq, setting=setting)
+
+    #plot_capacities()
