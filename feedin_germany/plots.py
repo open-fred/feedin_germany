@@ -8,7 +8,7 @@ from feedin_germany.validation_tools import pv_feedin_drop_night_times
 
 def plot_correlation(df, val_cols, filename='Tests/correlation_test.pdf',
                      title=None, xlabel=None, ylabel=None, color='darkblue',
-                     marker_size=3):
+                     marker_size=3, metrics=None, maximum=None):
     r"""
     Visualize the correlation between two feedin time series.
 
@@ -16,9 +16,7 @@ def plot_correlation(df, val_cols, filename='Tests/correlation_test.pdf',
     ----------
     df : pd.DataFrame
         Contains simulation results and validation data in the columns as
-        specified in `val_cols`. May include other columns which are filtered
-        with column names as specified in `filter_cols` or other columns which
-        will be ignored.
+        specified in `val_cols`.
     val_cols : list of strings
         Contains columns names of (1) time series to be validated and (2)
         validation time series in the form [(1), (2)].
@@ -38,7 +36,8 @@ def plot_correlation(df, val_cols, filename='Tests/correlation_test.pdf',
         plt.ylabel(ylabel)
 
     # Maximum value for xlim and ylim and line
-    maximum = max(df.iloc[:, 0].max(), df.iloc[:, 1].max())
+    if maximum is None:
+        maximum = max(data.iloc[:, 0].max(), data.iloc[:, 1].max())
     plt.xlim(xmin=0, xmax=maximum)
     plt.ylim(ymin=0, ymax=maximum)
     ideal, = plt.plot([0, maximum], [0, maximum], color='black',
@@ -50,19 +49,49 @@ def plot_correlation(df, val_cols, filename='Tests/correlation_test.pdf',
         plt.title(title)
     plt.legend(handles=[ideal, deviation_100])
     # Add certain values to plot as text
-    # plt.annotate(
-    #     'RMSE = {0} \n Pr = {1} \n mean bias = {2}{3} \n std dev = {4}'.format(
-    #         round(validation_object.rmse, 2),
-    #         round(validation_object.pearson_s_r, 2),
-    #         round(validation_object.mean_bias, 2), 'MW',
-    #         round(validation_object.standard_deviation, 2)) + 'MW',
-    #     xy=(1, 1), xycoords='axes fraction',
-    #     xytext=(-6, -6), textcoords='offset points',
-    #     ha='right', va='top', bbox=dict(facecolor='white', alpha=0.5))
+    if metrics:
+        annotation_str = ''.join(['{met} = {val} \n '.format(
+            met=item, val=metrics[item]) for item in metrics])[0:-3]
+        # annotation_str = ''.join(['{met} &= {val} \\ '.format(
+        #     met=item, val=metrics[item]) for item in metrics])[0:-3]
+        # annotation_str_aligned = '$\begin{align}' + annotation_str + '\end{align}$'
+
+        plt.annotate(
+            annotation_str,
+            xy=(1, 0),  # x and y axis - for right lower corner (1, 0)
+            xycoords='axes fraction',
+            xytext=(-6, +6), textcoords='offset points',
+            ha='right', va='bottom', bbox=dict(facecolor='white', alpha=0.5))
     plt.tight_layout()
     fig.savefig(filename)
     plt.close()
 
+
+def box_plots_bias(df, filename='Tests/test.pdf', title='Test'):
+    r"""
+    Creates boxplots of the columns of a DataFrame.
+
+    This function is mainly used for creating boxplots of the biases of time
+    series.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Columns contain Series to be plotted as Box plots.
+    filename : String
+        Filename including path relatively to the active folder for saving
+        the figure. Default: 'Tests/test.pdf'.
+    title : String
+        Title of figure. Default: 'Test'.
+
+    """
+    fig = plt.figure()
+    g = sns.boxplot(data=df, palette='Set3')
+    g.set_ylabel('Deviation in MW')
+    g.set_title(title)
+    fig.savefig(os.path.abspath(os.path.join(
+                os.path.dirname(__file__), filename)))
+    plt.close()
 
 def histogram(validation_df, filename=None, freq=0.5, setting=None):
     """
@@ -127,123 +156,3 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None):
            label=label1, color='b')
 
 
-    # ERA5
-    ax.bar(bins.mid - freq / 4, -calc_data_2_density, width=freq/2,
-           label=label2, color='r')
-    ax.bar(bins.mid + freq / 4, -val_data_density, width=freq/2, color='c')
-
-    plt.grid(True, alpha=0.5)
-    plt.xlabel('Feed-in in GW')
-    plt.ylabel('Probability')
-    ax.legend()
-
-    ax.set_xlim(0, 3)#math.ceil(validation_df.max().max()))
-    max_density = max(calc_data_1_density.max(),
-                        calc_data_2_density.max(),
-                        val_data_density.max())
-    ylim = round(max_density*1.1, 2)
-    ax.set_ylim(-ylim, ylim)
-
-    yticks = np.arange(start=0, stop=ylim, step=np.round(ylim / 5, 2))
-    ax.set_yticks(np.round(np.append(yticks, -yticks[1:]), 2))
-    ax.set_yticklabels([str(abs(x)) for x in ax.get_yticks()])
-
-    if filename is not None:
-        plt.savefig(filename + '.png')
-        plt.savefig(filename + '.pdf')
-        plt.close()
-    else:
-        plt.show()
-
-
-def plot_capacities():
-    cap_2016 = pd.DataFrame(
-        {'BNetzA': [16.8, 9.92],
-         'MaStR': [18.52, 12.89],
-         'OPSD': [21.62, 10.42]},
-        index=['Wind', 'PV']
-    )
-    cap = pd.DataFrame(
-        {'BNetzA': [17.93, 10.47],
-         'MaStR': [20.29, 13.45],
-         'OPSD': [21.94, 10.49]},
-        index=['Wind', 'PV']
-    )
-    cap_all = pd.DataFrame(
-        {'BNetzA': [16.8, 17.93, 9.92, 10.47],
-         'MaStR': [18.52, 20.29, 12.89, 13.45],
-         'OPSD': [21.62, 21.94, 10.42, 10.49]},
-        index=[('Wind', 2016), ('Wind', 2017), ('PV', 2016), ('PV', 2017)]
-    )
-    cap.plot.bar(rot=0, color=['c', 'b', 'r'])
-    plt.ylabel('Installed capacity in GW')
-    #plt.show()
-    plt.savefig('installed_capacities.png')
-
-
-if __name__ == "__main__":
-
-    years = [2016, 2017]
-    category = 'Wind'
-    freq = 0.1
-    setting = 'ramps' # 'ramps', 'smoothing'
-    weather_data_names = ['open_FRED', 'ERA5']
-    register_name = 'MaStR'
-    filename = 'histogram_{}_{}_compare_ramps'.format(category, register_name)
-
-    from feedin_germany import validation_data as val_data
-    from feedin_germany import settings
-    settings.init()  # note: set your paths in settings.py
-    feedin_folder = settings.path_wam_ezr
-
-    # get validation time series for all years
-    val_feedin_50hertz = pd.DataFrame()
-    for year in years:
-        val_feedin_year = val_data.load_feedin_data([category], year,
-                                                    latest=True)
-        val_feedin_50hertz_year = val_feedin_year.loc[
-            val_feedin_year['nuts'] == '50 Hertz']
-        val_feedin_50hertz = pd.concat(
-            [val_feedin_50hertz, val_feedin_50hertz_year])
-
-    validation_df = val_feedin_50hertz
-    for weather_data_name in weather_data_names:
-        feedin_50hertz = pd.DataFrame()
-        for year in years:
-            filename_feedin = os.path.join(
-                feedin_folder, category, 'feedin_50Hz_{}_{}_{}.csv'.format(
-                    weather_data_name, register_name, year))
-            feedin_50hertz_year = pd.read_csv(filename_feedin, index_col=0,
-                                              parse_dates=True).reset_index()
-            feedin_50hertz = pd.concat([feedin_50hertz, feedin_50hertz_year])
-        feedin_50hertz = feedin_50hertz.rename(
-            columns={'feedin': 'feedin_{}'.format(weather_data_name)})
-        validation_df = pd.merge(left=validation_df, right=feedin_50hertz,
-                                 how='left', on=['time', 'technology', 'nuts'])
-
-    if category is 'Solar':
-        # filter night time values
-        lat = 52.456032
-        lon = 13.525282
-        validation_df = pv_feedin_drop_night_times(
-            validation_df.set_index('time'), lat=lat, lon=lon)
-    else:
-        validation_df.set_index('time', inplace=True)
-
-    # plots for only one weather data set
-    #special_histogram(validation_df)
-    #histogram(validation_df)
-    #simple_histogram(validation_df)
-
-    # calculate ramp
-    ind_2 = validation_df.index - pd.Timedelta(hours=1)
-    cols = ['feedin_{}'.format(_) for _ in weather_data_names]
-    cols.append('feedin_val')
-    for col in cols:
-        validation_df['ramp_{}'.format(col)] = \
-            validation_df.loc[:, col].values - \
-            validation_df.loc[ind_2, col].values
-    # plot for both weather data sets
-    histogram(validation_df, filename, freq=freq, setting=setting)
-
-    #plot_capacities()

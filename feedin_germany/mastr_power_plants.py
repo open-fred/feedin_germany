@@ -246,6 +246,15 @@ def get_mastr_pp_filtered_by_year(energy_source, year,
         filtered_register['has_power_curve'] = filtered_register[
             'turbine_type'].apply(lambda x: True if x in list(
             types_with_power_curve) else False)
+        # amount of turbines with power curve from wind_turbine_library
+        register_with_pc = filtered_register['turbine_type'].loc[
+            filtered_register['has_power_curve'] == True]
+        print("amount of turbines with power curve from wind_turbine_library: {}".format(len(register_with_pc)))
+        register_without_pc = filtered_register['turbine_type'].loc[
+            filtered_register['has_power_curve'] == False]
+        sum = len(register_with_pc) + len(register_without_pc)
+        print("Number of all turbines: {} --- {}".format(len(filtered_register), sum))
+        print("turbines without pc {}".format(len(register_without_pc)))
         # add turbine types by wind zone in new column
         filtered_register = opsd.assign_turbine_data_by_wind_zone(
             filtered_register, turbine_type_col='new_turbine_type',
