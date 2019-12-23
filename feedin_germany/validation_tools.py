@@ -153,10 +153,42 @@ def get_metric(metric, validation_data, val_cols, **kwargs):
         metric_value = get_pearson_s_r(df=validation_data, min_periods=None)  # todo min periods
     elif metric == 'time_step_amount':
         metric_value = len(validation_data)
+    elif metric == 'energy_yield_deviation':
+        metric_value = get_energy_yield_deviation(
+            simulation_series=validation_data[val_cols[0]],
+            validation_series=validation_data[val_cols[1]])
     else:
         raise ValueError("Metric {} not added, yet.".format(metric))
 
     return metric_value
+
+
+def get_energy_yield_deviation(simulation_series, validation_series):
+    r"""
+    Calculates energy yield deviation of simulation from validation series.
+
+    Parameters
+    ----------
+    simulation_series : pd.Series
+        Simulated feed-in time series.
+    validation_series : pd.Series
+        Validation feed-in time series. Must have the same frequency as
+        `simulation_series`.
+
+    Notes
+    -----
+    Attention: `simulation_series` and `validation_series` time series must
+    have the same frequency as this function does not calculate the energy
+    yield but just sums up the power output of one year.
+
+    Returns
+    -------
+    deviation : float
+        Deviation from the energy yield in %.
+
+    """
+    return ((simulation_series.sum() - validation_series.sum()) /
+            validation_series.sum() * 100)
 
 
 def get_standard_deviation(data_series):
