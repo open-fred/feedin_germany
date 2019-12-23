@@ -93,7 +93,8 @@ def box_plots_bias(df, filename='Tests/test.pdf', title='Test'):
                 os.path.dirname(__file__), filename)))
     plt.close()
 
-def histogram(validation_df, filename=None, freq=0.5, setting=None):
+def histogram(validation_df, filename=None, freq=0.5, setting=None, unit='GW',
+              unit_factor=1e9):
     """
     Histogram for calculated and validation data for two calculated time
     series, one on positive and one on negative y-axis.
@@ -109,6 +110,12 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None):
         Bin width.
     setting : str or None
         Specifies which columns are used and how to label them.
+    unit : str
+        Used for labels. Default: 'GW'.
+    unit_factor : float
+        To adapt the unit of metrics like RMSE, bias, ... (that are not in unit
+        %) the metrics will be devided by this factor. Example: time series in
+        W, desired unit of metrics GW --> `unit_factor` = 1e9. Default: 1e9
 
     """
 
@@ -118,9 +125,15 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None):
         val_col = 'feedin_val'
         label1 = 'open_FRED'
         label2 = 'ERA5'
-    elif setting == 'smoothing':
+    elif setting == 'smoothing_1':
         col1 = 'feedin_open_FRED'
         col2 = 'feedin_open_FRED_smoothed'
+        val_col = 'feedin_val'
+        label1 = 'calculated feed-in (not smoothed)'
+        label2 = 'calculated feed-in (smoothed)'
+    elif setting == 'smoothing_2':
+        col1 = 'feedin_ERA5'
+        col2 = 'feedin_ERA5_smoothed'
         val_col = 'feedin_val'
         label1 = 'calculated feed-in (not smoothed)'
         label2 = 'calculated feed-in (smoothed)'
@@ -132,7 +145,7 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None):
         label2 = 'ERA5'
 
     validation_df = validation_df.loc[
-                    :, [col1, col2, val_col]] / 1e9
+                    :, [col1, col2, val_col]] / unit_factor
     bins = pd.interval_range(start=0.0,
                              end=math.ceil(validation_df.max().max()),
                              closed='left', freq=freq)
@@ -162,7 +175,7 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None):
     ax.bar(bins.mid + freq / 4, -val_data_density, width=freq/2, color='c')
 
     plt.grid(True, alpha=0.5)
-    plt.xlabel('Feed-in in GW')
+    plt.xlabel('Feed-in in {}'.format(unit))
     plt.ylabel('Probability')
     ax.legend()
 
