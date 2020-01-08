@@ -64,6 +64,7 @@ def plot_correlation(df, val_cols, filename='Tests/correlation_test.pdf',
             ha='right', va='bottom', bbox=dict(facecolor='white', alpha=0.5))
     plt.tight_layout()
     fig.savefig(filename)
+    fig.savefig(filename.replace('png', 'pdf'))
     plt.close()
 
 
@@ -262,6 +263,8 @@ if __name__ == "__main__":
             validation_df.loc[:, col].values - \
             validation_df.loc[ind_2, col].values
     # plot for both weather data sets
-    histogram(validation_df, filename=None, freq=freq, setting=setting)
+    histogram(validation_df, filename=os.path.join(feedin_folder, 'plots',
+                                                   filename),
+              freq=freq, setting=setting)
 
     #plot_capacities()
