@@ -41,8 +41,10 @@ def load_feedin_data(categories, year, latest=True, onshore=True):
         For description of further columns see
         https://data.open-power-system-data.org/renewable_power_plants/.
     """
-    filename = os.path.join(os.path.dirname(__file__), 'data/validation',
-                            'tso_feedin_{}.csv'.format(year))
+    val_dir = os.path.join(os.path.dirname(__file__), 'data/validation')
+    if not os.path.exists(val_dir):
+        os.makedirs(val_dir, exist_ok=True)
+    filename = os.path.join(val_dir, 'tso_feedin_{}.csv'.format(year))
 
     if os.path.exists(filename):
         df_agg = pd.read_csv(filename)
