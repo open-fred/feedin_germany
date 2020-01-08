@@ -58,7 +58,7 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         df.dropna(inplace=True)
     if metrics == 'standard':
         metrics = ['rmse_norm', 'rmse_norm_bias_corrected', 'mean_bias',
-                   'rmse',
+                   'rmse', 'energy_yield_deviation',
                    'pearson', 'time_step_amount']
     if filter_cols:
         metrics_df = pd.DataFrame()
