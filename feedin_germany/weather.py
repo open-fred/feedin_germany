@@ -15,6 +15,8 @@ def get_weather_data_germany(year, weather_data_name, format_):
         Options: 'windpowerlib', 'pvlib'
     path : str
         Path to where weather data csv files are located.
+    format_ : str
+        'pvlib' or 'windpowerlib'
     """
     if weather_data_name == 'ERA5':
         if format_ == 'windpowerlib':

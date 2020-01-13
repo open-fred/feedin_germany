@@ -14,7 +14,7 @@ from pvlib.location import Location
 
 def calculate_validation_metrics(df, val_cols, metrics='standard',
                                  filter_cols=None, filename='test.csv',
-                                 exclude_nans=True):
+                                 exclude_nans=True, **kwargs):
     r"""
     Calculates metrics for validating simulated data and saves results to file.
 
@@ -31,7 +31,7 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
     metrics : list of strings or string
         Contains metrics (strings) to be calculated. If it is set to 'standard'
          standard metrics are used. Default: 'standard'.
-    filter_cols : list of strings
+    filter_cols : list of strings or None
         Contains column names by which `df` is filtered before the validation.
         col an erster Stelle wird Index
         see example todo example
@@ -40,6 +40,13 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
     exclude_nans : bool
         If True, time steps with nan values in either simulation or validation
          time series are excluded from the validation. Default: True.
+
+    Other Parameters
+    ----------------
+    unit_factor : float (optional)
+        To adapt the unit of metrics like RMSE, bias, ... (that are not in unit
+        %) the metrics will be devided by this factor. Example: time series in
+        W, desired unit of metrics GW --> `unit_factor` = 1e9
 
     """
     if exclude_nans:
@@ -51,7 +58,7 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
         df.dropna(inplace=True)
     if metrics == 'standard':
         metrics = ['rmse_norm', 'rmse_norm_bias_corrected', 'mean_bias',
-                   'rmse',
+                   'rmse', 'energy_yield_deviation',
                    'pearson', 'time_step_amount']
     if filter_cols:
         metrics_df = pd.DataFrame()
@@ -72,7 +79,8 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
                                                           index=[index])], axis=1)
             for metric in metrics:
                 metrics_temp_df[metric] = get_metric(
-                    metric=metric, validation_data=val_df, val_cols=val_cols)
+                    metric=metric, validation_data=val_df, val_cols=val_cols,
+                    **kwargs)
             metrics_df = pd.concat([metrics_df, metrics_temp_df])
     else:
         metrics_df = pd.DataFrame(columns=metrics)
@@ -84,7 +92,7 @@ def calculate_validation_metrics(df, val_cols, metrics='standard',
     return metrics_df
 
 
-def get_metric(metric, validation_data, val_cols):
+def get_metric(metric, validation_data, val_cols, **kwargs):
     r"""
     Fetches metric of `validation_data` from single functions.
 
@@ -101,12 +109,22 @@ def get_metric(metric, validation_data, val_cols):
         Contains columns names of (1) time series to be validated and (2)
         validation time series in the form [(1), (2)].
 
+    Other Parameters
+    ----------------
+    unit_factor : float (optional)
+        To adapt the unit of metrics like RMSE, bias, ... (that are not in unit
+        %) the metrics will be devided by this factor. Example: time series in
+        W, desired unit of metrics GW --> `unit_factor` = 1e9
+
     Returns
     -------
     metric_value : float
         Calculated metric value.
 
     """
+    unit_factor = kwargs.get('unit_factor')
+    if not unit_factor:
+        unit_factor = 1
     if metric == 'rmse_norm':
         metric_value = get_rmse(
             simulation_series=validation_data[val_cols[0]],
@@ -114,7 +132,7 @@ def get_metric(metric, validation_data, val_cols):
     elif metric == 'mean_bias':
         metric_value = get_mean_bias(
             simulation_series=validation_data[val_cols[0]],
-            validation_series=validation_data[val_cols[1]])
+            validation_series=validation_data[val_cols[1]]) / unit_factor
     elif metric == 'rmse_norm_bias_corrected':
         metric_value = get_rmse(
             simulation_series=validation_data[val_cols[0]],
@@ -124,19 +142,53 @@ def get_metric(metric, validation_data, val_cols):
         metric_value = get_rmse(
             simulation_series=validation_data[val_cols[0]],
             validation_series=validation_data[val_cols[1]], normalized=False,
-            bias_corrected=False)
+            bias_corrected=False) / unit_factor
     elif metric == 'standard_deviation_simulation_results':
-        metric_value = get_standard_deviation(validation_data[val_cols[0]])
+        metric_value = (get_standard_deviation(validation_data[val_cols[0]]) /
+                        unit_factor)
     elif metric == 'standard_deviation_validation_data':
-        metric_value = get_standard_deviation(validation_data[val_cols[1]])
+        metric_value = (get_standard_deviation(validation_data[val_cols[1]]) /
+                        unit_factor)
     elif metric == 'pearson':
         metric_value = get_pearson_s_r(df=validation_data, min_periods=None)  # todo min periods
     elif metric == 'time_step_amount':
         metric_value = len(validation_data)
+    elif metric == 'energy_yield_deviation':
+        metric_value = get_energy_yield_deviation(
+            simulation_series=validation_data[val_cols[0]],
+            validation_series=validation_data[val_cols[1]])
     else:
         raise ValueError("Metric {} not added, yet.".format(metric))
 
     return metric_value
+
+
+def get_energy_yield_deviation(simulation_series, validation_series):
+    r"""
+    Calculates energy yield deviation of simulation from validation series.
+
+    Parameters
+    ----------
+    simulation_series : pd.Series
+        Simulated feed-in time series.
+    validation_series : pd.Series
+        Validation feed-in time series. Must have the same frequency as
+        `simulation_series`.
+
+    Notes
+    -----
+    Attention: `simulation_series` and `validation_series` time series must
+    have the same frequency as this function does not calculate the energy
+    yield but just sums up the power output of one year.
+
+    Returns
+    -------
+    deviation : float
+        Deviation from the energy yield in %.
+
+    """
+    return ((simulation_series.sum() - validation_series.sum()) /
+            validation_series.sum() * 100)
 
 
 def get_standard_deviation(data_series):
