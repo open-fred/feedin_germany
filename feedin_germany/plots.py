@@ -201,70 +201,76 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None, unit='GW',
 
 
 if __name__ == "__main__":
+    from feedin_germany import validation_data as val_data
+    from feedin_germany import settings
+
+    settings.init()  # note: set your paths in settings.py
+    feedin_folder = settings.path_wam_ezr
 
     years = [2016, 2017]
     category = 'Wind'
     freq = 0.5
-    setting = 'smoothing' # 'ramps', 'smoothing'
-    weather_data_names = ['open_FRED', 'open_FRED_smoothed']
-    register_name = 'MaStR'
-    filename = 'histogram_{}_{}_compare_smoothing'.format(category, register_name)
+    # setting = 'smoothing_2' # 'ramps', 'smoothing'
+    settings = [None, 'smoothing_1', 'smoothing_2', 'ramps'] # 'ramps', 'smoothing'
 
-    from feedin_germany import validation_data as val_data
-    from feedin_germany import settings
-    settings.init()  # note: set your paths in settings.py
-    feedin_folder = settings.path_wam_ezr
+    register_names = ['MaStR', 'opsd']
 
-    # get validation time series for all years
-    val_feedin_50hertz = pd.DataFrame()
-    for year in years:
-        val_feedin_year = val_data.load_feedin_data([category], year,
-                                                    latest=True)
-        val_feedin_50hertz_year = val_feedin_year.loc[
-            val_feedin_year['nuts'] == '50 Hertz']
-        val_feedin_50hertz = pd.concat(
-            [val_feedin_50hertz, val_feedin_50hertz_year])
 
-    validation_df = val_feedin_50hertz
-    for weather_data_name in weather_data_names:
-        feedin_50hertz = pd.DataFrame()
-        for year in years:
-            filename_feedin = os.path.join(
-                feedin_folder, category, 'feedin_50Hz_{}_{}_{}.csv'.format(
-                    weather_data_name, register_name, year))
-            feedin_50hertz_year = pd.read_csv(filename_feedin, index_col=0,
-                                              parse_dates=True).reset_index()
-            feedin_50hertz = pd.concat([feedin_50hertz, feedin_50hertz_year])
-        feedin_50hertz = feedin_50hertz.rename(
-            columns={'feedin': 'feedin_{}'.format(weather_data_name)})
-        validation_df = pd.merge(left=validation_df, right=feedin_50hertz,
-                                 how='left', on=['time', 'technology', 'nuts'])
+    for setting in settings:
+        for register_name in register_names:
+            if setting == 'smoothing_2':
+                weather_data_names = ['ERA5', 'ERA5_smoothed']
+            elif setting == 'smoothing_1':
+                weather_data_names = ['open_FRED', 'open_FRED_smoothed']
+            else:
+                weather_data_names = ['open_FRED', 'ERA5']
 
-    if category is 'Solar':
-        # filter night time values
-        lat = 52.456032
-        lon = 13.525282
-        validation_df = pv_feedin_drop_night_times(
-            validation_df.set_index('time'), lat=lat, lon=lon)
-    else:
-        validation_df.set_index('time', inplace=True)
+            filename = 'histogram_{}_{}_compare_{}'.format(
+                category, register_name, setting)
 
-    # plots for only one weather data set
-    #special_histogram(validation_df)
-    #histogram(validation_df)
-    #simple_histogram(validation_df)
+            # get validation time series for all years
+            val_feedin_50hertz = pd.DataFrame()
+            for year in years:
+                val_feedin_year = val_data.load_feedin_data([category], year,
+                                                            latest=True)
+                val_feedin_50hertz_year = val_feedin_year.loc[
+                    val_feedin_year['nuts'] == '50 Hertz']
+                val_feedin_50hertz = pd.concat(
+                    [val_feedin_50hertz, val_feedin_50hertz_year])
 
-    # calculate ramp
-    ind_2 = validation_df.index - pd.Timedelta(hours=1)
-    cols = ['feedin_{}'.format(_) for _ in weather_data_names]
-    cols.append('feedin_val')
-    for col in cols:
-        validation_df['ramp_{}'.format(col)] = \
-            validation_df.loc[:, col].values - \
-            validation_df.loc[ind_2, col].values
-    # plot for both weather data sets
-    histogram(validation_df, filename=os.path.join(feedin_folder, 'plots',
-                                                   filename),
-              freq=freq, setting=setting)
+            validation_df = val_feedin_50hertz
+            for weather_data_name in weather_data_names:
+                feedin_50hertz = pd.DataFrame()
+                for year in years:
+                    filename_feedin = os.path.join(
+                        feedin_folder, category, 'feedin_50Hz_{}_{}_{}.csv'.format(
+                            weather_data_name, register_name, year))
+                    feedin_50hertz_year = pd.read_csv(filename_feedin, index_col=0,
+                                                      parse_dates=True).reset_index()
+                    feedin_50hertz = pd.concat([feedin_50hertz, feedin_50hertz_year])
+                feedin_50hertz = feedin_50hertz.rename(
+                    columns={'feedin': 'feedin_{}'.format(weather_data_name)})
+                validation_df = pd.merge(left=validation_df, right=feedin_50hertz,
+                                         how='left', on=['time', 'technology', 'nuts'])
+                validation_df.set_index('time', inplace=True)
 
-    #plot_capacities()
+
+            # plots for only one weather data set
+            #special_histogram(validation_df)
+            #histogram(validation_df)
+            #simple_histogram(validation_df)
+
+            # calculate ramp
+            ind_2 = validation_df.index - pd.Timedelta(hours=1)
+            cols = ['feedin_{}'.format(_) for _ in weather_data_names]
+            cols.append('feedin_val')
+            for col in cols:
+                validation_df['ramp_{}'.format(col)] = \
+                    validation_df.loc[:, col].values - \
+                    validation_df.loc[ind_2, col].values
+            # plot for both weather data sets
+            histogram(validation_df, filename=os.path.join(feedin_folder, 'plots',
+                                                           filename),
+                      freq=freq, setting=setting)
+
+        #plot_capacities()
