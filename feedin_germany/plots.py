@@ -47,7 +47,7 @@ def plot_correlation(df, val_cols, filename='Tests/correlation_test.pdf',
     plt.plot([0, maximum * 2], [0, maximum], color='orange', linestyle='--')
     if title:
         plt.title(title)
-    plt.legend(handles=[ideal, deviation_100])
+    plt.legend(handles=[ideal, deviation_100], loc='upper left')
     # Add certain values to plot as text
     if metrics:
         annotation_str = ''.join(['{met} = {val} \n '.format(
@@ -130,14 +130,14 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None, unit='GW',
         col1 = 'feedin_open_FRED'
         col2 = 'feedin_open_FRED_smoothed'
         val_col = 'feedin_val'
-        label1 = 'calculated feed-in (not smoothed)'
-        label2 = 'calculated feed-in (smoothed)'
+        label1 = 'berechnete Einspeisung (nicht geglättet)'
+        label2 = 'berechnete Einspeisung (geglättet)'
     elif setting == 'smoothing_2':
         col1 = 'feedin_ERA5'
         col2 = 'feedin_ERA5_smoothed'
         val_col = 'feedin_val'
-        label1 = 'calculated feed-in (not smoothed)'
-        label2 = 'calculated feed-in (smoothed)'
+        label1 = 'berechnete Einspeisung (nicht geglättet)'
+        label2 = 'berechnete Einspeisung (geglättet)'
     elif setting == 'ramps':
         col1 = 'ramp_feedin_open_FRED'
         col2 = 'ramp_feedin_ERA5'
@@ -209,7 +209,6 @@ if __name__ == "__main__":
 
     years = [2016, 2017]
     category = 'Wind'
-    freq = 0.5
     # setting = 'smoothing_2' # 'ramps', 'smoothing'
     settings = [None, 'smoothing_1', 'smoothing_2', 'ramps'] # 'ramps', 'smoothing'
 
@@ -227,6 +226,11 @@ if __name__ == "__main__":
 
             filename = 'histogram_{}_{}_compare_{}'.format(
                 category, register_name, setting)
+
+            if setting == 'ramps':
+                freq = 0.2
+            else:
+                freq = 0.5
 
             # get validation time series for all years
             val_feedin_50hertz = pd.DataFrame()

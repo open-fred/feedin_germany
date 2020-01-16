@@ -82,6 +82,7 @@ for category in categories:
                             (metrics_df['register'] == register_name) &
                             (metrics_df['weather'] == weather_data_name)].drop(
                             ['register', 'weather', 'time_step_amount',
+                             'energy_yield_deviation', 'rmse',
                              'pearson'], axis=1)
                         if category == 'Wind':
                             metrics = metrics.loc[

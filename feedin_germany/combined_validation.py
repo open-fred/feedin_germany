@@ -91,9 +91,8 @@ for category in categories:
                                 add_on = ''
                             filename_feedin = os.path.join(
                                 feedin_folder, category,
-                                'feedin_50Hz_{}_{}_{}{}.csv'.format(
-                                    weather_data_name, register_name, year,
-                                    add_on))
+                                'feedin_50Hz_{}{}_{}_{}.csv'.format(
+                                    weather_data_name, add_on, register_name, year))
                         else:
                             filename_feedin = os.path.join(
                                 feedin_folder, category, 'feedin_50Hz_{}_{}_{}.csv'.format(
@@ -115,8 +114,8 @@ for category in categories:
                     if category == 'Wind':
                         val_filename = os.path.join(
                             validation_df_folder,
-                            'validation_df_{}_{}_{}{}.csv'.format(
-                                category, weather_data_name, register_name, add_on))
+                            'validation_df_{}_{}{}_{}.csv'.format(
+                                category, weather_data_name, add_on, register_name))
                     else:
                         val_filename = os.path.join(
                         validation_df_folder, 'validation_df_{}_{}_{}.csv'.format(
