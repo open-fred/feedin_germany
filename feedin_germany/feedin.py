@@ -427,7 +427,8 @@ def calculate_feedin_germany(year, categories,
                     register_name) + " Must be 'opsd' or 'MaStR' or "
                                      "pd.DataFrame.")
         # add region column 'nuts' to register
-        register = oep.add_region_to_register(register, region_gdf)
+        # register = oep.add_region_to_register(register, region_gdf)
+        register['nuts'] = 'DE40I'
 
         feedin = calculate_feedin(
             year=year, register=register, regions=region_gdf,
