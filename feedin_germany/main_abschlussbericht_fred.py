@@ -26,21 +26,21 @@ validation_path = settings.path_validation_metrics
 years = [
     # 2013, 2014,
     # 2015,
-    # 2016,
+    #2016,
     2017
 ]
 categories = [
     'Wind',
-    # 'Solar',
+    #'Solar',
     # 'Hydro'  # not implemented, yet
 ]
 register_names = [
-    # 'opsd',  # fix decommissioning date...
-    'MaStR'  # only use for category 'Wind'
+    'opsd',  # fix decommissioning date...
+    #'MaStR'  # only use for category 'Wind'
 ]
 weather_data_names = [
-    'open_FRED',
-    # 'ERA5'
+    #'open_FRED',
+    'ERA5'
 ]
 # windpowerlib parameters
 wake_losses_model = 'dena_mean'
@@ -122,11 +122,13 @@ for year in years:
 # load feed-in and validation time series into one data frame
 for weather_data_name in weather_data_names:
     for register_name in register_names:
+        print(weather_data_name)
+        print(register_name)
         # get calculated feed-in time series for all years
         feedin_50hertz = pd.DataFrame()
         for year in years:
             filename_feedin = os.path.join(
-                feedin_folder, 'feedin_50Hz_{}_{}_{}.csv'.format(
+                feedin_folder, categories[0], 'feedin_50Hz_{}_{}_{}.csv'.format(
                     weather_data_name, register_name, year))
             feedin_50hertz_year = pd.read_csv(filename_feedin,index_col=0,
                                                 parse_dates=True).reset_index()
@@ -137,27 +139,38 @@ for weather_data_name in weather_data_names:
         validation_df = pd.merge(left=feedin_50hertz, right=val_feedin_50hertz,
                                  how='left', on=['time', 'technology', 'nuts'])
 
-        validation_df.set_index('time').to_csv(os.path.join(
-            feedin_folder, 'validation_df_{}_{}.csv'.format(
-                weather_data_name, register_name)))
+        # evaluate
+        print(weather_data_name)
+        validation_df.loc[:, ['feedin', 'feedin_val']].plot()
+        plt.show()
+        print('annual energy in GWh (val vs. calc): {} vs. {}; {}'.format(
+            validation_df.loc[:, 'feedin_val'].sum() / 1e9,
+            validation_df.loc[:, 'feedin'].sum() / 1e9,
+            (validation_df.loc[:, 'feedin'].sum() -
+            validation_df.loc[:, 'feedin_val'].sum()) /
+            validation_df.loc[:, 'feedin_val'].sum()))
 
-###############################################################################
-# calculate metrics and save to file (for each register and each weather data)
-###############################################################################
-
-if not os.path.exists(feedin_folder):
-    os.makedirs(feedin_folder, exist_ok=True)
-for weather_data_name in weather_data_names:
-    for register_name in register_names:
-        # load validation data frame
-        val_filename = os.path.join(feedin_folder, 'validation_df_{}_{}.csv'.format(
-            weather_data_name, register_name))
-        validation_df = pd.read_csv(val_filename, parse_dates=True, index_col=0)
-        filename = os.path.join(
-            feedin_folder, 'validation_metrics_50Hz_{reg}_{weather}.csv'.format(
-                reg=register_name, weather=weather_data_name))
-        val_tools.calculate_validation_metrics(
-            df=validation_df,
-            val_cols=['feedin', 'feedin_val'], metrics='standard',
-            filter_cols=['nuts', 'technology'],
-            filename=filename)
+#         validation_df.set_index('time').to_csv(os.path.join(
+#             feedin_folder, 'validation_df_{}_{}.csv'.format(
+#                 weather_data_name, register_name)))
+#
+# ###############################################################################
+# # calculate metrics and save to file (for each register and each weather data)
+# ###############################################################################
+#
+# if not os.path.exists(feedin_folder):
+#     os.makedirs(feedin_folder, exist_ok=True)
+# for weather_data_name in weather_data_names:
+#     for register_name in register_names:
+#         # load validation data frame
+#         val_filename = os.path.join(feedin_folder, 'validation_df_{}_{}.csv'.format(
+#             weather_data_name, register_name))
+#         validation_df = pd.read_csv(val_filename, parse_dates=True, index_col=0)
+#         filename = os.path.join(
+#             feedin_folder, 'validation_metrics_50Hz_{reg}_{weather}.csv'.format(
+#                 reg=register_name, weather=weather_data_name))
+#         val_tools.calculate_validation_metrics(
+#             df=validation_df,
+#             val_cols=['feedin', 'feedin_val'], metrics='standard',
+#             filter_cols=['nuts', 'technology'],
+#             filename=filename)

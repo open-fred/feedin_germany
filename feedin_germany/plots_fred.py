@@ -56,9 +56,9 @@ for category in categories:
                             add_on = '_smoothed'
                         else:
                             add_on = ''
-                        filename = 'validation_df_{}_{}{}_{}.csv'.format(
-                                category, weather_data_name, add_on,
-                            register_name)
+                        filename = 'validation_df_{}_{}_{}{}.csv'.format(
+                                category, weather_data_name, register_name,
+                                add_on)
                         plot_title = '{reg}, {weather}, {add}'.format(
                             reg=register_name,
                             weather=weather_data_name, add=add_on.replace('_', ' ').replace('ed', 'ing'))
@@ -82,7 +82,6 @@ for category in categories:
                             (metrics_df['register'] == register_name) &
                             (metrics_df['weather'] == weather_data_name)].drop(
                             ['register', 'weather', 'time_step_amount',
-                             'energy_yield_deviation', 'rmse',
                              'pearson'], axis=1)
                         if category == 'Wind':
                             metrics = metrics.loc[
@@ -103,7 +102,7 @@ for category in categories:
                         metrics_dict = None
                     filename_plot = os.path.join(
                         plots_folder, filename.replace('validation_df',
-                                                           'qq_plot').replace('csv', 'png'))  # svg, png..
+                                                           'qq_plot').replace('csv', 'pdf'))  # svg, png..
                     if category == 'Solar':
                         maximum = 9.0
                     elif category == 'Wind':

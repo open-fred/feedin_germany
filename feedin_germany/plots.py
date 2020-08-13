@@ -200,6 +200,31 @@ def histogram(validation_df, filename=None, freq=0.5, setting=None, unit='GW',
         plt.show()
 
 
+def plot_capacities():
+    cap_2016 = pd.DataFrame(
+        {'BNetzA': [16.8, 9.92],
+         'MaStR': [18.52, 12.89],
+         'OPSD': [21.62, 10.42]},
+        index=['Wind', 'PV']
+    )
+    cap = pd.DataFrame(
+        {'BNetzA': [17.93, 10.47],
+         'MaStR': [20.29, 13.45],
+         'OPSD': [21.94, 10.49]},
+        index=['Wind', 'PV']
+    )
+    cap_all = pd.DataFrame(
+        {'BNetzA': [16.8, 17.93, 9.92, 10.47],
+         'MaStR': [18.52, 20.29, 12.89, 13.45],
+         'OPSD': [21.62, 21.94, 10.42, 10.49]},
+        index=[('Wind', 2016), ('Wind', 2017), ('PV', 2016), ('PV', 2017)]
+    )
+    cap.plot.bar(rot=0, color=['c', 'b', 'r'])
+    plt.ylabel('Installed capacity in GW')
+    #plt.show()
+    plt.savefig('installed_capacities.png')
+
+
 if __name__ == "__main__":
     from feedin_germany import validation_data as val_data
     from feedin_germany import settings

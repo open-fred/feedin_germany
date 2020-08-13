@@ -281,7 +281,7 @@ def calculate_feedin_germany(year, categories,
     regions : geopandas.GeoDataFrame or string
         Regions for which feed-in time series are calculated
         (geopandas.GeoDataFrame) or specification of regions that are loaded
-        from OEP. Options for string: 'landkreise', 'uebertragunsnetzzonen'.
+        from OEP. Options for string: 'landkreise', 'tso'.
         Default: 'landkreise'.
         todo: add exact required form of GeoDataFrame
     register_name : pd.DataFrame or string
@@ -340,8 +340,8 @@ def calculate_feedin_germany(year, categories,
     # get regions from OEP if regions is not a geopandas.GeoDataFrame
     if isinstance(regions, gpd.GeoDataFrame):
         region_gdf = regions
-    elif regions == 'landkreise' or regions =='tso' or regions == '50 Hertz':
-        if regions == '50 Hertz':  #todo could be if regions in [...]
+    elif regions in ['landkreise', 'tso', '50 Hertz']:
+        if regions == '50 Hertz':
             sub_region = regions
             regions = 'tso'
         else:

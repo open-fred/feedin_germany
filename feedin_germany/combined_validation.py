@@ -114,8 +114,8 @@ for category in categories:
                     if category == 'Wind':
                         val_filename = os.path.join(
                             validation_df_folder,
-                            'validation_df_{}_{}{}_{}.csv'.format(
-                                category, weather_data_name, add_on, register_name))
+                            'validation_df_{}_{}_{}{}.csv'.format(
+                                category, weather_data_name, register_name, add_on))
                     else:
                         val_filename = os.path.join(
                         validation_df_folder, 'validation_df_{}_{}_{}.csv'.format(
